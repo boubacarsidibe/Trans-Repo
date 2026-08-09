@@ -1,0 +1,67 @@
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editors and IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Node.js
+node_modules/
+dist/
+coverage/
+.turbo/
+.cache/
+*.tsbuildinfo
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.venv/
+venv/
+env/
+build/
+site/
+*.egg-info/
+
+# Java / JVM
+.classpath
+.project
+.settings/
+target/
+out/
+*.class
+
+# Go
+bin/
+pkg/
+
+# Rust
+target/
+
+# Docker
+.docker/
+
+# Archives and packages
+*.zip
+*.tar
+*.tgz
+*.gz

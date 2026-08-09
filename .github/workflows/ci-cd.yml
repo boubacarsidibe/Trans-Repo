@@ -1,0 +1,156 @@
+name: CI/CD
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - develop
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: "Run the deploy job after checks"
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  detect:
+    name: Detect project type
+    runs-on: ubuntu-latest
+    outputs:
+      has_node: ${{ steps.detect.outputs.has_node }}
+      has_python: ${{ steps.detect.outputs.has_python }}
+      has_java: ${{ steps.detect.outputs.has_java }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: detect
+        name: Detect stack
+        run: |
+          has_node=false
+          has_python=false
+          has_java=false
+
+          if [ -f package.json ] || [ -f pnpm-lock.yaml ] || [ -f yarn.lock ] || [ -f package-lock.json ]; then
+            has_node=true
+          fi
+
+          if [ -f pyproject.toml ] || [ -f requirements.txt ] || [ -f setup.py ] || [ -f Pipfile ]; then
+            has_python=true
+          fi
+
+          if [ -f pom.xml ] || [ -f build.gradle ] || [ -f build.gradle.kts ] || [ -f gradlew ]; then
+            has_java=true
+          fi
+
+          echo "has_node=$has_node" >> "$GITHUB_OUTPUT"
+          echo "has_python=$has_python" >> "$GITHUB_OUTPUT"
+          echo "has_java=$has_java" >> "$GITHUB_OUTPUT"
+
+  ci:
+    name: Build and test
+    runs-on: ubuntu-latest
+    needs: detect
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        if: needs.detect.outputs.has_node == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install Node.js dependencies
+        if: needs.detect.outputs.has_node == 'true' && hashFiles('package-lock.json') != ''
+        run: npm ci
+
+      - name: Install Node.js dependencies
+        if: needs.detect.outputs.has_node == 'true' && hashFiles('package-lock.json') == ''
+        run: npm install
+
+      - name: Test Node.js project
+        if: needs.detect.outputs.has_node == 'true'
+        run: |
+          if npm run | grep -q " test"; then npm test; else echo "No npm test script found"; fi
+
+      - name: Build Node.js project
+        if: needs.detect.outputs.has_node == 'true'
+        run: |
+          if npm run | grep -q " build"; then npm run build; else echo "No npm build script found"; fi
+
+      - name: Set up Python
+        if: needs.detect.outputs.has_python == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Python dependencies
+        if: needs.detect.outputs.has_python == 'true' && hashFiles('requirements.txt') != ''
+        run: python -m pip install --upgrade pip && pip install -r requirements.txt
+
+      - name: Install Python package
+        if: needs.detect.outputs.has_python == 'true' && hashFiles('pyproject.toml') != ''
+        run: python -m pip install --upgrade pip build
+
+      - name: Test Python project
+        if: needs.detect.outputs.has_python == 'true'
+        run: |
+          if [ -d tests ] || [ -d test ]; then python -m pytest; else echo "No Python tests directory found"; fi
+
+      - name: Build Python package
+        if: needs.detect.outputs.has_python == 'true' && hashFiles('pyproject.toml') != ''
+        run: python -m build
+
+      - name: Set up Java
+        if: needs.detect.outputs.has_java == 'true'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Test Java project
+        if: needs.detect.outputs.has_java == 'true' && hashFiles('pom.xml') != ''
+        run: mvn -B test
+
+      - name: Build Java project
+        if: needs.detect.outputs.has_java == 'true' && hashFiles('pom.xml') != ''
+        run: mvn -B package -DskipTests
+
+      - name: Test Gradle project
+        if: needs.detect.outputs.has_java == 'true' && hashFiles('pom.xml') == ''
+        run: |
+          if [ -x ./gradlew ]; then ./gradlew test; else gradle test; fi
+
+      - name: Build Gradle project
+        if: needs.detect.outputs.has_java == 'true' && hashFiles('pom.xml') == ''
+        run: |
+          if [ -x ./gradlew ]; then ./gradlew build -x test; else gradle build -x test; fi
+
+      - name: Upload packaged artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: |
+            dist/
+            build/
+            target/
+          if-no-files-found: ignore
+
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    needs: ci
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' && inputs.deploy || github.event_name == 'push')
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy placeholder
+        run: |
+          echo "Configure your deployment target here."
+          echo "Examples: Azure, Vercel, Netlify, Docker, Kubernetes, or a custom server."
+          echo "This job currently validates the CD stage is wired, but does not deploy yet."
