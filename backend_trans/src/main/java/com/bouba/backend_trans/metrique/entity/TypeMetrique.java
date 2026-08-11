@@ -1,0 +1,19 @@
+package com.bouba.backend_trans.metrique.entity;
+
+public enum TypeMetrique {
+	CPU,
+	RAM,
+	DISQUE,
+	SWAP,
+	NOMBRE_PROCESSUS,
+	PORTS_ECOUTE,
+	DISQUE_IO_LECTURE,
+	DISQUE_IO_ECRITURE,
+	RESEAU_IO_ENTRANT,
+	RESEAU_IO_SORTANT,
+	UPTIME,
+	BANDE_PASSANTE,
+	LATENCE,
+	TAUX_ERREUR,
+	DISPONIBILITE
+}
