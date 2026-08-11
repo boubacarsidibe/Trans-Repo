@@ -39,6 +39,14 @@ public class MetriqueService {
 		enregistrer(equipement, TypeMetrique.CPU, request.getCpuPercent(), "%");
 		enregistrer(equipement, TypeMetrique.RAM, request.getMemoryPercent(), "%");
 		enregistrer(equipement, TypeMetrique.DISQUE, request.getDiskPercent(), "%");
+		enregistrer(equipement, TypeMetrique.SWAP, request.getSwapPercent(), "%");
+		enregistrer(equipement, TypeMetrique.NOMBRE_PROCESSUS, request.getProcessCount(), "processus");
+		enregistrer(equipement, TypeMetrique.PORTS_ECOUTE, request.getListeningPortsCount(), "ports");
+		enregistrer(equipement, TypeMetrique.DISQUE_IO_LECTURE, request.getDiskReadKbps(), "Ko/s");
+		enregistrer(equipement, TypeMetrique.DISQUE_IO_ECRITURE, request.getDiskWriteKbps(), "Ko/s");
+		enregistrer(equipement, TypeMetrique.RESEAU_IO_ENTRANT, request.getNetworkInKbps(), "Ko/s");
+		enregistrer(equipement, TypeMetrique.RESEAU_IO_SORTANT, request.getNetworkOutKbps(), "Ko/s");
+		enregistrer(equipement, TypeMetrique.UPTIME, request.getUptimeSeconds(), "s");
 	}
 
 	@Transactional

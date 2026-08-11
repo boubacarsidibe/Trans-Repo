@@ -3,6 +3,8 @@ import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YA
 import { fetchEquipementMetriques } from "../api/endpoints";
 import type { Metrique, TypeMetrique } from "../types/api";
 
+const POLL_INTERVAL_MS = 5000;
+
 function formatTime(iso: string) {
 	return new Date(iso).toLocaleTimeString();
 }
@@ -14,16 +16,33 @@ export function MetricChart({ equipementId, equipementNom }: { equipementId: str
 	const [error, setError] = useState<string | null>(null);
 
 	useEffect(() => {
+		let cancelled = false;
 		setLoading(true);
 		setError(null);
-		fetchEquipementMetriques(equipementId)
-			.then((data) => {
-				setMetriques(data);
-				const types = Array.from(new Set(data.map((m) => m.typeMetrique)));
-				setSelectedType((current) => (current && types.includes(current) ? current : (types[0] ?? null)));
-			})
-			.catch(() => setError("Impossible de charger les métriques."))
-			.finally(() => setLoading(false));
+
+		function poll() {
+			fetchEquipementMetriques(equipementId)
+				.then((data) => {
+					if (cancelled) return;
+					setMetriques(data);
+					const types = Array.from(new Set(data.map((m) => m.typeMetrique)));
+					setSelectedType((current) => (current && types.includes(current) ? current : (types[0] ?? null)));
+					setError(null);
+				})
+				.catch(() => {
+					if (!cancelled) setError("Impossible de charger les métriques.");
+				})
+				.finally(() => {
+					if (!cancelled) setLoading(false);
+				});
+		}
+
+		poll();
+		const intervalId = setInterval(poll, POLL_INTERVAL_MS);
+		return () => {
+			cancelled = true;
+			clearInterval(intervalId);
+		};
 	}, [equipementId]);
 
 	const availableTypes = useMemo(

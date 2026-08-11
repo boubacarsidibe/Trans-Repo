@@ -45,6 +45,7 @@ public class MetriqueSeuilEvaluator {
 			case CPU -> new Seuil(TypeAnomalie.CPU, new BigDecimal("80"), new BigDecimal("95"));
 			case RAM -> new Seuil(TypeAnomalie.RAM, new BigDecimal("80"), new BigDecimal("95"));
 			case DISQUE -> new Seuil(TypeAnomalie.DISQUE, new BigDecimal("85"), new BigDecimal("95"));
+			case SWAP -> new Seuil(TypeAnomalie.RAM, new BigDecimal("60"), new BigDecimal("90"));
 			case LATENCE -> new Seuil(TypeAnomalie.RESEAU, new BigDecimal("150"), new BigDecimal("400"));
 			case TAUX_ERREUR -> new Seuil(TypeAnomalie.RESEAU, new BigDecimal("1"), new BigDecimal("5"));
 			default -> null;
