@@ -66,7 +66,15 @@ apiClient.interceptors.response.use(
 	async (error: AxiosError) => {
 		const originalRequest = error.config as (InternalAxiosRequestConfig & { _retried?: boolean }) | undefined;
 
-		if (error.response?.status === 401 && originalRequest && !originalRequest._retried) {
+		// This backend has no AuthenticationEntryPoint configured, so Spring Security
+		// returns 403 (not 401) for a missing/expired token, indistinguishable here
+		// from a genuine role-based denial. Retrying once after a refresh is safe
+		// either way: it fixes the expired-token case, and a real permission error
+		// will just fail the same way again on retry.
+		const status = error.response?.status;
+		const isAuthFailure = status === 401 || status === 403;
+
+		if (isAuthFailure && originalRequest && !originalRequest._retried) {
 			originalRequest._retried = true;
 			try {
 				refreshPromise ??= refreshAccessToken().finally(() => {
