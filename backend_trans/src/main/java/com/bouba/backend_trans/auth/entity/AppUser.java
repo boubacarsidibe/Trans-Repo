@@ -41,6 +41,16 @@ public class AppUser {
 	@Column(nullable = false)
 	private boolean active = true;
 
+	/**
+	 * Canal e-mail souhaité par l'utilisateur (F7). Les alertes de sévérité
+	 * critique partent quoi qu'il arrive : la règle F7 le prévoit explicitement,
+	 * « indépendamment des préférences de l'utilisateur ».
+	 */
+	// La valeur par défaut est portée par le schéma : sans elle, l'ajout de la
+	// colonne échoue sur une table déjà peuplée (ddl-auto=update).
+	@Column(name = "notifications_email", nullable = false, columnDefinition = "boolean not null default true")
+	private boolean notificationsEmail = true;
+
 	@Column(name = "failed_login_attempts", nullable = false)
 	private int failedLoginAttempts = 0;
 
@@ -59,7 +69,10 @@ public class AppUser {
 		this.createdAt = now;
 		this.updatedAt = now;
 		if (this.role == null) {
-			this.role = Role.CLIENT;
+			// Moindre privilège parmi les rôles de supervision (§4.4). L'ancien
+			// défaut CLIENT n'existe pas dans la matrice des permissions : il
+			// produisait un compte sans aucun accès.
+			this.role = Role.OBSERVATEUR;
 		}
 		if (this.userType == null) {
 			this.userType = UserType.INDIVIDUAL;
@@ -125,6 +138,14 @@ public class AppUser {
 
 	public void setActive(boolean active) {
 		this.active = active;
+	}
+
+	public boolean isNotificationsEmail() {
+		return notificationsEmail;
+	}
+
+	public void setNotificationsEmail(boolean notificationsEmail) {
+		this.notificationsEmail = notificationsEmail;
 	}
 
 	public int getFailedLoginAttempts() {

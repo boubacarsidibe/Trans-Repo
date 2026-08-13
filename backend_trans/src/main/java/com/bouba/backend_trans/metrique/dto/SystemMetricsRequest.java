@@ -46,6 +46,54 @@ public class SystemMetricsRequest {
 	@JsonProperty("uptime_seconds")
 	private BigDecimal uptimeSeconds;
 
+	@JsonProperty("load_1min")
+	private BigDecimal load1min;
+
+	@JsonProperty("memory_total_mb")
+	private BigDecimal memoryTotalMb;
+
+	@JsonProperty("memory_used_mb")
+	private BigDecimal memoryUsedMb;
+
+	@JsonProperty("disk_total_gb")
+	private BigDecimal diskTotalGb;
+
+	@JsonProperty("disk_used_gb")
+	private BigDecimal diskUsedGb;
+
+	@JsonProperty("open_files_limit")
+	private BigDecimal openFilesLimit;
+
+	@JsonProperty("process_limit")
+	private BigDecimal processLimit;
+
+	@JsonProperty("tcp_services_down")
+	private BigDecimal tcpServicesDown;
+
+	@JsonProperty("dns_latency_ms")
+	private BigDecimal dnsLatencyMs;
+
+	@JsonProperty("log_lines_count")
+	private BigDecimal logLinesCount;
+
+	@JsonProperty("log_lines_match_count")
+	private BigDecimal logLinesMatchCount;
+
+	@JsonProperty("watched_file_exists")
+	private BigDecimal watchedFileExists;
+
+	@JsonProperty("watched_file_size_bytes")
+	private BigDecimal watchedFileSizeBytes;
+
+	@JsonProperty("temperature_max_celsius")
+	private BigDecimal temperatureMaxCelsius;
+
+	@JsonProperty("fan_speed_rpm")
+	private BigDecimal fanSpeedRpm;
+
+	@JsonProperty("modbus_value")
+	private BigDecimal modbusValue;
+
 	public UUID getEquipmentId() {
 		return equipmentId;
 	}
@@ -140,5 +188,133 @@ public class SystemMetricsRequest {
 
 	public void setUptimeSeconds(BigDecimal uptimeSeconds) {
 		this.uptimeSeconds = uptimeSeconds;
+	}
+
+	public BigDecimal getLoad1min() {
+		return load1min;
+	}
+
+	public void setLoad1min(BigDecimal load1min) {
+		this.load1min = load1min;
+	}
+
+	public BigDecimal getMemoryTotalMb() {
+		return memoryTotalMb;
+	}
+
+	public void setMemoryTotalMb(BigDecimal memoryTotalMb) {
+		this.memoryTotalMb = memoryTotalMb;
+	}
+
+	public BigDecimal getMemoryUsedMb() {
+		return memoryUsedMb;
+	}
+
+	public void setMemoryUsedMb(BigDecimal memoryUsedMb) {
+		this.memoryUsedMb = memoryUsedMb;
+	}
+
+	public BigDecimal getDiskTotalGb() {
+		return diskTotalGb;
+	}
+
+	public void setDiskTotalGb(BigDecimal diskTotalGb) {
+		this.diskTotalGb = diskTotalGb;
+	}
+
+	public BigDecimal getDiskUsedGb() {
+		return diskUsedGb;
+	}
+
+	public void setDiskUsedGb(BigDecimal diskUsedGb) {
+		this.diskUsedGb = diskUsedGb;
+	}
+
+	public BigDecimal getOpenFilesLimit() {
+		return openFilesLimit;
+	}
+
+	public void setOpenFilesLimit(BigDecimal openFilesLimit) {
+		this.openFilesLimit = openFilesLimit;
+	}
+
+	public BigDecimal getProcessLimit() {
+		return processLimit;
+	}
+
+	public void setProcessLimit(BigDecimal processLimit) {
+		this.processLimit = processLimit;
+	}
+
+	public BigDecimal getTcpServicesDown() {
+		return tcpServicesDown;
+	}
+
+	public void setTcpServicesDown(BigDecimal tcpServicesDown) {
+		this.tcpServicesDown = tcpServicesDown;
+	}
+
+	public BigDecimal getDnsLatencyMs() {
+		return dnsLatencyMs;
+	}
+
+	public void setDnsLatencyMs(BigDecimal dnsLatencyMs) {
+		this.dnsLatencyMs = dnsLatencyMs;
+	}
+
+	public BigDecimal getLogLinesCount() {
+		return logLinesCount;
+	}
+
+	public void setLogLinesCount(BigDecimal logLinesCount) {
+		this.logLinesCount = logLinesCount;
+	}
+
+	public BigDecimal getLogLinesMatchCount() {
+		return logLinesMatchCount;
+	}
+
+	public void setLogLinesMatchCount(BigDecimal logLinesMatchCount) {
+		this.logLinesMatchCount = logLinesMatchCount;
+	}
+
+	public BigDecimal getWatchedFileExists() {
+		return watchedFileExists;
+	}
+
+	public void setWatchedFileExists(BigDecimal watchedFileExists) {
+		this.watchedFileExists = watchedFileExists;
+	}
+
+	public BigDecimal getWatchedFileSizeBytes() {
+		return watchedFileSizeBytes;
+	}
+
+	public void setWatchedFileSizeBytes(BigDecimal watchedFileSizeBytes) {
+		this.watchedFileSizeBytes = watchedFileSizeBytes;
+	}
+
+	public BigDecimal getTemperatureMaxCelsius() {
+		return temperatureMaxCelsius;
+	}
+
+	public void setTemperatureMaxCelsius(BigDecimal temperatureMaxCelsius) {
+		this.temperatureMaxCelsius = temperatureMaxCelsius;
+	}
+
+	public BigDecimal getFanSpeedRpm() {
+		return fanSpeedRpm;
+	}
+
+	public void setFanSpeedRpm(BigDecimal fanSpeedRpm) {
+		this.fanSpeedRpm = fanSpeedRpm;
+	}
+
+	public BigDecimal getModbusValue() {
+		return modbusValue;
+	}
+
+	public void setModbusValue(BigDecimal modbusValue) {
+		this.modbusValue = modbusValue;
 	}
 }

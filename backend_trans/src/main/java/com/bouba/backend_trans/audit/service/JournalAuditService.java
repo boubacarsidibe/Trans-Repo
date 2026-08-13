@@ -2,6 +2,7 @@ package com.bouba.backend_trans.audit.service;
 
 import java.util.List;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,5 +31,10 @@ public class JournalAuditService {
 	@Transactional(readOnly = true)
 	public List<JournalAudit> findAll() {
 		return journalAuditRepository.findAllByOrderByHorodatageDesc();
+	}
+
+	@Transactional(readOnly = true)
+	public List<JournalAudit> findAll(Pageable pageable) {
+		return journalAuditRepository.findAllByOrderByHorodatageDesc(pageable);
 	}
 }

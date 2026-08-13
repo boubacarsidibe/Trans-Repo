@@ -1,5 +1,6 @@
 package com.bouba.backend_trans.equipement.entity;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import jakarta.persistence.Column;
@@ -41,6 +42,20 @@ public class Equipement {
 
 	@Column(name = "cle_api", length = 255)
 	private String cleApi;
+
+	/**
+	 * Horodatage de la dernière métrique reçue, tenu à jour à l'ingestion.
+	 *
+	 * <p>C'est ce qui permet au watchdog de disponibilité (règles F3 et F4) de
+	 * repérer un équipement muet par une simple lecture de cette table, sans
+	 * balayer la table des métriques — qui atteint plusieurs centaines de
+	 * millions de lignes à 90 jours de rétention (§6.10).
+	 *
+	 * <p>{@code null} signifie « n'a jamais rien remonté » : un équipement
+	 * déclaré mais pas encore équipé d'agent ne doit pas sonner l'alarme.
+	 */
+	@Column(name = "derniere_mesure")
+	private LocalDateTime derniereMesure;
 
 	public UUID getId() {
 		return id;
@@ -104,5 +119,13 @@ public class Equipement {
 
 	public void setCleApi(String cleApi) {
 		this.cleApi = cleApi;
+	}
+
+	public LocalDateTime getDerniereMesure() {
+		return derniereMesure;
+	}
+
+	public void setDerniereMesure(LocalDateTime derniereMesure) {
+		this.derniereMesure = derniereMesure;
 	}
 }

@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Poste de supervision du parc réseau et serveurs du CRI — École Polytechnique de Thiès." />
+    <meta name="theme-color" content="#23272a" />
+    <title>Supervision EPT · CRI</title>
+    <script>
+      // Pose la finition avant le premier rendu : le panneau ne doit jamais
+      // s'allumer en blanc dans une salle de supervision de nuit.
+      (function () {
+        var finition = localStorage.getItem("monitoring.finition");
+        if (finition !== "jour" && finition !== "nuit") {
+          finition = window.matchMedia("(prefers-color-scheme: dark)").matches ? "nuit" : "jour";
+        }
+        document.documentElement.dataset.theme = finition;
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

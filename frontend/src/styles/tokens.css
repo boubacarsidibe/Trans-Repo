@@ -1,0 +1,76 @@
+/*
+ * Panneau synoptique — jetons de conception
+ *
+ * The console is modelled on a control-room mimic panel: enamelled steel,
+ * engraved label plates, and small recessed indicator lamps. The panel is grey
+ * metal; colour exists only in the lamps. Every rule below serves that.
+ */
+
+:root {
+	color-scheme: light;
+
+	/* Surfaces — enamelled panel, screwed-on plate, recessed well */
+	--fond: #d7d9d1;
+	--plaque: #edeee8;
+	--plaque-survol: #e3e5dd;
+	--plaque-creuse: #c9ccc3;
+	--rail: #23272a;
+	--rail-encre: #d5d8d2;
+	--rail-encre-faible: #8d938f;
+
+	/* Encres */
+	--encre: #1a1d1a;
+	--encre-faible: #565c56;
+	--encre-inverse: #edeee8;
+
+	/* Traits gravés */
+	--trait: #b4b8af;
+	--trait-fort: #8c9289;
+
+	/* Lampes de signalisation — la seule couleur du panneau */
+	--vert: #24704a;
+	--ambre: #9d6a06;
+	--rouge: #a8231c;
+	--bleu: #23507e;
+
+	/* Reliefs : un panneau embouti, pas une carte flottante */
+	--bevel-haut: rgba(255, 255, 255, 0.65);
+	--bevel-bas: rgba(0, 0, 0, 0.14);
+	--halo-ombre: 0 0 0 transparent;
+
+	/* Typographie */
+	--f-plaque: "Archivo Variable", "Segoe UI", sans-serif;
+	--f-donnee: "IBM Plex Mono", ui-monospace, "Cascadia Mono", monospace;
+
+	--pas: 4px;
+	--largeur-max: 1240px;
+}
+
+[data-theme="nuit"] {
+	color-scheme: dark;
+
+	--fond: #171b19;
+	--plaque: #1f2422;
+	--plaque-survol: #262c29;
+	--plaque-creuse: #10130f;
+	--rail: #0d100e;
+	--rail-encre: #d5d8d2;
+	--rail-encre-faible: #7d847f;
+
+	--encre: #e4e7e1;
+	--encre-faible: #99a09a;
+	--encre-inverse: #10130f;
+
+	--trait: #333a36;
+	--trait-fort: #4a534e;
+
+	/* Les lampes montent d'un cran : c'est la nuit qu'une LED déborde. */
+	--vert: #46b37a;
+	--ambre: #e0a63b;
+	--rouge: #e2564c;
+	--bleu: #7fb0ea;
+
+	--bevel-haut: rgba(255, 255, 255, 0.06);
+	--bevel-bas: rgba(0, 0, 0, 0.45);
+	--halo-ombre: 0 0 9px var(--lampe-couleur, transparent);
+}

@@ -42,6 +42,10 @@ public class SecurityConfig {
 				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.authorizeHttpRequests(auth -> auth
 						.requestMatchers("/api/auth/**").permitAll()
+						.requestMatchers("/api/v1/health").permitAll()
+						// Le handshake porte lui-même le contrôle du jeton (§8.4) :
+						// laisser passer ici, refuser dans JwtHandshakeInterceptor.
+						.requestMatchers("/ws/**").permitAll()
 						.requestMatchers("/api/v1/metrics/**").hasRole("AGENT")
 						.anyRequest().authenticated()
 				)

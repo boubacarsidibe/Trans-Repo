@@ -1,10 +1,17 @@
 package com.bouba.backend_trans.rapport.service;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,10 +23,23 @@ import com.bouba.backend_trans.rapport.repository.RapportRepository;
 @Service
 public class RapportService {
 
-	private final RapportRepository rapportRepository;
+	private static final Logger log = LoggerFactory.getLogger(RapportService.class);
 
-	public RapportService(RapportRepository rapportRepository) {
+	private final RapportRepository rapportRepository;
+	private final RapportCalculateur calculateur;
+	private final RapportPdf rapportPdf;
+	private final Path repertoire;
+
+	public RapportService(
+			RapportRepository rapportRepository,
+			RapportCalculateur calculateur,
+			RapportPdf rapportPdf,
+			@Value("${app.rapports.repertoire}") String repertoire
+	) {
 		this.rapportRepository = rapportRepository;
+		this.calculateur = calculateur;
+		this.rapportPdf = rapportPdf;
+		this.repertoire = Path.of(repertoire);
 	}
 
 	@Transactional(readOnly = true)
@@ -34,10 +54,8 @@ public class RapportService {
 	}
 
 	/**
-	 * Génère les métadonnées du rapport pour la période demandée (ou une période
-	 * par défaut calculée à partir du type). La compilation effective du contenu
-	 * (taux de disponibilité, alertes, équipements les plus sollicités) et
-	 * l'export PDF restent à implémenter.
+	 * Compile les indicateurs de la période, écrit le PDF et enregistre le
+	 * rapport (F8).
 	 */
 	@Transactional
 	public Rapport generate(RapportGenerateRequest request) {
@@ -46,7 +64,48 @@ public class RapportService {
 		rapport.setPeriodeDebut(
 				request.getPeriodeDebut() != null ? request.getPeriodeDebut() : defautDebut(request.getTypeRapport()));
 		rapport.setPeriodeFin(request.getPeriodeFin() != null ? request.getPeriodeFin() : LocalDateTime.now());
+		rapport.setDateGeneration(LocalDateTime.now());
+
+		SyntheseRapport synthese = calculateur.calculer(rapport.getPeriodeDebut(), rapport.getPeriodeFin());
+		rapport = rapportRepository.save(rapport);
+		rapport.setCheminFichierPdf(ecrirePdf(rapport, synthese));
+
 		return rapportRepository.save(rapport);
+	}
+
+	/** Recalcule les indicateurs d'un rapport déjà enregistré, pour l'aperçu (§10.5). */
+	@Transactional(readOnly = true)
+	public SyntheseRapport synthese(Rapport rapport) {
+		return calculateur.calculer(rapport.getPeriodeDebut(), rapport.getPeriodeFin());
+	}
+
+	@Transactional(readOnly = true)
+	public byte[] fichier(UUID id) {
+		Rapport rapport = findById(id);
+		if (rapport.getCheminFichierPdf() == null) {
+			throw new IllegalStateException("Aucun fichier n'a été produit pour ce rapport.");
+		}
+
+		try {
+			return Files.readAllBytes(Path.of(rapport.getCheminFichierPdf()));
+		} catch (IOException ex) {
+			throw new UncheckedIOException("Le fichier du rapport est introuvable sur le serveur.", ex);
+		}
+	}
+
+	private String ecrirePdf(Rapport rapport, SyntheseRapport synthese) {
+		try {
+			Files.createDirectories(repertoire);
+			Path fichier = repertoire.resolve("rapport-%s-%s.pdf".formatted(
+					rapport.getTypeRapport().name().toLowerCase(), rapport.getId()));
+			Files.write(fichier, rapportPdf.produire(rapport, synthese));
+			return fichier.toString();
+		} catch (IOException ex) {
+			// Le rapport reste consultable même si l'écriture du PDF échoue :
+			// perdre l'export ne doit pas perdre les indicateurs.
+			log.error("Écriture du PDF du rapport {} impossible : {}", rapport.getId(), ex.getMessage());
+			return null;
+		}
 	}
 
 	private LocalDateTime defautDebut(TypeRapport type) {

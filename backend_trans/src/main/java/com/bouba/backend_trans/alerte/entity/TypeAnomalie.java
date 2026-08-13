@@ -5,5 +5,6 @@ public enum TypeAnomalie {
 	CPU,
 	RAM,
 	DISQUE,
-	RESEAU
+	RESEAU,
+	MATERIEL
 }

@@ -1,5 +1,6 @@
 package com.bouba.backend_trans.equipement.dto;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import com.bouba.backend_trans.equipement.entity.Equipement;
@@ -16,6 +17,7 @@ public class EquipementResponse {
 	private String localisation;
 	private EtatEquipement etat;
 	private String description;
+	private LocalDateTime derniereMesure;
 
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	private String cleApi;
@@ -33,6 +35,7 @@ public class EquipementResponse {
 		response.localisation = equipement.getLocalisation();
 		response.etat = equipement.getEtat();
 		response.description = equipement.getDescription();
+		response.derniereMesure = equipement.getDerniereMesure();
 		if (includeApiKey) {
 			response.cleApi = equipement.getCleApi();
 		}
@@ -93,6 +96,14 @@ public class EquipementResponse {
 
 	public void setDescription(String description) {
 		this.description = description;
+	}
+
+	public LocalDateTime getDerniereMesure() {
+		return derniereMesure;
+	}
+
+	public void setDerniereMesure(LocalDateTime derniereMesure) {
+		this.derniereMesure = derniereMesure;
 	}
 
 	public String getCleApi() {

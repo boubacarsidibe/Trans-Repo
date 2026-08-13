@@ -52,6 +52,10 @@ public class Alerte {
 	@Column(name = "date_resolution")
 	private LocalDateTime dateResolution;
 
+	/** Dernier rappel envoyé pour cette alerte (§11.4), pour l'espacer. */
+	@Column(name = "dernier_rappel")
+	private LocalDateTime dernierRappel;
+
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "utilisateur_prise_en_charge")
 	private AppUser utilisateurPriseEnCharge;
@@ -117,6 +121,14 @@ public class Alerte {
 
 	public void setDateResolution(LocalDateTime dateResolution) {
 		this.dateResolution = dateResolution;
+	}
+
+	public LocalDateTime getDernierRappel() {
+		return dernierRappel;
+	}
+
+	public void setDernierRappel(LocalDateTime dernierRappel) {
+		this.dernierRappel = dernierRappel;
 	}
 
 	public AppUser getUtilisateurPriseEnCharge() {

@@ -40,3 +40,4 @@ agent/**/.env
 !agent/**/.env.example
 agent/**/equipments.json
 !agent/**/equipments.example.json
+agent/**/agent_state.json
