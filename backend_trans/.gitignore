@@ -31,3 +31,13 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Python agents ###
+agent/**/.venv/
+agent/**/__pycache__/
+agent/**/*.pyc
+agent/**/.env
+!agent/**/.env.example
+agent/**/equipments.json
+!agent/**/equipments.example.json
+agent/**/agent_state.json

@@ -1,0 +1,785 @@
+.cadre {
+	display: flex;
+	flex-direction: column;
+	min-height: 100%;
+}
+
+/* ── Rail de façade : la plaque signalétique vissée en haut du panneau ─────── */
+
+.rail {
+	position: sticky;
+	top: 0;
+	z-index: 10;
+	display: flex;
+	align-items: stretch;
+	gap: 28px;
+	height: 52px;
+	padding: 0 20px;
+	background: var(--rail);
+	border-bottom: 1px solid #000;
+	color: var(--rail-encre);
+}
+
+.rail-marque {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	font-size: 12px;
+	font-weight: 700;
+	font-stretch: 112%;
+	letter-spacing: 0.2em;
+	text-transform: uppercase;
+	white-space: nowrap;
+}
+
+.rail-marque-faible {
+	color: var(--rail-encre-faible);
+	font-weight: 500;
+	letter-spacing: 0.16em;
+}
+
+.rail-nav {
+	display: flex;
+	align-items: stretch;
+	gap: 2px;
+	flex: 1;
+	overflow-x: auto;
+	scrollbar-width: none;
+}
+
+.rail-lien {
+	display: flex;
+	align-items: center;
+	padding: 0 12px;
+	border-bottom: 2px solid transparent;
+	color: var(--rail-encre-faible);
+	font-size: 10.5px;
+	font-weight: 600;
+	letter-spacing: 0.16em;
+	text-decoration: none;
+	text-transform: uppercase;
+	white-space: nowrap;
+}
+
+.rail-lien:hover {
+	color: var(--rail-encre);
+	background: rgba(255, 255, 255, 0.05);
+}
+
+.rail-lien-actif {
+	color: var(--rail-encre);
+	border-bottom-color: var(--rail-encre);
+}
+
+.rail-poste {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	white-space: nowrap;
+}
+
+.rail-identite {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	gap: 3px;
+	line-height: 1.1;
+	text-align: right;
+}
+
+.rail-identite-nom {
+	font-family: var(--f-donnee);
+	font-size: 11.5px;
+	color: var(--rail-encre);
+}
+
+.rail-identite-role {
+	font-size: 9px;
+	font-weight: 600;
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+	color: var(--rail-encre-faible);
+}
+
+.rail-bouton {
+	padding: 6px 10px;
+	background: transparent;
+	border: 1px solid #4a504c;
+	border-radius: 2px;
+	color: var(--rail-encre-faible);
+	font-size: 10px;
+	font-weight: 600;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	cursor: pointer;
+}
+
+.rail-bouton:hover {
+	color: var(--rail-encre);
+	border-color: var(--rail-encre-faible);
+}
+
+/* ── Bandeau synoptique : le champ de lampes, unique lieu de couleur ───────── */
+
+.bandeau {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0 28px;
+	padding: 14px 20px 10px;
+	background: var(--plaque-creuse);
+	border-bottom: 1px solid var(--trait-fort);
+	box-shadow: inset 0 2px 3px var(--bevel-bas);
+}
+
+.bandeau-groupe {
+	min-width: 0;
+	padding-bottom: 6px;
+}
+
+.bandeau-lampes {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 2px 0;
+	margin-top: 8px;
+}
+
+.bandeau-vide {
+	padding: 6px 0 10px;
+	color: var(--encre-faible);
+	font-size: 11px;
+	letter-spacing: 0.08em;
+}
+
+/* Témoin de liaison : l'opérateur doit savoir si le panneau est vivant ou
+   s'il regarde une photo vieille de quinze secondes. */
+.bandeau-liaison {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin-left: auto;
+	align-self: flex-start;
+	padding-top: 2px;
+	color: var(--encre-faible);
+	font-size: 10px;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	white-space: nowrap;
+}
+
+.liaison-temoin {
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: var(--encre-faible);
+	box-shadow: inset 0 1px 1px var(--bevel-bas);
+}
+
+.liaison-temoin-actif {
+	--lampe-couleur: var(--vert);
+	background: var(--vert);
+	box-shadow: var(--halo-ombre);
+}
+
+.liaison-heure {
+	font-family: var(--f-donnee);
+	font-size: 10px;
+	letter-spacing: 0;
+}
+
+/* Douille : la lampe dans son embase, et son étiquette gravée. */
+.douille {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 7px;
+	width: 68px;
+	padding: 4px 2px 2px;
+	border: 1px solid transparent;
+	border-radius: 2px;
+	color: inherit;
+	text-decoration: none;
+	animation: allumage 220ms ease-out both;
+	animation-delay: calc(var(--i, 0) * 22ms);
+}
+
+.douille:hover {
+	background: var(--plaque);
+	border-color: var(--trait);
+}
+
+.douille-nom {
+	max-width: 100%;
+	overflow: hidden;
+	color: var(--encre-faible);
+	font-family: var(--f-donnee);
+	font-size: 9.5px;
+	letter-spacing: -0.02em;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.douille:hover .douille-nom {
+	color: var(--encre);
+}
+
+@keyframes allumage {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+/* ── La lampe ─────────────────────────────────────────────────────────────── */
+
+.lampe {
+	flex: none;
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	background: var(--lampe-couleur, transparent);
+	box-shadow:
+		inset 0 1px 1.5px rgba(255, 255, 255, 0.4),
+		inset 0 -1px 1.5px rgba(0, 0, 0, 0.3),
+		0 0 0 1px var(--trait-fort),
+		var(--halo-ombre, 0 0 0 transparent);
+}
+
+.lampe-verte {
+	--lampe-couleur: var(--vert);
+}
+
+/*
+ * Les quatre états se distinguent par la forme autant que par la teinte —
+ * pleine, percée, clignotante, éteinte — pour rester lisibles sans la couleur.
+ */
+.lampe-ambre {
+	--lampe-couleur: var(--ambre);
+}
+
+.lampe-ambre::after {
+	content: "";
+	display: block;
+	width: 4px;
+	height: 4px;
+	margin: 3px;
+	border-radius: 50%;
+	background: rgba(0, 0, 0, 0.5);
+}
+
+.lampe-rouge {
+	--lampe-couleur: var(--rouge);
+}
+
+/* Éteinte : c'est ainsi qu'un panneau dit « plus aucun signal ». */
+.lampe-eteinte {
+	background: var(--plaque-creuse);
+	box-shadow:
+		inset 0 1px 2px rgba(0, 0, 0, 0.35),
+		0 0 0 1px var(--trait-fort);
+}
+
+/*
+ * Une alerte déclenchée clignote jusqu'à sa prise en compte — comme sur un
+ * tableau d'alarme. L'animation s'arrête au moment exact où quelqu'un appuie
+ * sur « Prendre en compte » : c'est le geste métier qui l'éteint.
+ */
+.lampe-clignote {
+	animation: clignote 1.4s steps(1, end) infinite;
+}
+
+@keyframes clignote {
+	0%,
+	49% {
+		opacity: 1;
+	}
+	50%,
+	100% {
+		opacity: 0.22;
+	}
+}
+
+.lampe-large {
+	width: 13px;
+	height: 13px;
+}
+
+/* ── Contenu : plaques vissées sur le panneau ─────────────────────────────── */
+
+.contenu {
+	/* `width` est indispensable : les marges auto d'un enfant flex annulent
+	   l'étirement, et le contenu se rétracterait à sa largeur intrinsèque. */
+	width: 100%;
+	max-width: var(--largeur-max);
+	margin: 0 auto;
+	padding: 22px 20px 64px;
+}
+
+.section {
+	margin-top: 30px;
+}
+
+.section-premiere {
+	margin-top: 0;
+}
+
+.section-entete {
+	display: flex;
+	align-items: center;
+	gap: 18px;
+	margin-bottom: 12px;
+}
+
+.section-entete .plaque-titre {
+	flex: 1;
+}
+
+.encart {
+	background: var(--plaque);
+	border: 1px solid var(--trait-fort);
+	border-radius: 2px;
+	box-shadow: inset 0 1px 0 var(--bevel-haut);
+}
+
+.encart-creux {
+	background: var(--plaque-creuse);
+	border: 1px solid var(--trait-fort);
+	border-radius: 2px;
+	box-shadow: inset 0 2px 3px var(--bevel-bas);
+}
+
+/* ── Relevés : le plus gros caractère de la page est une valeur machine ───── */
+
+.releves {
+	display: flex;
+	flex-wrap: wrap;
+}
+
+.releve {
+	flex: 1;
+	min-width: 132px;
+	padding: 16px 20px 14px;
+	border-right: 1px solid var(--trait);
+}
+
+.releve:last-child {
+	border-right: 0;
+}
+
+.releve-valeur {
+	display: block;
+	font-family: var(--f-donnee);
+	font-size: 40px;
+	font-weight: 300;
+	line-height: 1.05;
+	letter-spacing: -0.03em;
+}
+
+.releve-unite {
+	font-size: 17px;
+	color: var(--encre-faible);
+}
+
+.releve-libelle {
+	display: block;
+	margin-top: 8px;
+	color: var(--encre-faible);
+	font-size: 9.5px;
+	font-weight: 600;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+}
+
+.releve-alarme .releve-valeur {
+	color: var(--rouge);
+}
+
+/* ── Rangées : une ligne = une unité de baie ──────────────────────────────── */
+
+.rangees {
+	display: flex;
+	flex-direction: column;
+}
+
+/*
+ * Colonnes fixes, sauf la dernière colonne de texte : le vide se pousse en
+ * bout de rangée au lieu de s'ouvrir entre deux valeurs qui se répondent.
+ */
+.rangee {
+	display: grid;
+	grid-template-columns: 16px 190px 130px 128px minmax(0, 1fr) 14px;
+	align-items: center;
+	gap: 14px;
+	min-height: 44px;
+	padding: 0 16px;
+	border-bottom: 1px solid var(--trait);
+	color: inherit;
+	text-decoration: none;
+}
+
+/* Sans cela, une cellule en `nowrap` déborde sur sa voisine au lieu de se tronquer. */
+.rangee > * {
+	min-width: 0;
+}
+
+.rangee:last-child {
+	border-bottom: 0;
+}
+
+/* Rangée actionnable : remet à plat le chrome natif du bouton. */
+.rangee-cliquable {
+	width: 100%;
+	background: none;
+	border-width: 0 0 1px;
+	border-style: solid;
+	border-color: var(--trait);
+	font: inherit;
+	text-align: left;
+	cursor: pointer;
+}
+
+.rangee:hover {
+	background: var(--plaque-survol);
+}
+
+.rangee-active {
+	background: var(--plaque-survol);
+	box-shadow: inset 3px 0 0 var(--bleu);
+}
+
+.rangee-entete {
+	min-height: 30px;
+	background: var(--plaque-creuse);
+	border-bottom: 1px solid var(--trait-fort);
+	color: var(--encre-faible);
+	font-size: 9.5px;
+	font-weight: 600;
+	font-stretch: 88%;
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+}
+
+.rangee-nom {
+	overflow: hidden;
+	font-family: var(--f-donnee);
+	font-size: 13px;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.rangee-ip,
+.rangee-secondaire {
+	overflow: hidden;
+	color: var(--encre-faible);
+	font-family: var(--f-donnee);
+	font-size: 11.5px;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.rangee-genre {
+	font-size: 9.5px;
+	font-weight: 600;
+	font-stretch: 88%;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--encre-faible);
+}
+
+.rangee-fleche {
+	color: var(--encre-faible);
+	font-family: var(--f-donnee);
+	font-size: 13px;
+	text-align: right;
+}
+
+.rangee:hover .rangee-fleche {
+	color: var(--encre);
+}
+
+/* ── États : jamais une pastille colorée seule, toujours lampe + mot ─────── */
+
+.etat {
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+	overflow: hidden;
+	font-size: 10px;
+	font-weight: 600;
+	letter-spacing: 0.14em;
+	text-overflow: ellipsis;
+	text-transform: uppercase;
+	white-space: nowrap;
+}
+
+.etat-critique {
+	color: var(--rouge);
+}
+
+.etat-attention {
+	color: var(--ambre);
+}
+
+.etat-calme {
+	color: var(--encre-faible);
+}
+
+/* ── Commandes ────────────────────────────────────────────────────────────── */
+
+.bouton {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	padding: 8px 14px;
+	background: var(--plaque);
+	border: 1px solid var(--trait-fort);
+	border-radius: 2px;
+	box-shadow:
+		inset 0 1px 0 var(--bevel-haut),
+		inset 0 -1px 0 var(--bevel-bas);
+	color: var(--encre);
+	font-size: 10.5px;
+	font-weight: 600;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	text-decoration: none;
+	cursor: pointer;
+}
+
+.bouton:hover {
+	background: var(--plaque-survol);
+}
+
+/* Un bouton de panneau s'enfonce. */
+.bouton:active {
+	transform: translateY(1px);
+	box-shadow: inset 0 1px 2px var(--bevel-bas);
+}
+
+.bouton:disabled {
+	color: var(--encre-faible);
+	cursor: not-allowed;
+	opacity: 0.55;
+}
+
+.bouton-principal {
+	background: var(--encre);
+	border-color: var(--encre);
+	box-shadow: none;
+	color: var(--encre-inverse);
+}
+
+.bouton-principal:hover {
+	background: var(--encre-faible);
+	border-color: var(--encre-faible);
+}
+
+.bouton-menu {
+	padding: 6px 11px;
+	font-size: 9.5px;
+}
+
+.bouton-large {
+	width: 100%;
+}
+
+.bouton-actif {
+	background: var(--encre);
+	border-color: var(--encre);
+	color: var(--encre-inverse);
+}
+
+.commandes {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+/* ── Saisie : les champs sont creusés dans la tôle ────────────────────────── */
+
+.champ {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.champ-libelle {
+	color: var(--encre-faible);
+	font-size: 9.5px;
+	font-weight: 600;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+}
+
+.champ-saisie {
+	width: 100%;
+	padding: 9px 11px;
+	background: var(--plaque-creuse);
+	border: 1px solid var(--trait-fort);
+	border-radius: 2px;
+	box-shadow: inset 0 2px 3px var(--bevel-bas);
+	font-family: var(--f-donnee);
+	font-size: 13px;
+}
+
+.champ-saisie:focus {
+	border-color: var(--bleu);
+}
+
+.champ-aide {
+	color: var(--encre-faible);
+	font-size: 11px;
+}
+
+.grille-champs {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+	gap: 16px;
+}
+
+/* ── Messages ─────────────────────────────────────────────────────────────── */
+
+.message {
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+	padding: 12px 14px;
+	background: var(--plaque);
+	border: 1px solid var(--trait-fort);
+	border-left: 3px solid var(--encre-faible);
+	border-radius: 2px;
+	font-size: 13px;
+}
+
+.message-echec {
+	border-left-color: var(--rouge);
+}
+
+.message-succes {
+	border-left-color: var(--vert);
+}
+
+.etat-vide {
+	padding: 40px 20px;
+	text-align: center;
+}
+
+.etat-vide-titre {
+	font-size: 13px;
+	font-weight: 600;
+	letter-spacing: 0.06em;
+}
+
+.etat-vide-texte {
+	max-width: 46ch;
+	margin: 8px auto 16px;
+	color: var(--encre-faible);
+	font-size: 13px;
+}
+
+.chargement {
+	padding: 40px 20px;
+	color: var(--encre-faible);
+	font-family: var(--f-donnee);
+	font-size: 12px;
+	letter-spacing: 0.1em;
+	text-align: center;
+	text-transform: uppercase;
+}
+
+/* ── Accessibilité : le mouvement n'est jamais le seul porteur d'état ─────── */
+
+@media (prefers-reduced-motion: reduce) {
+	.douille {
+		animation: none;
+	}
+
+	.lampe-clignote {
+		animation: none;
+		box-shadow:
+			inset 0 1px 1.5px rgba(255, 255, 255, 0.4),
+			0 0 0 1px var(--rouge),
+			0 0 0 3px var(--plaque-creuse),
+			0 0 0 4px var(--rouge);
+	}
+}
+
+/* ── Écrans étroits : la baie se déplie ───────────────────────────────────── */
+
+@media (max-width: 760px) {
+	.rail {
+		height: auto;
+		flex-wrap: wrap;
+		gap: 0 18px;
+		padding: 10px 14px;
+	}
+
+	.rail-nav {
+		order: 3;
+		flex-wrap: wrap;
+		width: 100%;
+		margin-top: 8px;
+		overflow-x: visible;
+	}
+
+	.section-entete {
+		flex-wrap: wrap;
+		gap: 10px 14px;
+	}
+
+	.section-entete .plaque-titre {
+		flex: 1 0 100%;
+	}
+
+	.rail-lien {
+		padding: 8px 10px 6px 0;
+	}
+
+	.rail-poste {
+		margin-left: auto;
+	}
+
+	.contenu {
+		padding: 18px 14px 48px;
+	}
+
+	.rangee {
+		grid-template-columns: 16px minmax(0, 1fr) auto;
+		gap: 4px 12px;
+		padding: 12px 14px;
+	}
+
+	.rangee-ip {
+		grid-column: 2 / 4;
+	}
+
+	.rangee-genre,
+	.rangee-secondaire {
+		grid-column: 2 / 4;
+	}
+
+	.rangee-fleche {
+		display: none;
+	}
+
+	.rangee-entete {
+		display: none;
+	}
+
+	.releve {
+		min-width: 50%;
+		padding: 14px 16px 12px;
+		border-bottom: 1px solid var(--trait);
+	}
+
+	.releve-valeur {
+		font-size: 30px;
+	}
+
+	/* Le rôle repasse sur le nom : le rail n'a plus la place pour deux lignes. */
+	.rail-identite-role {
+		display: none;
+	}
+}
