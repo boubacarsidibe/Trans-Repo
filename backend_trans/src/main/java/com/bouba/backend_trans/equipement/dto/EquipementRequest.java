@@ -1,5 +1,7 @@
 package com.bouba.backend_trans.equipement.dto;
 
+import java.util.UUID;
+
 import com.bouba.backend_trans.equipement.entity.EtatEquipement;
 import com.bouba.backend_trans.equipement.entity.TypeEquipement;
 
@@ -24,6 +26,17 @@ public class EquipementRequest {
 	private String description;
 
 	private String cleApi;
+
+	/** Équipement dont celui-ci dépend pour être joignable. */
+	private UUID dependDeId;
+
+	public UUID getDependDeId() {
+		return dependDeId;
+	}
+
+	public void setDependDeId(UUID dependDeId) {
+		this.dependDeId = dependDeId;
+	}
 
 	public String getNom() {
 		return nom;

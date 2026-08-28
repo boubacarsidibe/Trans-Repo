@@ -1,0 +1,867 @@
+/*
+ * NetVision Dashboard — pixel-exact static mockup from Figma.
+ * Scoped under `.netvision` so it never leaks into the app's own
+ * "verre de nuit" theme in tokens.css/base.css.
+ */
+
+.netvision {
+	--nv-bg: #0b0b0b;
+	--nv-surface: rgba(31, 31, 31, 0.7);
+	--nv-surface-strong: rgba(42, 42, 42, 0.5);
+	--nv-surface-soft: rgba(28, 27, 27, 0.3);
+	--nv-border: rgba(51, 51, 51, 0.5);
+	--nv-border-faint: rgba(66, 71, 82, 0.2);
+	--nv-border-faint-2: rgba(66, 71, 82, 0.3);
+	--nv-rail: rgba(32, 31, 31, 0.7);
+	--nv-rail-border: rgba(66, 71, 82, 0.3);
+	--nv-text: #e5e2e1;
+	--nv-text-dim: #c2c6d4;
+	--nv-blue: #a8c8ff;
+	--nv-blue-soft: #a3c9ff;
+	--nv-red: #ffb4ab;
+	--nv-orange: #ffb691;
+	--nv-green: #35d488;
+
+	position: relative;
+	min-height: 100vh;
+	width: 100%;
+	background: var(--nv-bg);
+	color: var(--nv-text);
+	font-family: "Inter", "Segoe UI", sans-serif;
+	display: flex;
+	overflow-x: hidden;
+}
+
+.netvision * {
+	box-sizing: border-box;
+}
+
+.netvision-noise {
+	position: absolute;
+	inset: 0;
+	mix-blend-mode: overlay;
+	opacity: 0.03;
+	background-image: url("/netvision/noise.png");
+	background-size: 24px 22px;
+	background-position: top left;
+	pointer-events: none;
+}
+
+/* Sidebar */
+
+.netvision-sidebar {
+	position: sticky;
+	top: 0;
+	flex-shrink: 0;
+	width: 240px;
+	height: 100vh;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	backdrop-filter: blur(12px);
+	background: var(--nv-rail);
+	border-right: 1px solid var(--nv-rail-border);
+	padding: 16px 0;
+}
+
+.netvision-brand {
+	padding: 0 24px 32px;
+}
+
+.netvision-brand h1 {
+	margin: 0;
+	font-size: 20px;
+	font-weight: 700;
+	line-height: 28px;
+	color: var(--nv-blue);
+}
+
+.netvision-brand p {
+	margin: 0;
+	font-size: 12px;
+	line-height: 16px;
+	color: var(--nv-text-dim);
+	opacity: 0.7;
+}
+
+.netvision-nav {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	padding: 0 12px;
+}
+
+.netvision-nav-link {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 8px 12px;
+	border-left: 4px solid transparent;
+	border-radius: 0;
+	font-size: 12px;
+	line-height: 16px;
+	color: var(--nv-text-dim);
+	text-decoration: none;
+	background: transparent;
+}
+
+.netvision-nav-link img {
+	width: 18px;
+	height: 18px;
+	opacity: 0.85;
+}
+
+.netvision-nav-link.actif {
+	background: rgba(255, 255, 255, 0.05);
+	border-left-color: var(--nv-blue);
+	color: var(--nv-blue);
+	padding-left: 16px;
+}
+
+.netvision-nav-footer {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	padding: 17px 12px 0;
+	border-top: 1px solid var(--nv-border-faint);
+}
+
+/* Main content */
+
+.netvision-main {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.netvision-topbar {
+	position: sticky;
+	top: 0;
+	z-index: 2;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	height: 64px;
+	padding: 0 24px;
+	backdrop-filter: blur(20px);
+	background: rgba(19, 19, 19, 0.7);
+	border-bottom: 1px solid var(--nv-border-faint);
+}
+
+.netvision-search {
+	position: relative;
+	flex: 1;
+	max-width: 576px;
+}
+
+.netvision-search input {
+	width: 100%;
+	background: rgba(14, 14, 14, 0.5);
+	border: none;
+	border-radius: 4px;
+	padding: 10px 16px 9px 40px;
+	font-size: 14px;
+	color: var(--nv-text);
+	font-family: inherit;
+}
+
+.netvision-search input::placeholder {
+	color: #6b7280;
+}
+
+.netvision-search img {
+	position: absolute;
+	left: 12px;
+	top: 50%;
+	transform: translateY(-50%);
+	width: 10.5px;
+	height: 10.5px;
+}
+
+.netvision-tabs {
+	display: flex;
+	gap: 24px;
+	padding-left: 16px;
+	margin-left: 16px;
+}
+
+.netvision-tab {
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: 0.5px;
+	color: var(--nv-text-dim);
+	text-decoration: none;
+	padding-bottom: 6px;
+	white-space: nowrap;
+}
+
+.netvision-tab.actif {
+	color: var(--nv-blue);
+	border-bottom: 2px solid var(--nv-blue);
+}
+
+.netvision-topbar-actions {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+}
+
+.netvision-icon-button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: none;
+	border: none;
+	padding: 0;
+	cursor: pointer;
+}
+
+.netvision-icon-button img {
+	width: 16px;
+	height: 20px;
+	opacity: 0.85;
+}
+
+.netvision-avatar {
+	width: 32px;
+	height: 32px;
+	border-radius: 12px;
+	border: 1px solid var(--nv-border-faint-2);
+	overflow: hidden;
+}
+
+.netvision-avatar img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+/* Dashboard canvas */
+
+.netvision-canvas {
+	display: flex;
+	flex-direction: column;
+	gap: 24px;
+	padding: 24px;
+}
+
+.netvision-grid {
+	display: grid;
+	grid-template-columns: repeat(12, minmax(0, 1fr));
+	gap: 16px;
+}
+
+/* Hero row */
+
+.netvision-quick-stats {
+	grid-column: span 8;
+	display: flex;
+	gap: 16px;
+}
+
+.netvision-stat-card {
+	flex: 1;
+	backdrop-filter: blur(10px);
+	background: var(--nv-surface);
+	border: 1px solid transparent;
+	border-left-width: 4px;
+	border-radius: 8px;
+	padding: 71px 21px 71px 24px;
+}
+
+.netvision-stat-card .netvision-stat-label {
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: 0.5px;
+	color: var(--nv-text-dim);
+}
+
+.netvision-stat-card .netvision-stat-value {
+	display: flex;
+	align-items: baseline;
+	gap: 8px;
+	padding-top: 4px;
+	white-space: nowrap;
+}
+
+.netvision-stat-card .netvision-stat-number {
+	font-size: 20px;
+	font-weight: 700;
+	line-height: 28px;
+	color: var(--nv-text);
+}
+
+.netvision-stat-card .netvision-stat-unit {
+	font-size: 12px;
+	line-height: 16px;
+}
+
+.netvision-stat-card--online {
+	border-color: rgba(163, 201, 255, 0.5);
+}
+
+.netvision-stat-card--online .netvision-stat-label {
+	color: var(--nv-text-dim);
+}
+
+.netvision-stat-card--online .netvision-stat-unit {
+	color: var(--nv-blue-soft);
+}
+
+.netvision-stat-card--offline {
+	border-color: rgba(140, 145, 157, 0.3);
+}
+
+.netvision-stat-card--offline .netvision-stat-unit {
+	color: var(--nv-text-dim);
+}
+
+.netvision-stat-card--critical {
+	border-color: #ffb4ab;
+	opacity: 0.82;
+	box-shadow: 0 0 15px 0 rgba(147, 0, 10, 0.4);
+}
+
+.netvision-stat-card--critical .netvision-stat-label,
+.netvision-stat-card--critical .netvision-stat-number {
+	color: var(--nv-red);
+}
+
+.netvision-stat-card--critical .netvision-stat-unit {
+	color: rgba(255, 180, 171, 0.7);
+}
+
+.netvision-stat-card--warning {
+	border-color: #ffb691;
+}
+
+.netvision-stat-card--warning .netvision-stat-label,
+.netvision-stat-card--warning .netvision-stat-number {
+	color: var(--nv-orange);
+}
+
+.netvision-stat-card--warning .netvision-stat-unit {
+	color: rgba(255, 182, 145, 0.7);
+}
+
+.netvision-health-card {
+	grid-column: span 4;
+	position: relative;
+	overflow: clip;
+	background: var(--nv-surface);
+	backdrop-filter: blur(10px);
+	border: 1px solid var(--nv-border);
+	border-radius: 8px;
+	padding: 25px;
+}
+
+.netvision-health-card .netvision-health-glow {
+	position: absolute;
+	top: 0;
+	right: 0;
+	width: 128px;
+	height: 128px;
+	background: rgba(168, 200, 255, 0.1);
+	filter: blur(30px);
+}
+
+.netvision-health-label {
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: 1px;
+	text-transform: uppercase;
+	color: var(--nv-text-dim);
+}
+
+.netvision-health-value {
+	font-size: 32px;
+	font-weight: 700;
+	letter-spacing: -0.64px;
+	line-height: 40px;
+	color: var(--nv-blue);
+	padding-top: 14px;
+}
+
+.netvision-sparkline-row {
+	display: flex;
+	align-items: flex-end;
+	justify-content: space-between;
+	padding-top: 16px;
+	gap: 16px;
+}
+
+.netvision-sparkline {
+	flex: 1;
+	display: flex;
+	align-items: flex-end;
+	gap: 4px;
+	height: 48px;
+}
+
+.netvision-sparkline span {
+	width: 8px;
+	border-radius: 2px 2px 0 0;
+	background: rgba(168, 200, 255, 0.3);
+}
+
+.netvision-sparkline span.forte {
+	background: var(--nv-blue);
+}
+
+.netvision-sparkline-delta {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	white-space: nowrap;
+}
+
+.netvision-sparkline-delta img {
+	width: 13.333px;
+	height: 8px;
+}
+
+.netvision-sparkline-delta span {
+	font-family: "JetBrains Mono", ui-monospace, monospace;
+	font-size: 12px;
+	color: var(--nv-blue-soft);
+}
+
+/* Central row */
+
+.netvision-panel {
+	backdrop-filter: blur(10px);
+	background: var(--nv-surface);
+	border: 1px solid var(--nv-border);
+	border-radius: 8px;
+	overflow: clip;
+	display: flex;
+	flex-direction: column;
+}
+
+.netvision-panel-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 16px 24px 17px;
+	border-bottom: 1px solid var(--nv-border-faint);
+}
+
+.netvision-panel-header--tinted {
+	background: var(--nv-surface-strong);
+}
+
+.netvision-panel-title {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.netvision-panel-title img {
+	width: 18px;
+	height: 18px;
+}
+
+.netvision-panel-title h3 {
+	margin: 0;
+	font-size: 20px;
+	font-weight: 600;
+	line-height: 28px;
+	color: var(--nv-text);
+	white-space: nowrap;
+}
+
+.netvision-performance {
+	grid-column: span 9;
+}
+
+.netvision-performance-legend {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+}
+
+.netvision-legend-item {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.netvision-legend-dot {
+	width: 8px;
+	height: 8px;
+	border-radius: 4px;
+}
+
+.netvision-legend-item span {
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: 0.5px;
+	white-space: nowrap;
+}
+
+.netvision-range-select {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	background: #131313;
+	border: 1px solid var(--nv-border-faint-2);
+	border-radius: 2px;
+	padding: 5px 9px;
+	font-size: 12px;
+	color: var(--nv-text);
+}
+
+.netvision-range-select img {
+	width: 18px;
+	height: 18px;
+}
+
+.netvision-chart-area {
+	height: 400px;
+	padding: 24px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.netvision-chart-area img {
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+}
+
+.netvision-events {
+	grid-column: span 3;
+}
+
+.netvision-events-list {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	padding: 16px 16px 32px;
+	overflow: auto;
+}
+
+.netvision-event {
+	display: flex;
+	gap: 16px;
+	padding: 13px;
+	border-radius: 4px;
+}
+
+.netvision-event--critical {
+	background: rgba(147, 0, 10, 0.1);
+	border: 1px solid rgba(255, 180, 171, 0.2);
+}
+
+.netvision-event--muted {
+	opacity: 0.7;
+}
+
+.netvision-event-rail {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+.netvision-event-rail img {
+	width: 15px;
+	height: 15px;
+}
+
+.netvision-event-rail-line {
+	flex: 1;
+	width: 2px;
+	margin-top: 4px;
+	background: rgba(66, 71, 82, 0.2);
+}
+
+.netvision-event--critical .netvision-event-rail-line {
+	background: rgba(255, 180, 171, 0.2);
+}
+
+.netvision-event-body {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.netvision-event-time-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+}
+
+.netvision-event-time {
+	font-family: "JetBrains Mono", ui-monospace, monospace;
+	font-size: 12px;
+	color: var(--nv-text-dim);
+}
+
+.netvision-event--critical .netvision-event-time {
+	color: var(--nv-red);
+}
+
+.netvision-event-badge {
+	background: rgba(255, 180, 171, 0.1);
+	color: var(--nv-red);
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: 0.5px;
+	padding: 0 4px;
+	border-radius: 2px;
+}
+
+.netvision-event-title {
+	font-size: 12px;
+	color: var(--nv-text);
+}
+
+.netvision-event-meta {
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: 0.5px;
+	color: var(--nv-text-dim);
+}
+
+.netvision-events-footer {
+	padding: 16px;
+}
+
+.netvision-button-outline {
+	width: 100%;
+	background: transparent;
+	border: 1px solid var(--nv-border-faint-2);
+	border-radius: 4px;
+	padding: 9px 0;
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: 0.5px;
+	color: var(--nv-text);
+	text-align: center;
+	cursor: pointer;
+}
+
+/* Bottom row */
+
+.netvision-topology {
+	grid-column: span 5;
+	padding: 25px;
+	display: flex;
+	flex-direction: column;
+	gap: 24px;
+}
+
+.netvision-topology-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.netvision-topology-header h3 {
+	margin: 0;
+	font-size: 20px;
+	font-weight: 600;
+	line-height: 28px;
+	color: var(--nv-text);
+}
+
+.netvision-topology-header img {
+	width: 18px;
+	height: 18px;
+}
+
+.netvision-topology-map {
+	position: relative;
+	height: 256px;
+	border-radius: 4px;
+	border: 1px solid var(--nv-border-faint);
+	background: #0e0e0e;
+	overflow: hidden;
+}
+
+.netvision-topology-glow {
+	position: absolute;
+	inset: 0;
+	opacity: 0.2;
+	background: radial-gradient(circle at 50% 50%, rgba(51, 51, 51, 1) 0%, rgba(51, 51, 51, 0) 45%);
+}
+
+.netvision-topology-nodes {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.netvision-topology-diagram {
+	position: relative;
+	width: 192px;
+	height: 192px;
+}
+
+.netvision-topology-diagram > img {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+}
+
+.netvision-topology-node {
+	position: absolute;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 40px;
+	height: 40px;
+	backdrop-filter: blur(10px);
+	background: var(--nv-surface);
+	border: 1px solid var(--nv-border-faint-2);
+	border-radius: 2px;
+}
+
+.netvision-topology-node img {
+	max-width: 22px;
+	max-height: 19px;
+}
+
+.netvision-topology-node--bl {
+	left: 0;
+	bottom: 0;
+}
+
+.netvision-topology-node--br {
+	right: 0;
+	bottom: 0;
+}
+
+.netvision-topology-node--top {
+	top: 0;
+	left: 50%;
+	transform: translateX(-50%);
+	border-color: rgba(168, 200, 255, 0.5);
+}
+
+.netvision-topology-badge {
+	position: absolute;
+	left: 16px;
+	bottom: 16px;
+	background: rgba(168, 200, 255, 0.2);
+	border: 1px solid rgba(168, 200, 255, 0.3);
+	border-radius: 12px;
+	padding: 3px 9px;
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: 0.5px;
+	color: var(--nv-blue);
+}
+
+.netvision-talkers {
+	grid-column: span 7;
+	padding-bottom: 49px;
+}
+
+.netvision-table {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.netvision-table thead {
+	background: var(--nv-surface-strong);
+}
+
+.netvision-table th {
+	text-align: left;
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: 0.5px;
+	color: var(--nv-text-dim);
+	padding: 12px 24px;
+	white-space: nowrap;
+}
+
+.netvision-table td {
+	padding: 14px 24px;
+	vertical-align: middle;
+	font-size: 14px;
+	color: var(--nv-text);
+	border-top: 1px solid rgba(66, 71, 82, 0.1);
+	white-space: nowrap;
+}
+
+.netvision-table tbody tr:nth-child(odd) {
+	background: var(--nv-surface-soft);
+}
+
+.netvision-node-name {
+	display: flex;
+	align-items: baseline;
+	gap: 8px;
+}
+
+.netvision-node-ip {
+	font-size: 10px;
+	color: var(--nv-text-dim);
+	opacity: 0.5;
+}
+
+.netvision-throughput {
+	font-family: "JetBrains Mono", ui-monospace, monospace;
+	font-size: 12px;
+	display: flex;
+	flex-direction: column;
+	line-height: 16px;
+}
+
+.netvision-status {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: 0.5px;
+}
+
+.netvision-status-dot {
+	width: 8px;
+	height: 8px;
+	border-radius: 4px;
+}
+
+.netvision-status-dot--active {
+	background: var(--nv-blue-soft);
+	box-shadow: 0 0 8px 0 var(--nv-blue-soft);
+}
+
+.netvision-status-dot--warning {
+	background: var(--nv-orange);
+}
+
+@media (max-width: 1080px) {
+	.netvision-sidebar {
+		display: none;
+	}
+
+	.netvision-quick-stats,
+	.netvision-health-card,
+	.netvision-performance,
+	.netvision-events,
+	.netvision-topology,
+	.netvision-talkers {
+		grid-column: span 12;
+	}
+}
+
+@media (max-width: 640px) {
+	.netvision-quick-stats {
+		flex-wrap: wrap;
+	}
+
+	.netvision-stat-card {
+		flex: 1 1 45%;
+	}
+}

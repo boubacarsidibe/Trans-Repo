@@ -72,9 +72,35 @@ public class EquipementService {
 		equipement.setLocalisation(request.getLocalisation());
 		equipement.setDescription(request.getDescription());
 		equipement.setEtat(request.getEtat() == null ? EtatEquipement.ACTIF : request.getEtat());
+		equipement.setDependDe(resoudreDependance(equipement, request.getDependDeId()));
 		if (request.getCleApi() != null && !request.getCleApi().isBlank()) {
 			equipement.setCleApi(request.getCleApi());
 		}
+	}
+
+	/**
+	 * Résout l'équipement parent en refusant les chaînes circulaires : une boucle
+	 * de dépendance rendrait la suppression des alertes en cascade indécidable.
+	 */
+	private Equipement resoudreDependance(Equipement equipement, UUID dependDeId) {
+		if (dependDeId == null) {
+			return null;
+		}
+		if (dependDeId.equals(equipement.getId())) {
+			throw new IllegalArgumentException("Un équipement ne peut pas dépendre de lui-même.");
+		}
+
+		Equipement parent = findById(dependDeId);
+
+		for (Equipement ancetre = parent; ancetre != null; ancetre = ancetre.getDependDe()) {
+			if (ancetre.getId().equals(equipement.getId())) {
+				throw new IllegalArgumentException(
+						"Cette dépendance formerait une boucle : " + parent.getNom()
+								+ " dépend déjà, directement ou non, de " + equipement.getNom() + ".");
+			}
+		}
+
+		return parent;
 	}
 
 	private String generateApiKey() {

@@ -2,6 +2,7 @@ package com.bouba.backend_trans.config;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -25,13 +26,16 @@ public class SecurityConfig {
 
 	private final JwtAuthenticationFilter jwtAuthenticationFilter;
 	private final ApiKeyAuthenticationFilter apiKeyAuthenticationFilter;
+	private final List<String> corsAllowedOrigins;
 
 	public SecurityConfig(
 			JwtAuthenticationFilter jwtAuthenticationFilter,
-			ApiKeyAuthenticationFilter apiKeyAuthenticationFilter
+			ApiKeyAuthenticationFilter apiKeyAuthenticationFilter,
+			@Value("${app.cors.allowed-origins}") List<String> corsAllowedOrigins
 	) {
 		this.jwtAuthenticationFilter = jwtAuthenticationFilter;
 		this.apiKeyAuthenticationFilter = apiKeyAuthenticationFilter;
+		this.corsAllowedOrigins = corsAllowedOrigins;
 	}
 
 	@Bean
@@ -42,6 +46,10 @@ public class SecurityConfig {
 				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.authorizeHttpRequests(auth -> auth
 						.requestMatchers("/api/auth/**").permitAll()
+						.requestMatchers("/api/v1/health").permitAll()
+						// Le handshake porte lui-même le contrôle du jeton (§8.4) :
+						// laisser passer ici, refuser dans JwtHandshakeInterceptor.
+						.requestMatchers("/ws/**").permitAll()
 						.requestMatchers("/api/v1/metrics/**").hasRole("AGENT")
 						.anyRequest().authenticated()
 				)
@@ -54,7 +62,7 @@ public class SecurityConfig {
 	@Bean
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration configuration = new CorsConfiguration();
-		configuration.setAllowedOrigins(List.of("http://localhost:5173"));
+		configuration.setAllowedOrigins(corsAllowedOrigins);
 		configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 		configuration.setAllowedHeaders(List.of("*"));
 		configuration.setAllowCredentials(true);

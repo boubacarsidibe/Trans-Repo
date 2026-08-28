@@ -1,0 +1,364 @@
+/*
+ * Écrans. Chargé après panneau.css : les grilles de rangées définies ici
+ * remplacent celle par défaut à spécificité égale, sans surcharge imbriquée.
+ */
+
+/* ── Synoptique ───────────────────────────────────────────────────────────── */
+
+.grille-synoptique {
+	display: grid;
+	grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+	gap: 30px;
+	align-items: start;
+	margin-top: 30px;
+}
+
+/* La colonne d'actions garde sa largeur même vide : sans quoi chaque rangée
+   décalerait ses voisines selon les boutons qu'elle porte. */
+.rangee-alerte,
+.rangee-alerte-large {
+	grid-template-columns: 16px 168px 140px 116px minmax(0, 1fr) 130px 232px;
+}
+
+.rangee-emplacement {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	align-items: center;
+	gap: 14px;
+	min-height: 42px;
+	padding: 8px 16px;
+	border-bottom: 1px solid var(--trait);
+}
+
+.rangee-emplacement:last-child {
+	border-bottom: 0;
+}
+
+.emplacement-nom {
+	overflow: hidden;
+	font-size: 12px;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.emplacement-lampes {
+	display: flex;
+	gap: 5px;
+}
+
+.rangee-actions {
+	display: flex;
+	gap: 6px;
+	justify-content: flex-end;
+}
+
+.legende {
+	display: flex;
+	flex-direction: column;
+	gap: 7px;
+	margin: 14px 0 0;
+	padding: 0 2px;
+}
+
+.legende-entree {
+	display: flex;
+	align-items: center;
+	gap: 9px;
+}
+
+.legende dt,
+.legende dd {
+	display: flex;
+	align-items: center;
+	margin: 0;
+}
+
+.legende dd {
+	color: var(--encre-faible);
+	font-size: 10.5px;
+	letter-spacing: 0.06em;
+}
+
+/* ── Équipements ──────────────────────────────────────────────────────────── */
+
+.filtres {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+}
+
+.filtres-recherche {
+	width: 200px;
+	padding: 7px 10px;
+	border-radius: var(--rayon-bouton);
+	font-size: 12px;
+}
+
+.fiche {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+	gap: 1px;
+	overflow: hidden;
+	background: var(--trait);
+	border-radius: var(--rayon-carte);
+	border-bottom: 1px solid var(--trait);
+}
+
+.fiche-case {
+	padding: 12px 16px;
+	background: var(--plaque);
+}
+
+.fiche-libelle {
+	display: block;
+	margin-bottom: 5px;
+	color: var(--encre-faible);
+	font-size: 9.5px;
+	font-weight: 600;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+}
+
+.fiche-valeur {
+	font-family: var(--f-donnee);
+	font-size: 12.5px;
+	overflow-wrap: anywhere;
+}
+
+/* ── Enregistreur : le tracé lu contre les seuils du cahier des charges ───── */
+
+.enregistreur {
+	padding: 16px 16px 8px;
+}
+
+.enregistreur-entete {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 12px 20px;
+	margin-bottom: 14px;
+}
+
+.enregistreur-valeur {
+	font-family: var(--f-donnee);
+	font-size: 30px;
+	font-weight: 300;
+	letter-spacing: -0.03em;
+}
+
+.enregistreur-unite {
+	font-size: 15px;
+	color: var(--encre-faible);
+}
+
+.enregistreur-lecture {
+	color: var(--encre-faible);
+	font-family: var(--f-donnee);
+	font-size: 10.5px;
+	letter-spacing: 0.04em;
+}
+
+.enregistreur-mesures {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 5px;
+	margin-bottom: 16px;
+}
+
+.enregistreur-legende {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px 18px;
+	padding: 10px 2px 4px;
+	color: var(--encre-faible);
+	font-size: 10px;
+	font-weight: 600;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+}
+
+.enregistreur-seuil {
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+}
+
+.trait-seuil {
+	width: 18px;
+	height: 0;
+	border-top: 1px dashed currentColor;
+}
+
+.seuil-attention {
+	color: var(--ambre);
+}
+
+.seuil-critique {
+	color: var(--rouge);
+}
+
+/*
+ * Habillage du tracé. Recharts produit son propre balisage : on le teinte par
+ * CSS plutôt que par attributs, pour que le passage jour/nuit suive sans code.
+ */
+.enregistreur .trace-ligne .recharts-curve {
+	stroke: var(--encre);
+}
+
+.enregistreur .trace-grille line {
+	stroke: var(--trait);
+}
+
+.enregistreur .trace-axe line {
+	stroke: var(--trait-fort);
+}
+
+.enregistreur .trace-axe text {
+	fill: var(--encre-faible);
+	font-family: var(--f-donnee);
+	font-size: 10px;
+}
+
+.enregistreur .trace-seuil-attention line {
+	stroke: var(--ambre);
+}
+
+.enregistreur .trace-seuil-critique line {
+	stroke: var(--rouge);
+}
+
+.enregistreur .recharts-tooltip-cursor {
+	stroke: var(--trait-fort);
+}
+
+.infobulle {
+	padding: 8px 10px;
+	background: var(--plaque);
+	border: 1px solid var(--trait-fort);
+	border-radius: var(--rayon-bouton);
+	backdrop-filter: blur(var(--flou-verre));
+	font-family: var(--f-donnee);
+	font-size: 11.5px;
+	line-height: 1.5;
+}
+
+/* ── Clé API : montrée une fois, puis jamais ─────────────────────────────── */
+
+.cle {
+	padding: 16px;
+}
+
+.cle-valeur {
+	display: block;
+	margin: 12px 0;
+	padding: 12px 14px;
+	background: var(--plaque-creuse);
+	border: 1px solid var(--trait-fort);
+	border-radius: var(--rayon-bouton);
+	box-shadow: inset 0 2px 3px var(--bevel-bas);
+	font-family: var(--f-donnee);
+	font-size: 14px;
+	overflow-wrap: anywhere;
+}
+
+.cle-commande {
+	display: block;
+	margin: 10px 0 14px;
+	padding: 12px 14px;
+	background: var(--rail);
+	border-radius: var(--rayon-bouton);
+	backdrop-filter: blur(var(--flou-verre));
+	color: var(--rail-encre);
+	font-family: var(--f-donnee);
+	font-size: 11.5px;
+	line-height: 1.7;
+	overflow-x: auto;
+	white-space: pre;
+}
+
+/* ── Rapports, journal, utilisateurs ──────────────────────────────────────── */
+
+.rangee-rapport {
+	grid-template-columns: 128px minmax(0, 1.6fr) minmax(0, 1fr) auto;
+}
+
+.rangee-journal {
+	grid-template-columns: 152px 190px minmax(0, 1fr) 116px;
+}
+
+.rangee-utilisateur {
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr) 152px 104px auto;
+}
+
+.rangee-seuil {
+	grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.1fr) 118px 104px 104px auto;
+}
+
+/* Sélecteur posé dans une rangée : il tient sa colonne, il ne la déborde pas. */
+.rangee-select {
+	width: 100%;
+	min-width: 0;
+	padding: 6px 8px;
+	border-radius: var(--rayon-bouton);
+	font-size: 12px;
+}
+
+.formulaire {
+	padding: 20px 18px;
+}
+
+.formulaire-pied {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-top: 20px;
+	padding-top: 16px;
+	border-top: 1px solid var(--trait);
+}
+
+/* ── Écrans étroits ───────────────────────────────────────────────────────── */
+
+@media (max-width: 960px) {
+	.grille-synoptique {
+		grid-template-columns: minmax(0, 1fr);
+		gap: 24px;
+	}
+}
+
+@media (max-width: 760px) {
+	/* La rangée se déplie : la lampe garde sa colonne, le reste s'empile. */
+	.rangee-alerte,
+	.rangee-alerte-large {
+		grid-template-columns: 16px minmax(0, 1fr);
+		gap: 5px 12px;
+		padding: 12px 14px;
+	}
+
+	.rangee-alerte > *:not(:first-child),
+	.rangee-alerte-large > *:not(:first-child) {
+		grid-column: 2;
+	}
+
+	.rangee-rapport,
+	.rangee-journal,
+	.rangee-utilisateur,
+	.rangee-seuil {
+		grid-template-columns: minmax(0, 1fr);
+		gap: 5px;
+		padding: 12px 14px;
+	}
+
+	.rangee-actions {
+		justify-content: flex-start;
+		margin-top: 6px;
+	}
+
+	.rangee-select {
+		width: auto;
+	}
+
+	.filtres-recherche {
+		width: 100%;
+	}
+}

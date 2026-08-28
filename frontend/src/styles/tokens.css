@@ -1,0 +1,91 @@
+/*
+ * Panneau synoptique — jetons de conception
+ *
+ * Le panneau reprend l'habillage « verre de nuit » de l'écran de connexion :
+ * surfaces translucides posées sur un dégradé bleu nuit, contours fins et
+ * lueur d'accent. La finition « jour » est la même scène éclairée en plein
+ * jour, pas un système différent — mêmes proportions, mêmes rayons, mêmes
+ * jetons.
+ */
+
+:root {
+	color-scheme: dark;
+
+	/* Scène de fond — dégradé profond, cf. .scene-fond */
+	--fond: #10141a;
+	--fond-bas: #1b3a57;
+
+	/* Surfaces — verre posé sur la scène */
+	--plaque: rgba(27, 58, 87, 0.4);
+	--plaque-survol: rgba(46, 84, 122, 0.5);
+	--plaque-creuse: rgba(12, 16, 22, 0.55);
+	--rail: rgba(13, 17, 23, 0.72);
+	--rail-encre: #dfe2eb;
+	--rail-encre-faible: #9aa1b0;
+
+	/* Encres */
+	--encre: #dfe2eb;
+	--encre-faible: #9aa1b0;
+	--encre-inverse: #00204a;
+
+	/* Traits — contour de verre plutôt que gravure métal */
+	--trait: rgba(120, 156, 214, 0.18);
+	--trait-fort: rgba(120, 156, 214, 0.32);
+
+	/* Lampes de signalisation et accent d'interface */
+	--vert: #35d488;
+	--ambre: #e0a63b;
+	--rouge: #e2564c;
+	--bleu: #a9c7ff;
+	--bleu-vif: #5391ec;
+
+	/* Reliefs : un panneau de verre, pas de tôle embossée */
+	--bevel-haut: rgba(255, 255, 255, 0.06);
+	--bevel-bas: rgba(0, 0, 0, 0.4);
+	--halo-ombre: 0 0 9px var(--lampe-couleur, transparent);
+
+	/* Typographie */
+	--f-plaque: "Archivo Variable", "Segoe UI", sans-serif;
+	--f-donnee: "IBM Plex Mono", ui-monospace, "Cascadia Mono", monospace;
+
+	/* Verre : rayons et flou partagés par toutes les surfaces */
+	--rayon-carte: 14px;
+	--rayon-bouton: 8px;
+	--rayon-pastille: 999px;
+	--flou-verre: 14px;
+
+	--pas: 4px;
+	--largeur-max: 1240px;
+}
+
+[data-theme="jour"] {
+	color-scheme: light;
+
+	/* Même scène, à la lumière du jour : ciel pâle plutôt que nuit d'encre. */
+	--fond: #eef2f8;
+	--fond-bas: #d8e6f7;
+
+	--plaque: rgba(255, 255, 255, 0.6);
+	--plaque-survol: rgba(255, 255, 255, 0.82);
+	--plaque-creuse: rgba(216, 227, 245, 0.55);
+	--rail: rgba(16, 24, 38, 0.85);
+	--rail-encre: #eef2f8;
+	--rail-encre-faible: #aab6cc;
+
+	--encre: #1c2534;
+	--encre-faible: #4d5b71;
+	--encre-inverse: #ffffff;
+
+	--trait: rgba(58, 111, 214, 0.16);
+	--trait-fort: rgba(58, 111, 214, 0.3);
+
+	--vert: #1f9d63;
+	--ambre: #b8790a;
+	--rouge: #c23327;
+	--bleu: #3a6fd6;
+	--bleu-vif: #1d4fb0;
+
+	--bevel-haut: rgba(255, 255, 255, 0.65);
+	--bevel-bas: rgba(20, 40, 70, 0.1);
+	--halo-ombre: 0 0 9px var(--lampe-couleur, transparent);
+}

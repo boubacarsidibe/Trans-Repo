@@ -1,5 +1,6 @@
 package com.bouba.backend_trans.equipement.dto;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import com.bouba.backend_trans.equipement.entity.Equipement;
@@ -16,6 +17,9 @@ public class EquipementResponse {
 	private String localisation;
 	private EtatEquipement etat;
 	private String description;
+	private LocalDateTime derniereMesure;
+	private UUID dependDeId;
+	private String dependDeNom;
 
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	private String cleApi;
@@ -33,6 +37,9 @@ public class EquipementResponse {
 		response.localisation = equipement.getLocalisation();
 		response.etat = equipement.getEtat();
 		response.description = equipement.getDescription();
+		response.derniereMesure = equipement.getDerniereMesure();
+		response.dependDeId = equipement.getDependDe() == null ? null : equipement.getDependDe().getId();
+		response.dependDeNom = equipement.getDependDe() == null ? null : equipement.getDependDe().getNom();
 		if (includeApiKey) {
 			response.cleApi = equipement.getCleApi();
 		}
@@ -93,6 +100,30 @@ public class EquipementResponse {
 
 	public void setDescription(String description) {
 		this.description = description;
+	}
+
+	public UUID getDependDeId() {
+		return dependDeId;
+	}
+
+	public void setDependDeId(UUID dependDeId) {
+		this.dependDeId = dependDeId;
+	}
+
+	public String getDependDeNom() {
+		return dependDeNom;
+	}
+
+	public void setDependDeNom(String dependDeNom) {
+		this.dependDeNom = dependDeNom;
+	}
+
+	public LocalDateTime getDerniereMesure() {
+		return derniereMesure;
+	}
+
+	public void setDerniereMesure(LocalDateTime derniereMesure) {
+		this.derniereMesure = derniereMesure;
 	}
 
 	public String getCleApi() {

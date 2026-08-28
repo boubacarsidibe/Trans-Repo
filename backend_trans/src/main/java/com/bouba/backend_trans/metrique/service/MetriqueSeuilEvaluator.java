@@ -1,6 +1,9 @@
 package com.bouba.backend_trans.metrique.service;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.EnumMap;
+import java.util.Map;
 
 import org.springframework.stereotype.Component;
 
@@ -9,49 +12,104 @@ import com.bouba.backend_trans.alerte.entity.TypeAnomalie;
 import com.bouba.backend_trans.alerte.service.AlerteService;
 import com.bouba.backend_trans.equipement.entity.Equipement;
 import com.bouba.backend_trans.metrique.entity.TypeMetrique;
+import com.bouba.backend_trans.metrique.repository.MetriqueRepository;
+import com.bouba.backend_trans.seuil.service.Seuil;
+import com.bouba.backend_trans.seuil.service.SeuilAlerteService;
 
 /**
- * Applique les seuils par défaut du cahier des spécifications (§11.2) à chaque
- * métrique ingérée, et déclenche ou résout les alertes correspondantes.
+ * Confronte chaque métrique ingérée au seuil configuré pour l'équipement, et
+ * déclenche, élève ou résout l'alerte correspondante.
+ *
+ * <p>Le §11.2 exprime les seuils sous la forme « ≥ 80 % pendant 5 minutes » : un
+ * dépassement n'alerte que s'il <strong>se maintient</strong> pendant la durée
+ * configurée. Une pointe isolée ne réveille donc personne.
  */
 @Component
 public class MetriqueSeuilEvaluator {
 
-	private final AlerteService alerteService;
+	/**
+	 * Nature de l'anomalie levée par chaque métrique. Cette correspondance est
+	 * structurelle — elle ne se configure pas : seules les valeurs de seuil sont
+	 * réglables par l'administrateur. Une métrique absente de cette table est
+	 * purement informative et ne lève jamais d'alerte.
+	 */
+	private static final Map<TypeMetrique, TypeAnomalie> ANOMALIES = new EnumMap<>(TypeMetrique.class);
 
-	public MetriqueSeuilEvaluator(AlerteService alerteService) {
+	static {
+		ANOMALIES.put(TypeMetrique.CPU, TypeAnomalie.CPU);
+		ANOMALIES.put(TypeMetrique.CHARGE_1MIN, TypeAnomalie.CPU);
+		ANOMALIES.put(TypeMetrique.RAM, TypeAnomalie.RAM);
+		ANOMALIES.put(TypeMetrique.SWAP, TypeAnomalie.RAM);
+		ANOMALIES.put(TypeMetrique.DISQUE, TypeAnomalie.DISQUE);
+		ANOMALIES.put(TypeMetrique.LATENCE, TypeAnomalie.RESEAU);
+		ANOMALIES.put(TypeMetrique.TAUX_ERREUR, TypeAnomalie.RESEAU);
+		ANOMALIES.put(TypeMetrique.DNS_LATENCE, TypeAnomalie.RESEAU);
+		ANOMALIES.put(TypeMetrique.SERVICES_TCP_INDISPONIBLES, TypeAnomalie.INDISPONIBILITE);
+		ANOMALIES.put(TypeMetrique.TEMPERATURE_MAX, TypeAnomalie.MATERIEL);
+	}
+
+	private final SeuilAlerteService seuilAlerteService;
+	private final AlerteService alerteService;
+	private final MetriqueRepository metriqueRepository;
+
+	public MetriqueSeuilEvaluator(
+			SeuilAlerteService seuilAlerteService,
+			AlerteService alerteService,
+			MetriqueRepository metriqueRepository
+	) {
+		this.seuilAlerteService = seuilAlerteService;
 		this.alerteService = alerteService;
+		this.metriqueRepository = metriqueRepository;
 	}
 
 	public void evaluer(Equipement equipement, TypeMetrique typeMetrique, BigDecimal valeur) {
-		Seuil seuil = seuilPour(typeMetrique);
-		if (seuil == null || valeur == null) {
+		TypeAnomalie typeAnomalie = ANOMALIES.get(typeMetrique);
+		if (typeAnomalie == null || valeur == null) {
 			return;
 		}
 
-		TypeAnomalie typeAnomalie = seuil.typeAnomalie();
+		Seuil seuil = seuilAlerteService.seuilEffectif(equipement.getId(), typeMetrique);
+		if (seuil == null) {
+			return;
+		}
 
-		if (valeur.compareTo(seuil.critique()) >= 0) {
-			alerteService.declencherSiAbsente(equipement, typeAnomalie, Severite.CRITIQUE);
-		} else if (valeur.compareTo(seuil.avertissement()) >= 0) {
-			alerteService.declencherSiAbsente(equipement, typeAnomalie, Severite.AVERTISSEMENT);
+		if (depassementConfirme(equipement, typeMetrique, valeur, seuil.critique(), seuil.dureeSecondes())) {
+			alerteService.declencherOuEleverSeverite(equipement, typeAnomalie, Severite.CRITIQUE);
+		} else if (depassementConfirme(equipement, typeMetrique, valeur, seuil.avertissement(), seuil.dureeSecondes())) {
+			alerteService.declencherOuEleverSeverite(equipement, typeAnomalie, Severite.AVERTISSEMENT);
 		} else {
 			alerteService.resoudreSiActive(equipement, typeAnomalie);
 		}
 	}
 
-	private Seuil seuilPour(TypeMetrique typeMetrique) {
-		return switch (typeMetrique) {
-			case CPU -> new Seuil(TypeAnomalie.CPU, new BigDecimal("80"), new BigDecimal("95"));
-			case RAM -> new Seuil(TypeAnomalie.RAM, new BigDecimal("80"), new BigDecimal("95"));
-			case DISQUE -> new Seuil(TypeAnomalie.DISQUE, new BigDecimal("85"), new BigDecimal("95"));
-			case SWAP -> new Seuil(TypeAnomalie.RAM, new BigDecimal("60"), new BigDecimal("90"));
-			case LATENCE -> new Seuil(TypeAnomalie.RESEAU, new BigDecimal("150"), new BigDecimal("400"));
-			case TAUX_ERREUR -> new Seuil(TypeAnomalie.RESEAU, new BigDecimal("1"), new BigDecimal("5"));
-			default -> null;
-		};
-	}
+	/**
+	 * Vrai si la mesure courante dépasse le seuil <em>et</em> que ce dépassement
+	 * dure depuis au moins {@code dureeSecondes}.
+	 */
+	private boolean depassementConfirme(
+			Equipement equipement,
+			TypeMetrique typeMetrique,
+			BigDecimal valeur,
+			BigDecimal seuil,
+			int dureeSecondes
+	) {
+		if (seuil == null || valeur.compareTo(seuil) < 0) {
+			return false;
+		}
+		if (dureeSecondes <= 0) {
+			return true;
+		}
 
-	private record Seuil(TypeAnomalie typeAnomalie, BigDecimal avertissement, BigDecimal critique) {
+		LocalDateTime debutExige = LocalDateTime.now().minusSeconds(dureeSecondes);
+
+		// Le dépassement court depuis le dernier retour sous le seuil ; s'il n'y
+		// en a jamais eu, depuis la toute première mesure connue.
+		LocalDateTime debutDepassement =
+				metriqueRepository.dernierPassageSousSeuil(equipement.getId(), typeMetrique, seuil);
+		if (debutDepassement == null) {
+			debutDepassement = metriqueRepository.premiereMesure(equipement.getId(), typeMetrique);
+		}
+
+		return debutDepassement != null && !debutDepassement.isAfter(debutExige);
 	}
 }

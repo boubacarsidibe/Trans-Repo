@@ -1,0 +1,27 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="692.273" height="429.611" viewBox="0 0 692.273 429.611" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="SVG - Simulated Real-time Chart Visualization">
+<g id="Group">
+<g id="Vector">
+<path d="M0.905238 123.102H690.905H0.905238" fill="black"/>
+<path d="M0.905238 123.102H690.905H0.905238" stroke="#424752" stroke-opacity="0.1" stroke-width="0.931667" stroke-dasharray="3.73 3.73"/>
+</g>
+<g id="Vector_2">
+<path d="M0.905238 240.436H690.905H0.905238" fill="black"/>
+<path d="M0.905238 240.436H690.905H0.905238" stroke="#424752" stroke-opacity="0.1" stroke-width="0.931667" stroke-dasharray="3.73 3.73"/>
+</g>
+<g id="Vector_3">
+<path d="M0.905238 357.769H690.905H0.905238" fill="black"/>
+<path d="M0.905238 357.769H690.905H0.905238" stroke="#424752" stroke-opacity="0.1" stroke-width="0.931667" stroke-dasharray="3.73 3.73"/>
+</g>
+</g>
+<path id="Vector_4" d="M0.905238 299.102C46.9052 283.458 92.9052 291.28 138.905 322.569C184.905 353.858 230.905 330.391 276.905 252.169C322.905 173.947 368.905 205.236 414.905 346.036C460.905 486.836 506.905 447.725 552.905 228.702C598.905 9.68015 644.905 25.3246 690.905 275.636" stroke="#A3C9FF" stroke-width="1.86333"/>
+<path id="Vector_5" d="M0.905238 240.436C46.9052 201.325 92.9052 201.325 138.905 240.436C184.905 279.547 230.905 252.169 276.905 158.302C322.905 64.4357 368.905 80.0802 414.905 205.236C460.905 330.391 506.905 303.013 552.905 123.102C598.905 -56.8087 644.905 -37.2532 690.905 181.769L0.905238 240.436" fill="url(#paint0_linear_0_38)"/>
+<path id="Vector_6" d="M0.905238 240.436C46.9052 201.325 92.9052 201.325 138.905 240.436C184.905 279.547 230.905 252.169 276.905 158.302C322.905 64.4357 368.905 80.0802 414.905 205.236C460.905 330.391 506.905 303.013 552.905 123.102C598.905 -56.8087 644.905 -37.2532 690.905 181.769" stroke="#A8C8FF" stroke-width="2.795"/>
+</g>
+<defs>
+<linearGradient id="paint0_linear_0_38" x1="0.905238" y1="1.39779" x2="0.905238" y2="282.255" gradientUnits="userSpaceOnUse">
+<stop stop-color="#A8C8FF" stop-opacity="0.2"/>
+<stop offset="1" stop-color="#A8C8FF" stop-opacity="0"/>
+</linearGradient>
+</defs>
+</svg>
