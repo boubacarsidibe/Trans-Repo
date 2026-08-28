@@ -1,0 +1,262 @@
+/*
+ * Écran de connexion — habillage « salle de supervision de nuit ».
+ * Scène isolée : ses jetons ne fuient pas vers le reste du panneau, qui garde
+ * sa propre finition jour/nuit indépendamment de cet écran d'accueil.
+ */
+
+.scene-connexion {
+	--sc-fond-haut: #10141a;
+	--sc-fond-bas: #1b3a57;
+	--sc-verre: rgba(27, 58, 87, 0.4);
+	--sc-verre-trait: rgba(58, 123, 213, 0.25);
+	--sc-accent: #a9c7ff;
+	--sc-accent-vif: #5391ec;
+	--sc-texte: #dfe2eb;
+	--sc-texte-faible: #9aa1b0;
+	--sc-saisie-fond: #181c22;
+	--sc-saisie-trait: #363c46;
+	--sc-vert: #35d488;
+
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 100%;
+	overflow: hidden;
+	padding: 40px 20px;
+	background: var(--sc-fond-haut);
+	color: var(--sc-texte);
+}
+
+.scene-fond {
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+	background:
+		linear-gradient(160deg, var(--sc-fond-haut) 0%, var(--sc-fond-bas) 130%),
+		repeating-linear-gradient(0deg, rgba(58, 123, 213, 0.05) 0 1px, transparent 1px 40px),
+		repeating-linear-gradient(90deg, rgba(58, 123, 213, 0.05) 0 1px, transparent 1px 40px);
+}
+
+.scene-lueur {
+	position: absolute;
+	width: 380px;
+	height: 380px;
+	border-radius: 50%;
+	filter: blur(110px);
+	opacity: 0.55;
+}
+
+.scene-lueur-a {
+	top: -60px;
+	left: -80px;
+	background: var(--sc-accent);
+}
+
+.scene-lueur-b {
+	right: -100px;
+	bottom: -100px;
+	background: var(--sc-accent-vif);
+}
+
+.carte-connexion {
+	position: relative;
+	z-index: 1;
+	width: 100%;
+	max-width: 400px;
+}
+
+.carte-entete {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 6px;
+	margin-bottom: 26px;
+	text-align: center;
+}
+
+.carte-insigne {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 56px;
+	height: 56px;
+	margin-bottom: 6px;
+	background: var(--sc-verre);
+	border: 1px solid var(--sc-verre-trait);
+	border-radius: 14px;
+	color: var(--sc-accent);
+	backdrop-filter: blur(10px);
+}
+
+.carte-nom {
+	font-size: 24px;
+	font-weight: 700;
+	font-stretch: 112%;
+	letter-spacing: 0.02em;
+}
+
+.carte-nom-accent {
+	color: var(--sc-accent);
+}
+
+.carte-sous-nom {
+	color: var(--sc-texte-faible);
+	font-size: 10px;
+	font-weight: 600;
+	letter-spacing: 0.2em;
+	text-transform: uppercase;
+}
+
+.carte-verre {
+	padding: 28px;
+	background: var(--sc-verre);
+	border: 1px solid var(--sc-verre-trait);
+	border-radius: 18px;
+	box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+	backdrop-filter: blur(14px);
+}
+
+.carte-verre-entete {
+	margin-bottom: 20px;
+}
+
+.carte-verre-entete h2 {
+	font-size: 19px;
+	font-weight: 700;
+}
+
+.carte-verre-entete p {
+	margin-top: 4px;
+	color: var(--sc-texte-faible);
+	font-size: 13px;
+}
+
+.carte-formulaire {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.champ-verre {
+	display: flex;
+	flex-direction: column;
+	gap: 7px;
+}
+
+.champ-verre label {
+	color: var(--sc-texte-faible);
+	font-size: 10px;
+	font-weight: 600;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+}
+
+.champ-verre-saisie {
+	position: relative;
+	display: flex;
+	align-items: center;
+}
+
+.champ-verre-saisie svg {
+	position: absolute;
+	left: 12px;
+	color: var(--sc-texte-faible);
+	pointer-events: none;
+}
+
+.champ-verre-saisie input {
+	width: 100%;
+	padding: 11px 14px 11px 38px;
+	background: var(--sc-saisie-fond);
+	border: 1px solid var(--sc-saisie-trait);
+	border-radius: 8px;
+	color: var(--sc-texte);
+	font-size: 13.5px;
+}
+
+.champ-verre-saisie input::placeholder {
+	color: var(--sc-texte-faible);
+	opacity: 0.6;
+}
+
+.champ-verre-saisie input:focus {
+	border-color: var(--sc-accent);
+	outline: none;
+}
+
+.champ-verre-saisie:focus-within svg {
+	color: var(--sc-accent);
+}
+
+.bouton-verre {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	padding: 12px;
+	background: var(--sc-accent);
+	border: none;
+	border-radius: 8px;
+	box-shadow: 0 10px 26px rgba(83, 145, 236, 0.28);
+	color: #00204a;
+	font-size: 12.5px;
+	font-weight: 700;
+	letter-spacing: 0.06em;
+	cursor: pointer;
+}
+
+.bouton-verre:hover {
+	background: #bcd3ff;
+}
+
+.bouton-verre:active {
+	transform: translateY(1px);
+}
+
+.bouton-verre:disabled {
+	opacity: 0.55;
+	cursor: not-allowed;
+}
+
+.carte-verre .message {
+	background: rgba(147, 0, 10, 0.25);
+	border-color: rgba(255, 180, 171, 0.35);
+	color: #ffb4ab;
+}
+
+.carte-pied {
+	display: flex;
+	justify-content: center;
+	margin-top: 22px;
+}
+
+.temoin-actif {
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+	padding: 5px 12px;
+	background: rgba(255, 255, 255, 0.04);
+	border: 1px solid var(--sc-verre-trait);
+	border-radius: 999px;
+	color: var(--sc-texte-faible);
+	font-family: var(--f-donnee);
+	font-size: 10px;
+	letter-spacing: 0.04em;
+	word-break: break-all;
+}
+
+.temoin-point {
+	width: 6px;
+	height: 6px;
+	flex: none;
+	border-radius: 50%;
+	background: var(--sc-vert);
+	box-shadow: 0 0 8px var(--sc-vert);
+}
+
+@media (max-width: 460px) {
+	.carte-verre {
+		padding: 22px;
+	}
+}

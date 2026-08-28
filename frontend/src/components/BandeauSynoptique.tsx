@@ -33,7 +33,7 @@ export function BandeauSynoptique() {
 							const etat = etatPoste(poste, ouvertes);
 							return (
 								<Link
-									className="douille"
+									className={etat === "alarme" ? "douille douille-critique" : "douille"}
 									key={poste.id}
 									to={`/equipements?poste=${poste.id}`}
 									style={{ "--i": rang++ } as React.CSSProperties}

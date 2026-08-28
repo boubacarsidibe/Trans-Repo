@@ -11,6 +11,7 @@ import "./styles/tokens.css";
 import "./styles/base.css";
 import "./styles/panneau.css";
 import "./styles/pages.css";
+import "./styles/connexion.css";
 
 import App from "./App.tsx";
 

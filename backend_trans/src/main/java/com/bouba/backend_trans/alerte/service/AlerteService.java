@@ -24,6 +24,9 @@ import com.bouba.backend_trans.websocket.TypeEvenement;
 @Service
 public class AlerteService {
 
+	/** Garde-fou contre une chaîne de dépendance circulaire. */
+	private static final int PROFONDEUR_MAX_DEPENDANCE = 10;
+
 	private final AlerteRepository alerteRepository;
 	private final DiffusionSupervision diffusionSupervision;
 
@@ -79,6 +82,13 @@ public class AlerteService {
 		// intervention reste une information utile.
 		if (typeAnomalie == TypeAnomalie.INDISPONIBILITE
 				&& equipement.getEtat() == EtatEquipement.EN_MAINTENANCE) {
+			return;
+		}
+
+		// Un équipement injoignable parce que le commutateur qui le dessert est
+		// tombé n'est pas une panne de plus : c'est la même panne. On n'alerte
+		// que sur la cause.
+		if (typeAnomalie == TypeAnomalie.INDISPONIBILITE && dependDunParentIndisponible(equipement)) {
 			return;
 		}
 
@@ -142,6 +152,31 @@ public class AlerteService {
 
 		diffuser(TypeEvenement.ALERT_RESOLVED, alerte);
 		return alerte;
+	}
+
+	/**
+	 * Remonte la chaîne de dépendance à la recherche d'un équipement déjà déclaré
+	 * indisponible.
+	 *
+	 * <p>La profondeur est bornée : une boucle de dépendance introduite par
+	 * erreur en configuration ne doit pas faire tourner l'ingestion à l'infini,
+	 * même si {@code EquipementService} refuse déjà de la créer.
+	 */
+	private boolean dependDunParentIndisponible(Equipement equipement) {
+		Equipement parent = equipement.getDependDe();
+
+		for (int profondeur = 0; parent != null && profondeur < PROFONDEUR_MAX_DEPENDANCE; profondeur++) {
+			boolean parentEnPanne = alerteRepository
+					.findFirstByEquipementIdAndTypeAnomalieAndStatutNot(
+							parent.getId(), TypeAnomalie.INDISPONIBILITE, StatutAlerte.RESOLUE)
+					.isPresent();
+			if (parentEnPanne) {
+				return true;
+			}
+			parent = parent.getDependDe();
+		}
+
+		return false;
 	}
 
 	/**

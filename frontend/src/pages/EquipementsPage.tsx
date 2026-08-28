@@ -122,14 +122,13 @@ export function EquipementsPage() {
 					<div className="rangees">
 						{visibles.map((poste) => {
 							const etat = etatPoste(poste, ouvertes);
+							const classes = ["rangee", "rangee-cliquable"];
+							if (poste.id === selectionne?.id) classes.push("rangee-active");
+							if (etat === "alarme") classes.push("rangee-critique");
 							return (
 								<button
 									key={poste.id}
-									className={
-										poste.id === selectionne?.id
-											? "rangee rangee-cliquable rangee-active"
-											: "rangee rangee-cliquable"
-									}
+									className={classes.join(" ")}
 									type="button"
 									onClick={() => selectionner(poste)}
 									aria-pressed={poste.id === selectionne?.id}

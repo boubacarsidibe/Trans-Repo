@@ -3,82 +3,6 @@
  * remplacent celle par défaut à spécificité égale, sans surcharge imbriquée.
  */
 
-/* ── Poste de connexion ───────────────────────────────────────────────────── */
-
-.poste {
-	display: grid;
-	grid-template-columns: minmax(0, 1fr) 366px;
-	align-content: center;
-	gap: 56px;
-	min-height: 100%;
-	max-width: 1040px;
-	margin: 0 auto;
-	padding: 48px 24px;
-}
-
-.poste-marque {
-	align-self: center;
-}
-
-.poste-eyebrow {
-	display: flex;
-	align-items: center;
-	gap: 10px;
-	margin-bottom: 18px;
-	color: var(--encre-faible);
-	font-size: 10px;
-	font-weight: 600;
-	letter-spacing: 0.2em;
-	text-transform: uppercase;
-}
-
-.poste-nom {
-	font-size: clamp(26px, 4.2vw, 38px);
-	font-weight: 700;
-	font-stretch: 112%;
-	letter-spacing: 0.16em;
-	line-height: 1.1;
-	text-transform: uppercase;
-}
-
-.poste-regle {
-	height: 2px;
-	margin: 20px 0 14px;
-	background: var(--encre);
-}
-
-.poste-sous-titre {
-	max-width: 40ch;
-	color: var(--encre-faible);
-	font-size: 13px;
-	line-height: 1.6;
-}
-
-.poste-bloc {
-	align-self: center;
-	padding: 26px 24px 22px;
-}
-
-.poste-champs {
-	display: flex;
-	flex-direction: column;
-	gap: 16px;
-	margin: 18px 0 20px;
-}
-
-.poste-pied {
-	display: flex;
-	flex-direction: column;
-	gap: 3px;
-	margin-top: 18px;
-	padding-top: 14px;
-	border-top: 1px solid var(--trait);
-	color: var(--encre-faible);
-	font-family: var(--f-donnee);
-	font-size: 10.5px;
-	word-break: break-all;
-}
-
 /* ── Synoptique ───────────────────────────────────────────────────────────── */
 
 .grille-synoptique {
@@ -167,6 +91,7 @@
 .filtres-recherche {
 	width: 200px;
 	padding: 7px 10px;
+	border-radius: var(--rayon-bouton);
 	font-size: 12px;
 }
 
@@ -174,7 +99,9 @@
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
 	gap: 1px;
+	overflow: hidden;
 	background: var(--trait);
+	border-radius: var(--rayon-carte);
 	border-bottom: 1px solid var(--trait);
 }
 
@@ -309,7 +236,8 @@
 	padding: 8px 10px;
 	background: var(--plaque);
 	border: 1px solid var(--trait-fort);
-	border-radius: 2px;
+	border-radius: var(--rayon-bouton);
+	backdrop-filter: blur(var(--flou-verre));
 	font-family: var(--f-donnee);
 	font-size: 11.5px;
 	line-height: 1.5;
@@ -327,6 +255,7 @@
 	padding: 12px 14px;
 	background: var(--plaque-creuse);
 	border: 1px solid var(--trait-fort);
+	border-radius: var(--rayon-bouton);
 	box-shadow: inset 0 2px 3px var(--bevel-bas);
 	font-family: var(--f-donnee);
 	font-size: 14px;
@@ -338,7 +267,8 @@
 	margin: 10px 0 14px;
 	padding: 12px 14px;
 	background: var(--rail);
-	border-radius: 2px;
+	border-radius: var(--rayon-bouton);
+	backdrop-filter: blur(var(--flou-verre));
 	color: var(--rail-encre);
 	font-family: var(--f-donnee);
 	font-size: 11.5px;
@@ -370,6 +300,7 @@
 	width: 100%;
 	min-width: 0;
 	padding: 6px 8px;
+	border-radius: var(--rayon-bouton);
 	font-size: 12px;
 }
 
@@ -396,12 +327,6 @@
 }
 
 @media (max-width: 760px) {
-	.poste {
-		grid-template-columns: minmax(0, 1fr);
-		gap: 30px;
-		padding: 36px 16px;
-	}
-
 	/* La rangée se déplie : la lampe garde sa colonne, le reste s'empile. */
 	.rangee-alerte,
 	.rangee-alerte-large {
