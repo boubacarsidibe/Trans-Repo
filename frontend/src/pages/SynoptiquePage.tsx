@@ -41,7 +41,7 @@ export function SynoptiquePage() {
 				<div className="section-entete">
 					<h1 className="plaque-titre">État du parc</h1>
 				</div>
-				<div className="encart releves">
+				<div className="releves-vitrees">
 					<Releve valeur={`${actifs}/${equipements.length}`} libelle="Équipements actifs" />
 					<Releve valeur={ouvertes.length} libelle="Alertes ouvertes" alarme={declenchees > 0} />
 					<Releve valeur={horsLigne} libelle="Hors ligne" />
@@ -77,29 +77,33 @@ export function SynoptiquePage() {
 						</EtatVide>
 					) : (
 						<div className="rangees">
-							{ouvertes.map((alerte) => (
-								<div className="rangee rangee-alerte" key={alerte.id}>
-									<Lampe etat={alerte.statut === "DECLENCHEE" ? "alarme" : "attention"} />
-									<Link className="rangee-nom" to={`/equipements?poste=${alerte.equipementId}`}>
-										{alerte.equipementNom}
-									</Link>
-									<span className="rangee-genre">{TYPE_ANOMALIE[alerte.typeAnomalie]}</span>
-									<span className={CLASSE_SEVERITE[alerte.severite]}>
-										{SEVERITE[alerte.severite]}
-									</span>
-									<span className="rangee-genre">
-										{STATUT_ALERTE[alerte.statut]}
-										{alerte.utilisateurPriseEnCharge && ` · ${alerte.utilisateurPriseEnCharge}`}
-									</span>
-									<span
-										className="rangee-secondaire"
-										title={formatDateHeure(alerte.dateDeclenchement)}
-									>
-										{depuis(alerte.dateDeclenchement)}
-									</span>
-									<ActionsAlerte alerte={alerte} />
-								</div>
-							))}
+							{ouvertes.map((alerte) => {
+								const critique = alerte.severite === "CRITIQUE" && alerte.statut === "DECLENCHEE";
+								const classes = critique ? "rangee rangee-alerte rangee-critique" : "rangee rangee-alerte";
+								return (
+									<div className={classes} key={alerte.id}>
+										<Lampe etat={alerte.statut === "DECLENCHEE" ? "alarme" : "attention"} />
+										<Link className="rangee-nom" to={`/equipements?poste=${alerte.equipementId}`}>
+											{alerte.equipementNom}
+										</Link>
+										<span className="rangee-genre">{TYPE_ANOMALIE[alerte.typeAnomalie]}</span>
+										<span className={CLASSE_SEVERITE[alerte.severite]}>
+											{SEVERITE[alerte.severite]}
+										</span>
+										<span className="rangee-genre">
+											{STATUT_ALERTE[alerte.statut]}
+											{alerte.utilisateurPriseEnCharge && ` · ${alerte.utilisateurPriseEnCharge}`}
+										</span>
+										<span
+											className="rangee-secondaire"
+											title={formatDateHeure(alerte.dateDeclenchement)}
+										>
+											{depuis(alerte.dateDeclenchement)}
+										</span>
+										<ActionsAlerte alerte={alerte} />
+									</div>
+								);
+							})}
 						</div>
 					)}
 				</div>

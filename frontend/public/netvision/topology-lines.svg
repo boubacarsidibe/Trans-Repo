@@ -1,0 +1,13 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="192" height="192" viewBox="0 0 192 192" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="SVG" opacity="0.3">
+<g id="Vector">
+<path d="M96 38.4L38.4 153.6L96 38.4" fill="black"/>
+<path d="M96 38.4L38.4 153.6L96 38.4" stroke="white" stroke-width="0.96"/>
+</g>
+<g id="Vector_2">
+<path d="M96 38.4L153.6 153.6L96 38.4" fill="black"/>
+<path d="M96 38.4L153.6 153.6L96 38.4" stroke="white" stroke-width="0.96"/>
+</g>
+<path id="Vector_3" d="M94.08 96C94.08 97.0597 94.9403 97.92 96 97.92C97.0597 97.92 97.92 97.0597 97.92 96C97.92 94.9403 97.0597 94.08 96 94.08C94.9403 94.08 94.08 94.9403 94.08 96V96" fill="white"/>
+</g>
+</svg>

@@ -1,14 +1,15 @@
-import { useState, type FormEvent } from "react";
+import { useId, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { BASE_URL } from "../api/client";
-import { Champ } from "../components/Champ";
-import { Marque } from "../components/Marque";
+import { IconeCadenas, IconeFleche, IconePersonne, IconeReseau } from "../components/IconesConnexion";
 import { Message } from "../components/Retours";
 
 export function LoginPage() {
 	const { login } = useAuth();
 	const navigate = useNavigate();
+	const idEmail = useId();
+	const idMotDePasse = useId();
 	const [email, setEmail] = useState("");
 	const [motDePasse, setMotDePasse] = useState("");
 	const [erreur, setErreur] = useState<string | null>(null);
@@ -35,67 +36,76 @@ export function LoginPage() {
 	}
 
 	return (
-		<div className="poste">
-			<div className="poste-marque">
-				<p className="poste-eyebrow">
-					<Marque taille={15} />
-					Centre des Ressources Informatiques
-				</p>
-				<h1 className="poste-nom">
-					Supervision
-					<br />
-					EPT
-				</h1>
-				<div className="poste-regle" />
-				<p className="poste-sous-titre">
-					Parc réseau et serveurs de l'École Polytechnique de Thiès : état en temps réel, alertes et
-					rapports.
-				</p>
+		<div className="scene-connexion">
+			<div className="scene-fond" aria-hidden="true">
+				<div className="scene-lueur scene-lueur-a" />
+				<div className="scene-lueur scene-lueur-b" />
 			</div>
 
-			<form className="poste-bloc encart" onSubmit={ouvrirSession}>
-				<h2 className="plaque-titre">Ouverture de session</h2>
-
-				<div className="poste-champs">
-					<Champ libelle="Adresse e-mail">
-						{(id) => (
-							<input
-								className="champ-saisie"
-								id={id}
-								type="email"
-								autoComplete="username"
-								value={email}
-								onChange={(e) => setEmail(e.target.value)}
-								required
-							/>
-						)}
-					</Champ>
-					<Champ libelle="Mot de passe">
-						{(id) => (
-							<input
-								className="champ-saisie"
-								id={id}
-								type="password"
-								autoComplete="current-password"
-								value={motDePasse}
-								onChange={(e) => setMotDePasse(e.target.value)}
-								required
-							/>
-						)}
-					</Champ>
+			<main className="carte-connexion">
+				<div className="carte-entete">
+					<div className="carte-insigne">
+						<IconeReseau />
+					</div>
+					<h1 className="carte-nom">
+						Supervision<span className="carte-nom-accent"> EPT</span>
+					</h1>
+					<p className="carte-sous-nom">Centre des Ressources Informatiques</p>
 				</div>
 
-				{erreur && <Message ton="echec">{erreur}</Message>}
+				<div className="carte-verre">
+					<div className="carte-verre-entete">
+						<h2>Connexion</h2>
+						<p>Accédez à votre console de supervision.</p>
+					</div>
 
-				<button className="bouton bouton-principal bouton-large" type="submit" disabled={envoi}>
-					{envoi ? "Connexion…" : "Se connecter"}
-				</button>
+					<form className="carte-formulaire" onSubmit={ouvrirSession}>
+						<div className="champ-verre">
+							<label htmlFor={idEmail}>Adresse e-mail</label>
+							<div className="champ-verre-saisie">
+								<IconePersonne />
+								<input
+									id={idEmail}
+									type="email"
+									autoComplete="username"
+									value={email}
+									onChange={(e) => setEmail(e.target.value)}
+									required
+								/>
+							</div>
+						</div>
 
-				<div className="poste-pied">
-					<span>Poste relié à {BASE_URL}</span>
-					<span>Session de 15 min, renouvelée automatiquement.</span>
+						<div className="champ-verre">
+							<label htmlFor={idMotDePasse}>Mot de passe</label>
+							<div className="champ-verre-saisie">
+								<IconeCadenas />
+								<input
+									id={idMotDePasse}
+									type="password"
+									autoComplete="current-password"
+									value={motDePasse}
+									onChange={(e) => setMotDePasse(e.target.value)}
+									required
+								/>
+							</div>
+						</div>
+
+						{erreur && <Message ton="echec">{erreur}</Message>}
+
+						<button className="bouton-verre" type="submit" disabled={envoi}>
+							<span>{envoi ? "Connexion…" : "Continuer"}</span>
+							<IconeFleche />
+						</button>
+					</form>
+
+					<div className="carte-pied">
+						<span className="temoin-actif">
+							<span className="temoin-point" />
+							Poste relié à {BASE_URL}
+						</span>
+					</div>
 				</div>
-			</form>
+			</main>
 		</div>
 	);
 }

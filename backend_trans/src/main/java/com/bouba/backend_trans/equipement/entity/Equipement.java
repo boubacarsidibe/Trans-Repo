@@ -7,9 +7,12 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
@@ -42,6 +45,20 @@ public class Equipement {
 
 	@Column(name = "cle_api", length = 255)
 	private String cleApi;
+
+	/**
+	 * Équipement dont celui-ci dépend pour être joignable — typiquement le
+	 * commutateur ou le routeur qui le dessert.
+	 *
+	 * <p>Quand ce parent tombe, tout ce qui se trouve derrière devient
+	 * injoignable en même temps. Sans cette relation, une seule panne de
+	 * commutateur produit vingt alertes d'indisponibilité et noie l'alerte
+	 * réelle — exactement le « faux positif qui noie les équipes » que le cahier
+	 * des charges veut éviter (§1.2).
+	 */
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "depend_de_id")
+	private Equipement dependDe;
 
 	/**
 	 * Horodatage de la dernière métrique reçue, tenu à jour à l'ingestion.
@@ -119,6 +136,14 @@ public class Equipement {
 
 	public void setCleApi(String cleApi) {
 		this.cleApi = cleApi;
+	}
+
+	public Equipement getDependDe() {
+		return dependDe;
+	}
+
+	public void setDependDe(Equipement dependDe) {
+		this.dependDe = dependDe;
 	}
 
 	public LocalDateTime getDerniereMesure() {

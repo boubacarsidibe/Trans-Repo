@@ -16,7 +16,8 @@
 	height: 52px;
 	padding: 0 20px;
 	background: var(--rail);
-	border-bottom: 1px solid #000;
+	border-bottom: 1px solid var(--trait-fort);
+	backdrop-filter: blur(var(--flou-verre));
 	color: var(--rail-encre);
 }
 
@@ -68,7 +69,7 @@
 
 .rail-lien-actif {
 	color: var(--rail-encre);
-	border-bottom-color: var(--rail-encre);
+	border-bottom-color: var(--bleu-vif);
 }
 
 .rail-poste {
@@ -104,8 +105,8 @@
 .rail-bouton {
 	padding: 6px 10px;
 	background: transparent;
-	border: 1px solid #4a504c;
-	border-radius: 2px;
+	border: 1px solid var(--trait-fort);
+	border-radius: var(--rayon-bouton);
 	color: var(--rail-encre-faible);
 	font-size: 10px;
 	font-weight: 600;
@@ -128,6 +129,7 @@
 	padding: 14px 20px 10px;
 	background: var(--plaque-creuse);
 	border-bottom: 1px solid var(--trait-fort);
+	backdrop-filter: blur(var(--flou-verre));
 	box-shadow: inset 0 2px 3px var(--bevel-bas);
 }
 
@@ -195,7 +197,7 @@
 	width: 68px;
 	padding: 4px 2px 2px;
 	border: 1px solid transparent;
-	border-radius: 2px;
+	border-radius: var(--rayon-bouton);
 	color: inherit;
 	text-decoration: none;
 	animation: allumage 220ms ease-out both;
@@ -338,14 +340,18 @@
 .encart {
 	background: var(--plaque);
 	border: 1px solid var(--trait-fort);
-	border-radius: 2px;
-	box-shadow: inset 0 1px 0 var(--bevel-haut);
+	border-radius: var(--rayon-carte);
+	backdrop-filter: blur(var(--flou-verre));
+	box-shadow:
+		inset 0 1px 0 var(--bevel-haut),
+		0 20px 60px var(--bevel-bas);
 }
 
 .encart-creux {
 	background: var(--plaque-creuse);
 	border: 1px solid var(--trait-fort);
-	border-radius: 2px;
+	border-radius: var(--rayon-carte);
+	backdrop-filter: blur(var(--flou-verre));
 	box-shadow: inset 0 2px 3px var(--bevel-bas);
 }
 
@@ -448,6 +454,72 @@
 	box-shadow: inset 3px 0 0 var(--bleu);
 }
 
+/*
+ * Rangée critique non prise en compte : au clignotement de la lampe s'ajoute
+ * une lueur portée par la rangée elle-même, pour qu'elle se voie même quand
+ * l'œil n'est pas sur la colonne des lampes. Même traitement partout où une
+ * rangée peut représenter un état critique — alertes, équipements en panne.
+ */
+.rangee-critique {
+	animation: pulsation-critique 2.2s ease-in-out infinite;
+}
+
+@keyframes pulsation-critique {
+	0%,
+	100% {
+		box-shadow: inset 3px 0 0 var(--rouge);
+	}
+	50% {
+		box-shadow:
+			inset 3px 0 0 var(--rouge),
+			0 0 16px color-mix(in srgb, var(--rouge) 45%, transparent);
+	}
+}
+
+/* Douille critique : la même lueur, en anneau, pour la lampe murale du bandeau. */
+.douille-critique {
+	animation: pulsation-critique-douille 2.2s ease-in-out infinite;
+	border-radius: 4px;
+}
+
+@keyframes pulsation-critique-douille {
+	0%,
+	100% {
+		box-shadow: none;
+	}
+	50% {
+		box-shadow: 0 0 0 1px var(--rouge), 0 0 14px color-mix(in srgb, var(--rouge) 45%, transparent);
+	}
+}
+
+/* ── Relevés vitrés : les mêmes chiffres clés, en cartes détachées ───────── */
+
+.releves-vitrees {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+	gap: 10px;
+}
+
+.releves-vitrees .releve {
+	flex: none;
+	min-width: 0;
+	padding: 16px 18px 14px;
+	background: var(--plaque);
+	border: 1px solid var(--trait-fort);
+	border-radius: var(--rayon-carte);
+	backdrop-filter: blur(var(--flou-verre));
+	box-shadow:
+		inset 0 1px 0 var(--bevel-haut),
+		0 8px 20px var(--bevel-bas);
+}
+
+.releves-vitrees .releve-alarme {
+	border-color: var(--rouge);
+	box-shadow:
+		inset 0 1px 0 var(--bevel-haut),
+		0 0 16px color-mix(in srgb, var(--rouge) 30%, transparent);
+}
+
 .rangee-entete {
 	min-height: 30px;
 	background: var(--plaque-creuse);
@@ -535,7 +607,8 @@
 	padding: 8px 14px;
 	background: var(--plaque);
 	border: 1px solid var(--trait-fort);
-	border-radius: 2px;
+	border-radius: var(--rayon-bouton);
+	backdrop-filter: blur(var(--flou-verre));
 	box-shadow:
 		inset 0 1px 0 var(--bevel-haut),
 		inset 0 -1px 0 var(--bevel-bas);
@@ -565,15 +638,15 @@
 }
 
 .bouton-principal {
-	background: var(--encre);
-	border-color: var(--encre);
-	box-shadow: none;
+	background: var(--bleu-vif);
+	border-color: var(--bleu-vif);
+	box-shadow: 0 10px 26px rgba(83, 145, 236, 0.28);
 	color: var(--encre-inverse);
 }
 
 .bouton-principal:hover {
-	background: var(--encre-faible);
-	border-color: var(--encre-faible);
+	background: var(--bleu);
+	border-color: var(--bleu);
 }
 
 .bouton-menu {
@@ -586,8 +659,8 @@
 }
 
 .bouton-actif {
-	background: var(--encre);
-	border-color: var(--encre);
+	background: var(--bleu-vif);
+	border-color: var(--bleu-vif);
 	color: var(--encre-inverse);
 }
 
@@ -618,7 +691,7 @@
 	padding: 9px 11px;
 	background: var(--plaque-creuse);
 	border: 1px solid var(--trait-fort);
-	border-radius: 2px;
+	border-radius: var(--rayon-bouton);
 	box-shadow: inset 0 2px 3px var(--bevel-bas);
 	font-family: var(--f-donnee);
 	font-size: 13px;
@@ -626,6 +699,7 @@
 
 .champ-saisie:focus {
 	border-color: var(--bleu);
+	outline: none;
 }
 
 .champ-aide {
@@ -649,7 +723,7 @@
 	background: var(--plaque);
 	border: 1px solid var(--trait-fort);
 	border-left: 3px solid var(--encre-faible);
-	border-radius: 2px;
+	border-radius: var(--rayon-bouton);
 	font-size: 13px;
 }
 
@@ -703,6 +777,18 @@
 			0 0 0 1px var(--rouge),
 			0 0 0 3px var(--plaque-creuse),
 			0 0 0 4px var(--rouge);
+	}
+
+	.rangee-critique {
+		animation: none;
+		box-shadow:
+			inset 3px 0 0 var(--rouge),
+			0 0 0 1px var(--rouge);
+	}
+
+	.douille-critique {
+		animation: none;
+		box-shadow: 0 0 0 1px var(--rouge);
 	}
 }
 

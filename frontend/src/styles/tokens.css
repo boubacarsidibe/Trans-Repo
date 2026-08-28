@@ -1,76 +1,91 @@
 /*
  * Panneau synoptique — jetons de conception
  *
- * The console is modelled on a control-room mimic panel: enamelled steel,
- * engraved label plates, and small recessed indicator lamps. The panel is grey
- * metal; colour exists only in the lamps. Every rule below serves that.
+ * Le panneau reprend l'habillage « verre de nuit » de l'écran de connexion :
+ * surfaces translucides posées sur un dégradé bleu nuit, contours fins et
+ * lueur d'accent. La finition « jour » est la même scène éclairée en plein
+ * jour, pas un système différent — mêmes proportions, mêmes rayons, mêmes
+ * jetons.
  */
 
 :root {
-	color-scheme: light;
+	color-scheme: dark;
 
-	/* Surfaces — enamelled panel, screwed-on plate, recessed well */
-	--fond: #d7d9d1;
-	--plaque: #edeee8;
-	--plaque-survol: #e3e5dd;
-	--plaque-creuse: #c9ccc3;
-	--rail: #23272a;
-	--rail-encre: #d5d8d2;
-	--rail-encre-faible: #8d938f;
+	/* Scène de fond — dégradé profond, cf. .scene-fond */
+	--fond: #10141a;
+	--fond-bas: #1b3a57;
+
+	/* Surfaces — verre posé sur la scène */
+	--plaque: rgba(27, 58, 87, 0.4);
+	--plaque-survol: rgba(46, 84, 122, 0.5);
+	--plaque-creuse: rgba(12, 16, 22, 0.55);
+	--rail: rgba(13, 17, 23, 0.72);
+	--rail-encre: #dfe2eb;
+	--rail-encre-faible: #9aa1b0;
 
 	/* Encres */
-	--encre: #1a1d1a;
-	--encre-faible: #565c56;
-	--encre-inverse: #edeee8;
+	--encre: #dfe2eb;
+	--encre-faible: #9aa1b0;
+	--encre-inverse: #00204a;
 
-	/* Traits gravés */
-	--trait: #b4b8af;
-	--trait-fort: #8c9289;
+	/* Traits — contour de verre plutôt que gravure métal */
+	--trait: rgba(120, 156, 214, 0.18);
+	--trait-fort: rgba(120, 156, 214, 0.32);
 
-	/* Lampes de signalisation — la seule couleur du panneau */
-	--vert: #24704a;
-	--ambre: #9d6a06;
-	--rouge: #a8231c;
-	--bleu: #23507e;
+	/* Lampes de signalisation et accent d'interface */
+	--vert: #35d488;
+	--ambre: #e0a63b;
+	--rouge: #e2564c;
+	--bleu: #a9c7ff;
+	--bleu-vif: #5391ec;
 
-	/* Reliefs : un panneau embouti, pas une carte flottante */
-	--bevel-haut: rgba(255, 255, 255, 0.65);
-	--bevel-bas: rgba(0, 0, 0, 0.14);
-	--halo-ombre: 0 0 0 transparent;
+	/* Reliefs : un panneau de verre, pas de tôle embossée */
+	--bevel-haut: rgba(255, 255, 255, 0.06);
+	--bevel-bas: rgba(0, 0, 0, 0.4);
+	--halo-ombre: 0 0 9px var(--lampe-couleur, transparent);
 
 	/* Typographie */
 	--f-plaque: "Archivo Variable", "Segoe UI", sans-serif;
 	--f-donnee: "IBM Plex Mono", ui-monospace, "Cascadia Mono", monospace;
 
+	/* Verre : rayons et flou partagés par toutes les surfaces */
+	--rayon-carte: 14px;
+	--rayon-bouton: 8px;
+	--rayon-pastille: 999px;
+	--flou-verre: 14px;
+
 	--pas: 4px;
 	--largeur-max: 1240px;
 }
 
-[data-theme="nuit"] {
-	color-scheme: dark;
+[data-theme="jour"] {
+	color-scheme: light;
 
-	--fond: #171b19;
-	--plaque: #1f2422;
-	--plaque-survol: #262c29;
-	--plaque-creuse: #10130f;
-	--rail: #0d100e;
-	--rail-encre: #d5d8d2;
-	--rail-encre-faible: #7d847f;
+	/* Même scène, à la lumière du jour : ciel pâle plutôt que nuit d'encre. */
+	--fond: #eef2f8;
+	--fond-bas: #d8e6f7;
 
-	--encre: #e4e7e1;
-	--encre-faible: #99a09a;
-	--encre-inverse: #10130f;
+	--plaque: rgba(255, 255, 255, 0.6);
+	--plaque-survol: rgba(255, 255, 255, 0.82);
+	--plaque-creuse: rgba(216, 227, 245, 0.55);
+	--rail: rgba(16, 24, 38, 0.85);
+	--rail-encre: #eef2f8;
+	--rail-encre-faible: #aab6cc;
 
-	--trait: #333a36;
-	--trait-fort: #4a534e;
+	--encre: #1c2534;
+	--encre-faible: #4d5b71;
+	--encre-inverse: #ffffff;
 
-	/* Les lampes montent d'un cran : c'est la nuit qu'une LED déborde. */
-	--vert: #46b37a;
-	--ambre: #e0a63b;
-	--rouge: #e2564c;
-	--bleu: #7fb0ea;
+	--trait: rgba(58, 111, 214, 0.16);
+	--trait-fort: rgba(58, 111, 214, 0.3);
 
-	--bevel-haut: rgba(255, 255, 255, 0.06);
-	--bevel-bas: rgba(0, 0, 0, 0.45);
+	--vert: #1f9d63;
+	--ambre: #b8790a;
+	--rouge: #c23327;
+	--bleu: #3a6fd6;
+	--bleu-vif: #1d4fb0;
+
+	--bevel-haut: rgba(255, 255, 255, 0.65);
+	--bevel-bas: rgba(20, 40, 70, 0.1);
 	--halo-ombre: 0 0 9px var(--lampe-couleur, transparent);
 }

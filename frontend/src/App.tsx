@@ -9,6 +9,7 @@ import { EquipementsPage } from "./pages/EquipementsPage";
 import { IntrouvablePage } from "./pages/IntrouvablePage";
 import { JournalPage } from "./pages/JournalPage";
 import { LoginPage } from "./pages/LoginPage";
+import { NetVisionDashboardPage } from "./pages/NetVisionDashboardPage";
 import { RapportsPage } from "./pages/RapportsPage";
 import { SeuilsPage } from "./pages/SeuilsPage";
 import { SynoptiquePage } from "./pages/SynoptiquePage";
@@ -20,6 +21,7 @@ function App() {
 			<BrowserRouter>
 				<Routes>
 					<Route path="/login" element={<LoginPage />} />
+					<Route path="/netvision-preview" element={<NetVisionDashboardPage />} />
 					<Route
 						element={
 							<ProtectedRoute>
