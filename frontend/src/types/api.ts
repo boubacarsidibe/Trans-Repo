@@ -1,11 +1,4 @@
-export type Role =
-	| "ADMIN"
-	| "MANAGER"
-	| "OPERATOR"
-	| "CLIENT"
-	| "ADMINISTRATEUR"
-	| "TECHNICIEN"
-	| "OBSERVATEUR";
+export type Role = "ADMINISTRATEUR" | "TECHNICIEN" | "OBSERVATEUR";
 
 export type UserType = "INDIVIDUAL" | "BUSINESS" | "PARTNER";
 

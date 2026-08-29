@@ -2,6 +2,7 @@ package com.bouba.backend_trans.auth.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,7 +28,11 @@ public class AuthController {
 		this.authService = authService;
 	}
 
+	// Restreint aux administrateurs (issue #8) : la création de compte publique
+	// produisait des comptes hors matrice RBAC (§4.4). L'auto-inscription reste
+	// désactivée ; POST /api/v1/users couvre déjà la création par un admin.
 	@PostMapping("/register")
+	@PreAuthorize("hasRole('ADMINISTRATEUR')")
 	public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
 		AuthResponse response = authService.register(request);
 		return ResponseEntity.status(HttpStatus.CREATED).body(response);
