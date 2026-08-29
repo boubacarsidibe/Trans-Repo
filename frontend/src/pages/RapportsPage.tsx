@@ -139,8 +139,8 @@ export function RapportsPage() {
 				</div>
 
 				<p className="champ-aide" style={{ marginTop: 12 }}>
-					Le contenu des rapports est calculé côté serveur ; l'export PDF n'est pas encore branché, les
-					entrées restent donc consultables sans fichier joint.
+					Le contenu des rapports est calculé côté serveur. Si l'écriture du PDF échoue, le rapport reste
+					consultable sans fichier joint.
 				</p>
 			</section>
 		</>

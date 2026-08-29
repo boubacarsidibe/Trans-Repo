@@ -12,7 +12,7 @@ Projet de fin d'études — Khadija DIENG & Boubacar SIDIBE.
 agent/system   (Python)  --\
 agent/network  (Python)  ---+--> HTTP  --> backend_trans (Spring Boot)  <--> PostgreSQL
                                               |
-                                              +--> WebSocket (STOMP, /ws) --> frontend (React)
+                                              +--> WebSocket natif (/ws/metrics, /ws/alerts, /ws/status) --> frontend (React)
 ```
 
 - **`backend_trans/`** — API Spring Boot (Java 17) : authentification JWT,
@@ -65,7 +65,7 @@ versionnées pour l'instant.
 | Journal d'audit | `/api/v1/audit-log` |
 | Préférences de notification | `/api/v1/users/me/notifications` |
 | Santé | `GET /api/v1/health` |
-| Temps réel | `ws(s)://.../ws` (STOMP, topics `/topic/metrics/{id}`, `/topic/alerts`) |
+| Temps réel | `ws(s)://.../ws/metrics`, `/ws/alerts`, `/ws/status` (WebSocket natif, pas STOMP) |
 
 ## Lancer le projet en local
 
