@@ -16,7 +16,7 @@ import com.bouba.backend_trans.audit.service.JournalAuditService;
 
 @RestController
 @RequestMapping("/api/v1/audit-log")
-@PreAuthorize("hasAnyRole('ADMIN', 'ADMINISTRATEUR')")
+@PreAuthorize("hasRole('ADMINISTRATEUR')")
 public class JournalAuditController {
 
 	private static final int TAILLE_MAXIMALE = 1000;
