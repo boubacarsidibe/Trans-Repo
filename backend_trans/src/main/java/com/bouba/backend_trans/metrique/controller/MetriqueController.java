@@ -26,9 +26,14 @@ import com.bouba.backend_trans.metrique.dto.SystemMetricsRequest;
 import com.bouba.backend_trans.metrique.entity.TypeMetrique;
 import com.bouba.backend_trans.metrique.service.MetriqueService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 @RestController
+@Tag(name = "Métriques", description = "Ingestion par les agents (clé API) et lecture de l'historique par équipement (JWT).")
 public class MetriqueController {
 
 	/** Fenêtre tracée par le tableau de bord en l'absence de borne (§10.2). */
@@ -44,6 +49,13 @@ public class MetriqueController {
 	}
 
 	@PostMapping("/api/v1/metrics/system")
+	@Operation(
+			summary = "Ingestion de métriques système",
+			description = "Poussé par l'agent système (agent/system.py) à intervalle régulier. "
+					+ "L'équipement de la clé API doit correspondre à `equipmentId` du corps.",
+			security = @SecurityRequirement(name = "api-key"))
+	@ApiResponse(responseCode = "201", description = "Métriques enregistrées")
+	@ApiResponse(responseCode = "403", description = "Clé API invalide, ou équipement différent de celui déclaré")
 	public ResponseEntity<Void> ingestSystem(@Valid @RequestBody SystemMetricsRequest request, Authentication authentication) {
 		verifyAgentOwnsEquipment(authentication, request.getEquipmentId());
 		metriqueService.ingestSystemMetrics(request);
@@ -51,6 +63,13 @@ public class MetriqueController {
 	}
 
 	@PostMapping("/api/v1/metrics/network")
+	@Operation(
+			summary = "Ingestion de métriques réseau",
+			description = "Poussé par le collecteur réseau (agent/network) à intervalle régulier. "
+					+ "L'équipement de la clé API doit correspondre à `equipmentId` du corps.",
+			security = @SecurityRequirement(name = "api-key"))
+	@ApiResponse(responseCode = "201", description = "Métriques enregistrées")
+	@ApiResponse(responseCode = "403", description = "Clé API invalide, ou équipement différent de celui déclaré")
 	public ResponseEntity<Void> ingestNetwork(@Valid @RequestBody NetworkMetricsRequest request, Authentication authentication) {
 		verifyAgentOwnsEquipment(authentication, request.getEquipmentId());
 		metriqueService.ingestNetworkMetrics(request);
@@ -66,6 +85,10 @@ public class MetriqueController {
 	 */
 	@GetMapping("/api/v1/equipments/{id}/metrics")
 	@PreAuthorize("hasAnyRole('ADMINISTRATEUR', 'TECHNICIEN', 'OBSERVATEUR')")
+	@Operation(
+			summary = "Historique des métriques d'un équipement",
+			description = "Fenêtre par défaut de 24h si `depuis` est omis (§10.2). `taille` est plafonné à "
+					+ TAILLE_MAXIMALE + " par page.")
 	public List<MetriqueResponse> historique(
 			@PathVariable UUID id,
 			@RequestParam(required = false) TypeMetrique type,

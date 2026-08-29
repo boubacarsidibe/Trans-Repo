@@ -51,6 +51,9 @@ public class SecurityConfig {
 						// laisser passer ici, refuser dans JwtHandshakeInterceptor.
 						.requestMatchers("/ws/**").permitAll()
 						.requestMatchers("/api/v1/metrics/**").hasRole("AGENT")
+						// Documentation de l'API (#43) : jamais exposee anonymement.
+						.requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**")
+							.hasRole("ADMINISTRATEUR")
 						.anyRequest().authenticated()
 				)
 				.addFilterBefore(apiKeyAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

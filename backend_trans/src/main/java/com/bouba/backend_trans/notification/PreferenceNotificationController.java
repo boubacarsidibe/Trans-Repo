@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.bouba.backend_trans.auth.entity.AppUser;
 import com.bouba.backend_trans.auth.repository.AppUserRepository;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 /**
  * « Chaque utilisateur peut configurer les canaux de notification qu'il
  * souhaite recevoir » (règle F7) — d'où un réglage personnel, accessible à tout
@@ -20,6 +22,7 @@ import com.bouba.backend_trans.auth.repository.AppUserRepository;
  */
 @RestController
 @RequestMapping("/api/v1/users/me/notifications")
+@Tag(name = "Préférences de notification", description = "Réglage personnel (F7), pour le compte authentifié lui-même.")
 public class PreferenceNotificationController {
 
 	private final AppUserRepository appUserRepository;

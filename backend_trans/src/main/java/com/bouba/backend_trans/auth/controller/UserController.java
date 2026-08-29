@@ -21,11 +21,13 @@ import com.bouba.backend_trans.auth.dto.UserUpdateRequest;
 import com.bouba.backend_trans.auth.entity.AppUser;
 import com.bouba.backend_trans.auth.service.UserService;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/users")
 @PreAuthorize("hasRole('ADMINISTRATEUR')")
+@Tag(name = "Utilisateurs", description = "Comptes du poste : création, modification de rôle, désactivation.")
 public class UserController {
 
 	private final UserService userService;

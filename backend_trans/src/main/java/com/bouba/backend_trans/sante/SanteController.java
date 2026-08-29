@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.bouba.backend_trans.websocket.CanalSupervision;
 import com.bouba.backend_trans.websocket.SupervisionWebSocketHandler;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 /**
  * Auto-supervision de la plateforme (§16) : « une défaillance du système de
  * monitoring ne doit pas passer elle-même inaperçue ».
@@ -22,6 +24,7 @@ import com.bouba.backend_trans.websocket.SupervisionWebSocketHandler;
  * puisse l'interroger. Aucune donnée d'infrastructure n'y transite.
  */
 @RestController
+@Tag(name = "Santé", description = "Auto-supervision de la plateforme (§16), accessible sans authentification.")
 public class SanteController {
 
 	private static final int DELAI_VALIDATION_SECONDES = 2;

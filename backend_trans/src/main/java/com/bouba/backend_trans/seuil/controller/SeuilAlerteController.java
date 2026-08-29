@@ -20,6 +20,7 @@ import com.bouba.backend_trans.seuil.dto.SeuilAlerteRequest;
 import com.bouba.backend_trans.seuil.dto.SeuilAlerteResponse;
 import com.bouba.backend_trans.seuil.service.SeuilAlerteService;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 /**
@@ -32,6 +33,7 @@ import jakarta.validation.Valid;
 @RestController
 @RequestMapping("/api/v1/thresholds")
 @PreAuthorize("hasAnyRole('ADMINISTRATEUR', 'TECHNICIEN')")
+@Tag(name = "Seuils d'alerte", description = "Seuils par équipement et type de métrique (§11.2), lecture technicien+, écriture administrateur.")
 public class SeuilAlerteController {
 
 	private final SeuilAlerteService seuilAlerteService;

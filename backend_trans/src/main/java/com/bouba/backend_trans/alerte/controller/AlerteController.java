@@ -24,9 +24,13 @@ import com.bouba.backend_trans.alerte.service.AlerteService;
 import com.bouba.backend_trans.auth.entity.AppUser;
 import com.bouba.backend_trans.auth.repository.AppUserRepository;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/api/v1/alerts")
 @PreAuthorize("hasAnyRole('ADMINISTRATEUR', 'TECHNICIEN', 'OBSERVATEUR')")
+@Tag(name = "Alertes", description = "Journal des alertes (§4.4, §7.9, §10.4) : consultation, prise en compte, résolution.")
 public class AlerteController {
 
 	/** Plafond de sécurité sur la taille de page demandée. */
@@ -65,6 +69,7 @@ public class AlerteController {
 
 	@PutMapping("/{id}/acknowledge")
 	@PreAuthorize("hasAnyRole('ADMINISTRATEUR', 'TECHNICIEN')")
+	@Operation(summary = "Prendre en compte une alerte", description = "Éteint le clignotement de la lampe associée sur le synoptique.")
 	public AlerteResponse acknowledge(@PathVariable UUID id, Authentication authentication) {
 		AppUser utilisateur = currentUser(authentication);
 		return AlerteResponse.fromEntity(alerteService.acknowledge(id, utilisateur));
@@ -72,6 +77,7 @@ public class AlerteController {
 
 	@PutMapping("/{id}/resolve")
 	@PreAuthorize("hasAnyRole('ADMINISTRATEUR', 'TECHNICIEN')")
+	@Operation(summary = "Résoudre une alerte")
 	public AlerteResponse resolve(@PathVariable UUID id) {
 		return AlerteResponse.fromEntity(alerteService.resolve(id));
 	}

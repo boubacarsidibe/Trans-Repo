@@ -21,11 +21,14 @@ import com.bouba.backend_trans.equipement.dto.EquipementResponse;
 import com.bouba.backend_trans.equipement.entity.Equipement;
 import com.bouba.backend_trans.equipement.service.EquipementService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/equipments")
 @PreAuthorize("hasAnyRole('ADMINISTRATEUR', 'TECHNICIEN', 'OBSERVATEUR')")
+@Tag(name = "Équipements", description = "Parc supervisé : déclaration, modification, archivage.")
 public class EquipementController {
 
 	private final EquipementService equipementService;
@@ -48,6 +51,10 @@ public class EquipementController {
 
 	@PostMapping
 	@PreAuthorize("hasAnyRole('ADMINISTRATEUR', 'TECHNICIEN')")
+	@Operation(
+			summary = "Déclarer un équipement",
+			description = "La réponse porte `cleApi` une seule fois, à la création : elle n'est plus jamais "
+					+ "retournée ensuite. À copier immédiatement pour la configuration de l'agent.")
 	public ResponseEntity<EquipementResponse> create(@Valid @RequestBody EquipementRequest request) {
 		Equipement created = equipementService.create(request);
 		return ResponseEntity.status(HttpStatus.CREATED).body(EquipementResponse.fromEntity(created, true));

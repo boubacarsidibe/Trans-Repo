@@ -14,9 +14,12 @@ import org.springframework.web.bind.annotation.RestController;
 import com.bouba.backend_trans.audit.dto.JournalAuditResponse;
 import com.bouba.backend_trans.audit.service.JournalAuditService;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/api/v1/audit-log")
 @PreAuthorize("hasRole('ADMINISTRATEUR')")
+@Tag(name = "Journal d'audit", description = "Traçabilité des actions de mutation, réservée à l'administrateur.")
 public class JournalAuditController {
 
 	private static final int TAILLE_MAXIMALE = 1000;

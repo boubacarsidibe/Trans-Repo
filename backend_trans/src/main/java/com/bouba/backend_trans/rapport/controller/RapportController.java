@@ -21,11 +21,14 @@ import com.bouba.backend_trans.rapport.dto.RapportResponse;
 import com.bouba.backend_trans.rapport.entity.Rapport;
 import com.bouba.backend_trans.rapport.service.RapportService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/reports")
 @PreAuthorize("hasAnyRole('ADMINISTRATEUR', 'TECHNICIEN', 'OBSERVATEUR')")
+@Tag(name = "Rapports", description = "Rapports archivés, génération à la demande (F8) et téléchargement PDF.")
 public class RapportController {
 
 	private final RapportService rapportService;
@@ -51,6 +54,7 @@ public class RapportController {
 	}
 
 	@GetMapping("/{id}/download")
+	@Operation(summary = "Télécharger le PDF d'un rapport")
 	public ResponseEntity<byte[]> download(@PathVariable UUID id) {
 		Rapport rapport = rapportService.findById(id);
 		byte[] pdf = rapportService.fichier(id);

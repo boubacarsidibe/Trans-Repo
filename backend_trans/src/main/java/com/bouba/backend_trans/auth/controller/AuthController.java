@@ -16,10 +16,13 @@ import com.bouba.backend_trans.auth.dto.RegisterRequest;
 import com.bouba.backend_trans.auth.dto.ResetPasswordRequest;
 import com.bouba.backend_trans.auth.service.AuthService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/auth")
+@Tag(name = "Authentification", description = "Connexion, rafraîchissement de jeton et réinitialisation de mot de passe.")
 public class AuthController {
 
 	private final AuthService authService;
@@ -39,12 +42,14 @@ public class AuthController {
 	}
 
 	@PostMapping("/login")
+	@Operation(summary = "Connexion", description = "Verrouille le compte après plusieurs échecs (§4.4).")
 	public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
 		AuthResponse response = authService.login(request);
 		return ResponseEntity.ok(response);
 	}
 
 	@PostMapping("/refresh")
+	@Operation(summary = "Rafraîchissement du jeton d'accès à partir du jeton de rafraîchissement")
 	public ResponseEntity<AuthResponse> refresh(@Valid @RequestBody RefreshRequest request) {
 		AuthResponse response = authService.refresh(request);
 		return ResponseEntity.ok(response);
