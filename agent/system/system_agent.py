@@ -47,6 +47,8 @@ class AgentConfig:
     api_key: str
     interval_seconds: int
     request_timeout_seconds: int
+    send_max_retries: int
+    send_retry_backoff_seconds: float
     tcp_targets: list[tuple[str, int]]
     tcp_check_timeout_seconds: float
     dns_check_hostname: str
@@ -76,6 +78,8 @@ def load_config() -> AgentConfig:
         api_key=api_key,
         interval_seconds=int(os.environ.get("INTERVAL_SECONDS", "60")),
         request_timeout_seconds=int(os.environ.get("REQUEST_TIMEOUT_SECONDS", "10")),
+        send_max_retries=int(os.environ.get("SEND_MAX_RETRIES", "3")),
+        send_retry_backoff_seconds=float(os.environ.get("SEND_RETRY_BACKOFF_SECONDS", "5")),
         tcp_targets=checks.parse_tcp_targets(os.environ.get("TCP_HEALTHCHECK_PORTS", "")),
         tcp_check_timeout_seconds=float(os.environ.get("TCP_CHECK_TIMEOUT_SECONDS", "2")),
         dns_check_hostname=os.environ.get("DNS_CHECK_HOSTNAME", ""),
@@ -198,20 +202,37 @@ def collect_optional_metrics(config: AgentConfig, state: dict) -> dict:
 
 
 def send_metrics(config: AgentConfig, metrics: dict) -> None:
+    """Envoie les metriques, avec quelques tentatives rapprochees en cas
+    d'erreur reseau passagere avant d'abandonner jusqu'au cycle suivant."""
     metrics["equipment_id"] = config.equipment_id
     url = f"{config.backend_url}/api/v1/metrics/system"
     headers = {"X-API-Key": config.api_key}
 
-    response = requests.post(url, json=metrics, headers=headers, timeout=config.request_timeout_seconds)
-    response.raise_for_status()
-    logger.info(
-        "Metriques envoyees (cpu=%.1f%%, ram=%.1f%%, disque=%.1f%%, swap=%.1f%%, processus=%s)",
-        metrics["cpu_percent"],
-        metrics["memory_percent"],
-        metrics["disk_percent"],
-        metrics["swap_percent"],
-        metrics["process_count"],
-    )
+    derniere_erreur: requests.RequestException | None = None
+    for tentative in range(1, config.send_max_retries + 1):
+        try:
+            response = requests.post(url, json=metrics, headers=headers, timeout=config.request_timeout_seconds)
+            response.raise_for_status()
+            logger.info(
+                "Metriques envoyees (cpu=%.1f%%, ram=%.1f%%, disque=%.1f%%, swap=%.1f%%, processus=%s)",
+                metrics["cpu_percent"],
+                metrics["memory_percent"],
+                metrics["disk_percent"],
+                metrics["swap_percent"],
+                metrics["process_count"],
+            )
+            return
+        except requests.RequestException as exc:
+            derniere_erreur = exc
+            if tentative < config.send_max_retries:
+                attente = config.send_retry_backoff_seconds * tentative
+                logger.warning(
+                    "Echec d'envoi des metriques (tentative %d/%d), nouvel essai dans %.0fs : %s",
+                    tentative, config.send_max_retries, attente, exc,
+                )
+                time.sleep(attente)
+
+    raise derniere_erreur
 
 
 class GracefulShutdown:
