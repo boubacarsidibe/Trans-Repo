@@ -13,6 +13,9 @@ Historique des décisions techniques prises pendant le développement et des poi
 **29/08 — Tableau des routes (#10)**
 `/equipements/:id/modifier` et `/seuils` ajoutées au tableau de `frontend/README.md`, avec `technicien` comme rôle requis (cohérent avec `peutIntervenir()`).
 
+**29/08 — Version pysnmp cassée**
+En écrivant les tests pytest de `network_collector.py`, découvert que `network/requirements.txt` épinglait `pysnmp==6.2.6` alors que le code importe `pysnmp.hlapi.v3arch.asyncio`, module introduit seulement en pysnmp 7.1.10+. L'agent réseau n'aurait jamais démarré en l'état (`ModuleNotFoundError`), un défaut que `python -m compileall` (vérif de syntaxe seule, sans import réel) ne pouvait pas détecter. Corrigé vers `pysnmp==7.1.29` (dernière version stable, testée : import + suite pytest complète passent).
+
 ## Points à trancher
 
 **Sort de `/netvision-preview` (#11)**

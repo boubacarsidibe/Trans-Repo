@@ -53,6 +53,21 @@ sont vraiment remplis.
     scénarios nominaux + erreurs (échec de connexion, liste vide, action sur
     une alerte).
 
+## Tests agents
+
+- [x] Mettre en place des tests pour les agents Python (pytest) et couvrir
+      la logique métier des deux agents (`checks.py`, `system_agent.py`,
+      `network_collector.py`).
+  - Critères : `python -m pytest` (depuis `agent/`) vert en local et dans
+    `ci-cd.yml` (job agent), réseau/disque/capteurs/HTTP/SNMP simulés (pas
+    de matériel ni de backend requis).
+  - A découvert au passage un bug réel que `compileall` ne pouvait pas
+    voir : `network_collector.py` importe `pysnmp.hlapi.v3arch.asyncio`,
+    module apparu seulement en pysnmp 7.1.10+, alors que
+    `network/requirements.txt` épinglait `pysnmp==6.2.6` — l'agent réseau
+    aurait plané au démarrage avec `ModuleNotFoundError`. Corrigé vers
+    `pysnmp==7.1.29`.
+
 ## Intégration
 
 - [ ] Test d'intégration bout-en-bout sans interface : un agent Python

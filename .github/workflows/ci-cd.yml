@@ -148,12 +148,17 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r system/requirements.txt -r network/requirements.txt
+          pip install -r system/requirements.txt -r network/requirements.txt -r requirements-dev.txt
 
-      # No test suite yet: compileall catches syntax errors and, combined with
-      # the install step above, missing dependencies.
+      # compileall catches syntax errors; pytest actually imports the
+      # modules and exercises their logic (it would have caught, for
+      # instance, network_collector.py importing a pysnmp submodule that
+      # didn't exist yet in the pinned version).
       - name: Syntax check
         run: python -m compileall -q system network
+
+      - name: Test
+        run: python -m pytest
 
   deploy:
     name: Deploy
