@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.bouba.backend_trans.audit.entity.JournalAudit;
@@ -19,7 +20,11 @@ public class JournalAuditService {
 		this.journalAuditRepository = journalAuditRepository;
 	}
 
-	@Transactional
+	// REQUIRES_NEW : l'ecriture d'audit est independante de la transaction de
+	// l'action metier qui la declenche (issue #44, AuditAspect) - elle commite
+	// meme si l'appelant tourne dans une transaction plus large qui echoue
+	// ensuite pour une autre raison.
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void enregistrer(AppUser utilisateur, String action, String adresseIpSource) {
 		JournalAudit entree = new JournalAudit();
 		entree.setUtilisateur(utilisateur);

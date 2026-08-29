@@ -6,6 +6,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.bouba.backend_trans.audit.Auditable;
 import com.bouba.backend_trans.auth.dto.UserCreateRequest;
 import com.bouba.backend_trans.auth.dto.UserUpdateRequest;
 import com.bouba.backend_trans.auth.entity.AppUser;
@@ -35,6 +36,7 @@ public class UserService {
 	}
 
 	@Transactional
+	@Auditable("CREATION_UTILISATEUR")
 	public AppUser create(UserCreateRequest request) {
 		String normalizedEmail = request.getEmail().trim().toLowerCase();
 		if (appUserRepository.existsByEmail(normalizedEmail)) {
@@ -51,6 +53,7 @@ public class UserService {
 	}
 
 	@Transactional
+	@Auditable("MODIFICATION_UTILISATEUR")
 	public AppUser update(Long id, UserUpdateRequest request) {
 		AppUser user = findById(id);
 
@@ -71,6 +74,7 @@ public class UserService {
 	}
 
 	@Transactional
+	@Auditable("DESACTIVATION_UTILISATEUR")
 	public void deactivate(Long id) {
 		AppUser user = findById(id);
 		user.setActive(false);

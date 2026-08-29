@@ -6,6 +6,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.bouba.backend_trans.audit.Auditable;
 import com.bouba.backend_trans.equipement.dto.EquipementRequest;
 import com.bouba.backend_trans.equipement.entity.Equipement;
 import com.bouba.backend_trans.equipement.entity.EtatEquipement;
@@ -32,6 +33,7 @@ public class EquipementService {
 	}
 
 	@Transactional
+	@Auditable("CREATION_EQUIPEMENT")
 	public Equipement create(EquipementRequest request) {
 		if (equipementRepository.existsByAdresseIp(request.getAdresseIp())) {
 			throw new IllegalStateException("Un équipement avec cette adresse IP existe déjà.");
@@ -46,6 +48,7 @@ public class EquipementService {
 	}
 
 	@Transactional
+	@Auditable("MODIFICATION_EQUIPEMENT")
 	public Equipement update(UUID id, EquipementRequest request) {
 		Equipement equipement = findById(id);
 
@@ -59,6 +62,7 @@ public class EquipementService {
 	}
 
 	@Transactional
+	@Auditable("ARCHIVAGE_EQUIPEMENT")
 	public void archive(UUID id) {
 		Equipement equipement = findById(id);
 		equipement.setEtat(EtatEquipement.INACTIF);

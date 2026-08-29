@@ -15,6 +15,7 @@ import com.bouba.backend_trans.alerte.entity.Severite;
 import com.bouba.backend_trans.alerte.entity.StatutAlerte;
 import com.bouba.backend_trans.alerte.entity.TypeAnomalie;
 import com.bouba.backend_trans.alerte.repository.AlerteRepository;
+import com.bouba.backend_trans.audit.Auditable;
 import com.bouba.backend_trans.auth.entity.AppUser;
 import com.bouba.backend_trans.equipement.entity.EtatEquipement;
 import com.bouba.backend_trans.equipement.entity.Equipement;
@@ -133,6 +134,7 @@ public class AlerteService {
 	}
 
 	@Transactional
+	@Auditable("PRISE_EN_COMPTE_ALERTE")
 	public Alerte acknowledge(UUID id, AppUser utilisateur) {
 		Alerte alerte = findById(id);
 		alerte.setStatut(StatutAlerte.PRISE_EN_COMPTE);
@@ -144,6 +146,7 @@ public class AlerteService {
 	}
 
 	@Transactional
+	@Auditable("RESOLUTION_ALERTE")
 	public Alerte resolve(UUID id) {
 		Alerte alerte = findById(id);
 		alerte.setStatut(StatutAlerte.RESOLUE);
