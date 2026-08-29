@@ -158,26 +158,26 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/trans-repo-frontend:latest
             ghcr.io/${{ github.repository_owner }}/trans-repo-frontend:${{ github.sha }}
 
-      # deploy/docker-compose.yml est ce que le VPS execute ; le .env qui
-      # porte les secrets reste local au VPS et n'est jamais touche ici
-      # (cf. deploy/README.md).
-      - name: Copier la configuration de deploiement sur le VPS
+      # deploy/docker-compose.yml est ce que le serveur CRI execute ; le .env
+      # qui porte les secrets reste local au serveur et n'est jamais touche
+      # ici (cf. deploy/README.md).
+      - name: Copier la configuration de deploiement sur le serveur CRI
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
+          host: ${{ secrets.CRI_HOST }}
+          username: ${{ secrets.CRI_USER }}
+          key: ${{ secrets.CRI_SSH_KEY }}
           source: "deploy/docker-compose.yml"
-          target: ${{ secrets.VPS_DEPLOY_PATH }}
+          target: ${{ secrets.CRI_DEPLOY_PATH }}
           strip_components: 1
 
-      - name: Deployer sur le VPS
+      - name: Deployer sur le serveur CRI
         uses: appleboy/ssh-action@v1.2.0
         with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
+          host: ${{ secrets.CRI_HOST }}
+          username: ${{ secrets.CRI_USER }}
+          key: ${{ secrets.CRI_SSH_KEY }}
           script: |
-            cd ${{ secrets.VPS_DEPLOY_PATH }}
+            cd ${{ secrets.CRI_DEPLOY_PATH }}
             docker compose pull
             docker compose up -d
