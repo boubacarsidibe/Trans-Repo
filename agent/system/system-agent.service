@@ -1,0 +1,34 @@
+[Unit]
+Description=Agent de supervision systeme (PFE Monitoring EPT)
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=monitoring
+Group=monitoring
+
+# Ajuster ce chemin a l'emplacement reel de deploiement sur la machine
+# supervisee (ex. /opt/monitoring-ept/agent/system).
+WorkingDirectory=/opt/monitoring-ept/agent/system
+EnvironmentFile=/opt/monitoring-ept/agent/system/.env
+ExecStart=/opt/monitoring-ept/agent/system/.venv/bin/python system_agent.py
+
+# system_agent.py gere deja SIGINT/SIGTERM proprement (fin apres le cycle en
+# cours, cf. GracefulShutdown) : systemd peut lui laisser le temps de finir.
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+Restart=on-failure
+RestartSec=10
+
+# Durcissement minimal : seul le repertoire de travail (ou vit agent_state.json,
+# STATE_FILE_PATH) a besoin d'etre inscriptible.
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/opt/monitoring-ept/agent/system
+
+[Install]
+WantedBy=multi-user.target

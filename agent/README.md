@@ -55,3 +55,53 @@ ses paramètres de sonde :
   "interface_index": 1
 }
 ```
+
+## Exécution durable (systemd)
+
+En développement, `python system_agent.py`/`python network_collector.py`
+suffit. Pour qu'un agent survive à un redémarrage de la machine et reparte
+après un plantage, chacun a son unit systemd : `system/system-agent.service`
+et `network/network-collector.service`.
+
+Installation (à répéter pour chaque agent, en remplaçant les chemins) :
+
+```bash
+# 1. Déployer le code sur la machine (serveur supervisé pour system/, poste
+#    centralisé du CRI pour network/), à l'emplacement attendu par le unit
+#    (par défaut /opt/monitoring-ept/agent/<system|network> — sinon, adapter
+#    WorkingDirectory/EnvironmentFile/ExecStart dans le fichier .service).
+sudo mkdir -p /opt/monitoring-ept/agent/system
+sudo cp -r agent/system/* /opt/monitoring-ept/agent/system/
+cd /opt/monitoring-ept/agent/system
+
+# 2. Environnement virtuel dédié (le unit pointe sur .venv/bin/python).
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+
+# 3. Configuration (jamais commitée : lue directement par systemd via
+#    EnvironmentFile, pas besoin de python-dotenv en production).
+cp .env.example .env
+# éditer .env : EQUIPMENT_ID/API_KEY (system) ou EQUIPMENTS_CONFIG_PATH +
+# equipments.json (network)
+
+# 4. Utilisateur de service dédié, sans privilèges (une seule fois pour les
+#    deux agents s'ils tournent sur la même machine).
+sudo useradd --system --no-create-home --shell /usr/sbin/nologin monitoring
+sudo chown -R monitoring:monitoring /opt/monitoring-ept
+
+# 5. Installer et démarrer le unit.
+sudo cp system-agent.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now system-agent.service
+sudo systemctl status system-agent.service
+journalctl -u system-agent.service -f
+```
+
+Les deux units redémarrent automatiquement en cas d'échec
+(`Restart=on-failure`) et laissent 30 s à l'agent pour terminer son cycle en
+cours avant de couper (les deux scripts gèrent déjà `SIGINT`/`SIGTERM`
+proprement). `network-collector.service` n'écrit rien sur disque (état entre
+deux cycles gardé en mémoire) ; `system-agent.service` a besoin d'écrire
+`agent_state.json` (`STATE_FILE_PATH`) dans son répertoire de travail, seul
+chemin laissé inscriptible par le durcissement du unit
+(`ProtectSystem=strict` + `ReadWritePaths`).

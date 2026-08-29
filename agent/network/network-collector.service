@@ -1,0 +1,33 @@
+[Unit]
+Description=Collecteur reseau SNMP/ICMP (PFE Monitoring EPT)
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=monitoring
+Group=monitoring
+
+# Ajuster ce chemin a l'emplacement reel de deploiement (machine centrale du
+# CRI, pas une machine supervisee : ce collecteur sonde a distance).
+WorkingDirectory=/opt/monitoring-ept/agent/network
+EnvironmentFile=/opt/monitoring-ept/agent/network/.env
+ExecStart=/opt/monitoring-ept/agent/network/.venv/bin/python network_collector.py
+
+# network_collector.py gere deja SIGINT/SIGTERM proprement (fin apres le
+# cycle en cours, cf. GracefulShutdown).
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+Restart=on-failure
+RestartSec=10
+
+# Durcissement minimal : aucune ecriture disque en dehors des logs (l'etat
+# entre deux cycles reste en memoire), donc pas de ReadWritePaths necessaire.
+NoNewPrivileges=true
+ProtectSystem=strict
+
+[Install]
+WantedBy=multi-user.target
