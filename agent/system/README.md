@@ -22,6 +22,7 @@ cp .env.example .env
 | `EQUIPMENT_ID` | UUID de l'équipement, créé au préalable via l'API/le frontend (`Équipements`) |
 | `API_KEY` | Clé API propre à cet équipement (générée à sa création) |
 | `INTERVAL_SECONDS` | Fréquence de collecte |
+| `SEND_MAX_RETRIES` / `SEND_RETRY_BACKOFF_SECONDS` | Tentatives d'envoi en cas d'erreur réseau, avant d'abandonner jusqu'au cycle suivant |
 
 Les sondes optionnelles (TCP, DNS, log, fichier surveillé, Modbus) restent
 désactivées tant que leurs variables associées ne sont pas renseignées —
