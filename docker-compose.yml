@@ -1,0 +1,57 @@
+services:
+  postgres:
+    # timescale/timescaledb plutot que postgres: nu, pour que l'extension soit
+    # deja presente quand #56 (migration TimescaleDB) l'active sur les tables
+    # de metriques. En attendant, elle se comporte comme un Postgres 16 normal.
+    image: timescale/timescaledb:latest-pg16
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-Transdb}
+      POSTGRES_USER: ${POSTGRES_USER:-admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secretpassword}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-admin} -d ${POSTGRES_DB:-Transdb}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend_trans
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-Transdb}
+      DB_USERNAME: ${POSTGRES_USER:-admin}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-secretpassword}
+      # JWT_SECRET non defini ici : le defaut de application.properties
+      # s'applique. A surcharger explicitement pour un usage au-dela du
+      # developpement/de la demonstration locale.
+      CORS_ALLOWED_ORIGINS: http://localhost:${FRONTEND_PORT:-8081}
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # Le navigateur appelle l'API depuis le poste hote, pas depuis le
+        # reseau interne des conteneurs : l'URL doit rester celle exposee
+        # sur l'hote (le port publie du service backend ci-dessus).
+        VITE_API_BASE_URL: http://localhost:8080
+    depends_on:
+      - backend
+    ports:
+      - "${FRONTEND_PORT:-8081}:80"
+
+volumes:
+  postgres_data:
+
+# Les agents Python (agent/system, agent/network) ne sont volontairement pas
+# ici : ils tournent normalement sur les machines supervisees elles-memes,
+# pas a cote de la plateforme (cf. issue #37). A ajouter separement si un
+# jour de la demonstration a besoin d'un agent conteneurise.
