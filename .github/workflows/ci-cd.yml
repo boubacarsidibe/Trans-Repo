@@ -38,8 +38,9 @@ jobs:
       - name: Audit dependencies
         run: npm audit --audit-level=high
 
-      # No "test" script in frontend/package.json: the build is the gate,
-      # since "tsc -b" fails on any broken import or type error.
+      - name: Test
+        run: npm run test
+
       - name: Build
         run: npm run build
 

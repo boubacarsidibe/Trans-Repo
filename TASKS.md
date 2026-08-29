@@ -45,7 +45,7 @@ sont vraiment remplis.
 
 ## Tests frontend
 
-- [ ] Mettre en place des tests frontend (Vitest + Testing Library, aligné
+- [x] Mettre en place des tests frontend (Vitest + Testing Library, aligné
       avec Vite) et couvrir les écrans critiques : `LoginPage`,
       `EquipementsPage`, `AlertesPage`.
   - Critères : `npm run test` (nouveau script à ajouter dans
