@@ -60,6 +60,13 @@ class AgentConfig:
     modbus_unit_id: int
     modbus_register_address: int
     modbus_register_type: str
+    probe_charge_machine: bool
+    probe_limites_ressources: bool
+    probe_capteurs: bool
+
+
+def _env_bool(name: str, default: bool = False) -> bool:
+    return os.environ.get(name, str(default)).strip().lower() in ("1", "true", "yes", "on")
 
 
 def load_config() -> AgentConfig:
@@ -89,6 +96,9 @@ def load_config() -> AgentConfig:
         modbus_unit_id=int(os.environ.get("MODBUS_UNIT_ID", "1")),
         modbus_register_address=int(os.environ.get("MODBUS_REGISTER_ADDRESS", "0")),
         modbus_register_type=os.environ.get("MODBUS_REGISTER_TYPE", "holding"),
+        probe_charge_machine=_env_bool("PROBE_CHARGE_MACHINE"),
+        probe_limites_ressources=_env_bool("PROBE_LIMITES_RESSOURCES"),
+        probe_capteurs=_env_bool("PROBE_CAPTEURS"),
     )
 
 
@@ -101,7 +111,7 @@ def count_listening_ports() -> int | None:
     return sum(1 for c in connections if c.status == psutil.CONN_LISTEN)
 
 
-def collect_core_metrics(previous_io: IoSample | None) -> tuple[dict, IoSample]:
+def collect_core_metrics(previous_io: IoSample | None, config: AgentConfig) -> tuple[dict, IoSample]:
     disk_path = "C:\\" if os.name == "nt" else "/"
     now = time.monotonic()
 
@@ -136,15 +146,17 @@ def collect_core_metrics(previous_io: IoSample | None) -> tuple[dict, IoSample]:
     if listening_ports is not None:
         metrics["listening_ports_count"] = listening_ports
 
-    load_ratio = checks.read_load_ratio()
-    if load_ratio is not None:
-        metrics["load_1min"] = load_ratio
+    if config.probe_charge_machine:
+        load_ratio = checks.read_load_ratio()
+        if load_ratio is not None:
+            metrics["load_1min"] = load_ratio
 
-    open_files_limit, process_limit = checks.read_resource_limits()
-    if open_files_limit is not None:
-        metrics["open_files_limit"] = open_files_limit
-    if process_limit is not None:
-        metrics["process_limit"] = process_limit
+    if config.probe_limites_ressources:
+        open_files_limit, process_limit = checks.read_resource_limits()
+        if open_files_limit is not None:
+            metrics["open_files_limit"] = open_files_limit
+        if process_limit is not None:
+            metrics["process_limit"] = process_limit
 
     if previous_io is not None and current_io.timestamp > previous_io.timestamp:
         elapsed = current_io.timestamp - previous_io.timestamp
@@ -182,11 +194,12 @@ def collect_optional_metrics(config: AgentConfig, state: dict) -> dict:
         if file_size is not None:
             metrics["watched_file_size_bytes"] = file_size
 
-    temperature, fan_speed = checks.read_sensors()
-    if temperature is not None:
-        metrics["temperature_max_celsius"] = temperature
-    if fan_speed is not None:
-        metrics["fan_speed_rpm"] = fan_speed
+    if config.probe_capteurs:
+        temperature, fan_speed = checks.read_sensors()
+        if temperature is not None:
+            metrics["temperature_max_celsius"] = temperature
+        if fan_speed is not None:
+            metrics["fan_speed_rpm"] = fan_speed
 
     modbus_value = checks.read_modbus_register(
         config.modbus_host, config.modbus_port, config.modbus_unit_id,
@@ -239,7 +252,7 @@ def run(config: AgentConfig) -> None:
     while not shutdown.stop_requested:
         cycle_start = time.monotonic()
         try:
-            metrics, previous_io = collect_core_metrics(previous_io)
+            metrics, previous_io = collect_core_metrics(previous_io, config)
             metrics.update(collect_optional_metrics(config, state))
             checks.save_state(config.state_file_path, state)
             send_metrics(config, metrics)

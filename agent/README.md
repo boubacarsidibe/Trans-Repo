@@ -18,12 +18,27 @@ python system_agent.py
 ```
 
 Un agent minimal ne demande que `EQUIPMENT_ID`/`API_KEY` : les sondes
-supplémentaires de `checks.py` (TCP, DNS, fichier de log, fichier surveillé,
-Modbus TCP) restent désactivées tant que leur(s) variable(s) d'environnement
-ne sont pas renseignées dans `.env` — chacune est indépendante des autres. La
-lecture Modbus n'a pas été validée sur du matériel réel (voir issue dédiée)
-et est à vérifier avant toute mise en production sur un site avec des
-automates.
+supplémentaires de `checks.py` restent désactivées tant qu'elles ne sont pas
+explicitement activées dans `.env` — chacune est indépendante des autres.
+Deux façons de les activer, selon la sonde (issue #45) :
+
+| Sonde | Activation | Variables |
+|---|---|---|
+| Charge machine (load average) | `PROBE_CHARGE_MACHINE=true` | — |
+| Limites de ressources (fichiers ouverts, processus) | `PROBE_LIMITES_RESSOURCES=true` | — |
+| Capteurs matériels (température, ventilateur) | `PROBE_CAPTEURS=true` | — |
+| Services TCP locaux | dès que renseignée | `TCP_HEALTHCHECK_PORTS` |
+| Latence DNS | dès que renseignée | `DNS_CHECK_HOSTNAME` |
+| Fichier de log surveillé | dès que renseignée | `LOG_FILE_PATH` (+ `LOG_PATTERN` optionnel) |
+| Fichier surveillé (existence/taille) | dès que renseignée | `WATCHED_FILE_PATH` |
+| Registre Modbus TCP | dès que renseignée | `MODBUS_HOST` |
+
+Les trois premières n'ont pas de configuration propre (juste une donnée à
+lire ou non) : un booléen suffit. Les cinq suivantes ont besoin d'une cible
+(hôte, chemin, fichier) : la renseigner suffit à les activer, pas besoin
+d'un booléen séparé. La lecture Modbus n'a pas été validée sur du matériel
+réel (voir issue dédiée) et est à vérifier avant toute mise en production sur
+un site avec des automates.
 
 ## `network/` — collecteur réseau
 

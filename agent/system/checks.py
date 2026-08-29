@@ -1,9 +1,12 @@
 """Sondes optionnelles additionnelles pour l'agent systeme.
 
-Chaque fonction est independante et desactivee par defaut (retourne None
-quand la variable d'environnement correspondante n'est pas configuree),
-afin qu'un agent minimal (CPU/RAM/disque) reste utilisable sans
-configuration supplementaire.
+Chaque fonction est independante. La plupart se desactivent d'elles-memes
+(retournent None) quand la variable d'environnement correspondante n'est
+pas configuree (cible TCP, hote DNS, chemin de fichier, hote Modbus) ; les
+trois qui n'ont aucune configuration propre (charge machine, limites de
+ressources, capteurs materiels) sont a la place gardees par un PROBE_xxx
+dans system_agent.py, cote appelant. Dans tous les cas, un agent minimal
+(CPU/RAM/disque) reste utilisable sans configuration supplementaire.
 """
 
 import json

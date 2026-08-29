@@ -8,7 +8,7 @@ import pytest
 import requests
 
 import system_agent
-from system_agent import AgentConfig, GracefulShutdown, collect_core_metrics, send_metrics
+from system_agent import AgentConfig, GracefulShutdown, collect_core_metrics, collect_optional_metrics, send_metrics
 
 
 def _config(**overrides) -> AgentConfig:
@@ -31,6 +31,9 @@ def _config(**overrides) -> AgentConfig:
         modbus_unit_id=1,
         modbus_register_address=0,
         modbus_register_type="holding",
+        probe_charge_machine=False,
+        probe_limites_ressources=False,
+        probe_capteurs=False,
     )
     base.update(overrides)
     return AgentConfig(**base)
@@ -65,7 +68,7 @@ class TestCollectCoreMetrics:
         mocker.patch("system_agent.psutil.disk_io_counters", return_value=_fake_disk_io(1000, 2000))
         mocker.patch("system_agent.psutil.net_io_counters", return_value=_fake_net_io(3000, 4000))
 
-        metrics, io = collect_core_metrics(previous_io=None)
+        metrics, io = collect_core_metrics(previous_io=None, config=_config())
 
         assert metrics["cpu_percent"] == 10.0
         assert metrics["memory_percent"] == 42.5
@@ -79,7 +82,7 @@ class TestCollectCoreMetrics:
         mocker.patch("system_agent.psutil.disk_io_counters", return_value=_fake_disk_io(1000, 2000))
         mocker.patch("system_agent.psutil.net_io_counters", return_value=_fake_net_io(3000, 4000))
 
-        metrics, _ = collect_core_metrics(previous_io=None)
+        metrics, _ = collect_core_metrics(previous_io=None, config=_config())
 
         for cle in ("disk_read_kbps", "disk_write_kbps", "network_in_kbps", "network_out_kbps"):
             assert cle not in metrics
@@ -88,7 +91,7 @@ class TestCollectCoreMetrics:
         mocker.patch("system_agent.psutil.disk_io_counters", return_value=_fake_disk_io(1_000_000, 2_000_000))
         mocker.patch("system_agent.psutil.net_io_counters", return_value=_fake_net_io(500_000, 250_000))
         mocker.patch("system_agent.time.monotonic", return_value=100.0)
-        _, premier_io = collect_core_metrics(previous_io=None)
+        _, premier_io = collect_core_metrics(previous_io=None, config=_config())
 
         mocker.patch(
             "system_agent.psutil.disk_io_counters",
@@ -100,7 +103,7 @@ class TestCollectCoreMetrics:
         )
         mocker.patch("system_agent.time.monotonic", return_value=105.0)
 
-        metrics, _ = collect_core_metrics(previous_io=premier_io)
+        metrics, _ = collect_core_metrics(previous_io=premier_io, config=_config())
 
         # 5 secondes ecoulees entre les deux cycles.
         assert metrics["disk_read_kbps"] == pytest.approx(2.0)
@@ -114,16 +117,75 @@ class TestCollectCoreMetrics:
         mocker.patch("system_agent.psutil.disk_io_counters", return_value=_fake_disk_io(1_000_000, 2_000_000))
         mocker.patch("system_agent.psutil.net_io_counters", return_value=_fake_net_io(500_000, 250_000))
         mocker.patch("system_agent.time.monotonic", return_value=100.0)
-        _, premier_io = collect_core_metrics(previous_io=None)
+        _, premier_io = collect_core_metrics(previous_io=None, config=_config())
 
         mocker.patch("system_agent.psutil.disk_io_counters", return_value=_fake_disk_io(100, 200))
         mocker.patch("system_agent.psutil.net_io_counters", return_value=_fake_net_io(50, 25))
         mocker.patch("system_agent.time.monotonic", return_value=105.0)
 
-        metrics, _ = collect_core_metrics(previous_io=premier_io)
+        metrics, _ = collect_core_metrics(previous_io=premier_io, config=_config())
 
         assert metrics["disk_read_kbps"] == 0
         assert metrics["network_in_kbps"] == 0
+
+    def test_charge_machine_ignoree_par_defaut(self, mocker):
+        lire = mocker.patch("system_agent.checks.read_load_ratio", return_value=0.42)
+        mocker.patch("system_agent.psutil.disk_io_counters", return_value=_fake_disk_io(0, 0))
+        mocker.patch("system_agent.psutil.net_io_counters", return_value=_fake_net_io(0, 0))
+
+        metrics, _ = collect_core_metrics(previous_io=None, config=_config(probe_charge_machine=False))
+
+        lire.assert_not_called()
+        assert "load_1min" not in metrics
+
+    def test_charge_machine_lue_si_activee(self, mocker):
+        mocker.patch("system_agent.checks.read_load_ratio", return_value=0.42)
+        mocker.patch("system_agent.psutil.disk_io_counters", return_value=_fake_disk_io(0, 0))
+        mocker.patch("system_agent.psutil.net_io_counters", return_value=_fake_net_io(0, 0))
+
+        metrics, _ = collect_core_metrics(previous_io=None, config=_config(probe_charge_machine=True))
+
+        assert metrics["load_1min"] == 0.42
+
+    def test_limites_ressources_ignorees_par_defaut(self, mocker):
+        lire = mocker.patch("system_agent.checks.read_resource_limits", return_value=(1024, 512))
+        mocker.patch("system_agent.psutil.disk_io_counters", return_value=_fake_disk_io(0, 0))
+        mocker.patch("system_agent.psutil.net_io_counters", return_value=_fake_net_io(0, 0))
+
+        metrics, _ = collect_core_metrics(previous_io=None, config=_config(probe_limites_ressources=False))
+
+        lire.assert_not_called()
+        assert "open_files_limit" not in metrics
+        assert "process_limit" not in metrics
+
+    def test_limites_ressources_lues_si_activees(self, mocker):
+        mocker.patch("system_agent.checks.read_resource_limits", return_value=(1024, 512))
+        mocker.patch("system_agent.psutil.disk_io_counters", return_value=_fake_disk_io(0, 0))
+        mocker.patch("system_agent.psutil.net_io_counters", return_value=_fake_net_io(0, 0))
+
+        metrics, _ = collect_core_metrics(previous_io=None, config=_config(probe_limites_ressources=True))
+
+        assert metrics["open_files_limit"] == 1024
+        assert metrics["process_limit"] == 512
+
+
+class TestCollectOptionalMetrics:
+    def test_capteurs_ignores_par_defaut(self, mocker):
+        lire = mocker.patch("system_agent.checks.read_sensors", return_value=(55.0, 3200))
+
+        metrics = collect_optional_metrics(_config(probe_capteurs=False), state={})
+
+        lire.assert_not_called()
+        assert "temperature_max_celsius" not in metrics
+        assert "fan_speed_rpm" not in metrics
+
+    def test_capteurs_lus_si_actives(self, mocker):
+        mocker.patch("system_agent.checks.read_sensors", return_value=(55.0, 3200))
+
+        metrics = collect_optional_metrics(_config(probe_capteurs=True), state={})
+
+        assert metrics["temperature_max_celsius"] == 55.0
+        assert metrics["fan_speed_rpm"] == 3200
 
 
 def test_send_metrics_poste_les_bonnes_donnees(mocker):
@@ -186,7 +248,7 @@ def test_run_continue_apres_une_erreur_denvoi_sur_un_cycle(mocker):
 
     compteur = {"n": 0}
 
-    def fausse_collecte(previous_io):
+    def fausse_collecte(previous_io, config):
         compteur["n"] += 1
         if compteur["n"] >= 2:
             faux_arret.stop_requested = True
