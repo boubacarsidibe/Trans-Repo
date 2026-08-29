@@ -55,3 +55,15 @@ ses paramètres de sonde :
   "interface_index": 1
 }
 ```
+
+## Tests
+
+```bash
+pip install -r system/requirements.txt -r network/requirements.txt -r requirements-dev.txt
+python -m pytest   # depuis agent/ ; ramasse system/tests et network/tests (pytest.ini)
+```
+
+Tests unitaires (`pytest`) sur les fonctions pures et la logique métier des
+deux agents (`checks.py`, `system_agent.py`, `network_collector.py`) :
+réseau, disque, capteurs et appels HTTP/SNMP sont simulés — aucun matériel
+ni backend requis pour lancer la suite.
