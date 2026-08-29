@@ -10,6 +10,10 @@ Historique des décisions techniques prises pendant le développement et des poi
 **29/08 — Duplicata `agent/` (#9)**
 `agent/` (racine) confirmé comme version de référence (dernier commit plus récent, c'est celle que la CI compile). `backend_trans/agent/`, obsolète et non référencé ailleurs dans le dépôt, supprimé.
 
+**29/08 — Tableau des routes (#10)**
+`/equipements/:id/modifier` et `/seuils` ajoutées au tableau de `frontend/README.md`, avec `technicien` comme rôle requis (cohérent avec `peutIntervenir()`).
+
 ## Points à trancher
 
-_(aucun en cours)_
+**Sort de `/netvision-preview` (#11)**
+Trois options possibles : retirer la route du build de prod, la documenter et garder en prod avec garde de rôle, ou la supprimer complètement. En attente d'arbitrage avant implémentation.
