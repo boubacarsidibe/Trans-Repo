@@ -28,17 +28,20 @@ public class RapportService {
 	private final RapportRepository rapportRepository;
 	private final RapportCalculateur calculateur;
 	private final RapportPdf rapportPdf;
+	private final RapportCsv rapportCsv;
 	private final Path repertoire;
 
 	public RapportService(
 			RapportRepository rapportRepository,
 			RapportCalculateur calculateur,
 			RapportPdf rapportPdf,
+			RapportCsv rapportCsv,
 			@Value("${app.rapports.repertoire}") String repertoire
 	) {
 		this.rapportRepository = rapportRepository;
 		this.calculateur = calculateur;
 		this.rapportPdf = rapportPdf;
+		this.rapportCsv = rapportCsv;
 		this.repertoire = Path.of(repertoire);
 	}
 
@@ -91,6 +94,17 @@ public class RapportService {
 		} catch (IOException ex) {
 			throw new UncheckedIOException("Le fichier du rapport est introuvable sur le serveur.", ex);
 		}
+	}
+
+	/**
+	 * Recalcule les indicateurs et produit le CSV à la volée : contrairement au
+	 * PDF, il n'est pas persisté sur disque (peu coûteux à régénérer).
+	 */
+	@Transactional(readOnly = true)
+	public byte[] csv(UUID id) {
+		Rapport rapport = findById(id);
+		SyntheseRapport synthese = calculateur.calculer(rapport.getPeriodeDebut(), rapport.getPeriodeFin());
+		return rapportCsv.produire(rapport, synthese);
 	}
 
 	private String ecrirePdf(Rapport rapport, SyntheseRapport synthese) {

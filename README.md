@@ -61,7 +61,7 @@ versionnées pour l'instant.
 | Métriques (lecture) | `GET /api/v1/equipments/{id}/metrics` |
 | Seuils | `/api/v1/thresholds` |
 | Alertes | `/api/v1/alerts` |
-| Rapports | `/api/v1/reports` |
+| Rapports | `/api/v1/reports` (export `.../download` en PDF, `.../download-csv` en CSV) |
 | Journal d'audit | `/api/v1/audit-log` |
 | Préférences de notification | `/api/v1/users/me/notifications` |
 | Santé | `GET /api/v1/health` |

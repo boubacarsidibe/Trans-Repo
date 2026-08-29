@@ -83,6 +83,13 @@ export function telechargerRapport(id: string) {
 		.then((r) => r.data as Blob);
 }
 
+/** Récupère le CSV du rapport, régénéré à la volée côté serveur. */
+export function telechargerRapportCsv(id: string) {
+	return apiClient
+		.get(`/api/v1/reports/${id}/download-csv`, { responseType: "blob" })
+		.then((r) => r.data as Blob);
+}
+
 export function fetchSeuils() {
 	return apiClient.get<SeuilAlerte[]>("/api/v1/thresholds").then((r) => r.data);
 }
