@@ -67,6 +67,15 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-security</artifactId>
 		</dependency>
+		<!--
+			@Auditable / AuditAspect (issue #44) : journal d'audit generique.
+			"spring-boot-starter-aspectj" (Spring Boot 4) remplace l'ancien
+			"spring-boot-starter-aop" des versions 3.x et anterieures.
+		-->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-aspectj</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>io.jsonwebtoken</groupId>
 			<artifactId>jjwt-api</artifactId>

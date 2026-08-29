@@ -10,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.bouba.backend_trans.audit.Auditable;
 import com.bouba.backend_trans.equipement.entity.Equipement;
 import com.bouba.backend_trans.equipement.repository.EquipementRepository;
 import com.bouba.backend_trans.metrique.entity.TypeMetrique;
@@ -57,6 +58,7 @@ public class SeuilAlerteService {
 	}
 
 	@Transactional
+	@Auditable("CREATION_SEUIL")
 	public SeuilAlerte create(SeuilAlerteRequest request) {
 		valider(request);
 
@@ -81,6 +83,7 @@ public class SeuilAlerteService {
 	}
 
 	@Transactional
+	@Auditable("MODIFICATION_SEUIL")
 	public SeuilAlerte update(UUID id, SeuilAlerteRequest request) {
 		valider(request);
 
@@ -93,6 +96,7 @@ public class SeuilAlerteService {
 	}
 
 	@Transactional
+	@Auditable("SUPPRESSION_SEUIL")
 	public void delete(UUID id) {
 		seuilRepository.delete(findById(id));
 		cache.clear();
