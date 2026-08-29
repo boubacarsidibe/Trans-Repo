@@ -1,3 +1,6 @@
+import { useAuth } from "../auth/AuthContext";
+import { RequireRole } from "../auth/RequireRole";
+import { ROLE, estAdministrateur } from "../supervision/libelles";
 import "../styles/netvision.css";
 
 const NAV_LINKS = [
@@ -72,7 +75,24 @@ const TOP_TALKERS = [
 	},
 ];
 
+/**
+ * Ecran de style/demo (issue #11), pas un outil de supervision reel — garde
+ * de role au meme titre que les autres pages reservees aux administrateurs.
+ */
 export function NetVisionDashboardPage() {
+	const { user } = useAuth();
+
+	return (
+		<RequireRole
+			autorise={estAdministrateur(user?.role)}
+			requis={user ? ROLE[user.role as keyof typeof ROLE] : "inconnu"}
+		>
+			<Contenu />
+		</RequireRole>
+	);
+}
+
+function Contenu() {
 	return (
 		<div className="netvision">
 			<aside className="netvision-sidebar">
