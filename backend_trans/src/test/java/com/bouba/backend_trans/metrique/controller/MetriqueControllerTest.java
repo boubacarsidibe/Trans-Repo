@@ -26,7 +26,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.bouba.backend_trans.config.MethodSecurityTestConfig;
+import com.bouba.backend_trans.auth.security.AppUserDetailsService;
+import com.bouba.backend_trans.auth.security.JwtService;
+import com.bouba.backend_trans.config.SecurityConfig;
+import com.bouba.backend_trans.equipement.repository.EquipementRepository;
 import com.bouba.backend_trans.metrique.entity.TypeMetrique;
 import com.bouba.backend_trans.metrique.service.MetriqueService;
 
@@ -34,9 +37,18 @@ import com.bouba.backend_trans.metrique.service.MetriqueService;
  * Ingestion (clé API, contrôle manuel dans le contrôleur) et lecture de
  * l'historique (fenêtre par défaut, pagination, plafond) de
  * {@link MetriqueController}.
+ *
+ * <p>{@code SecurityConfig} est importée telle quelle (pas une config de test
+ * dédiée) : sans son {@code SecurityFilterChain} réel,
+ * {@code SecurityContextHolderFilter} ne tourne pas et le contexte posé par
+ * {@code with(user(...))}/{@code with(authentication(...))} n'est jamais lu,
+ * et {@code AccessDeniedException} n'est pas traduite en 403. Ses filtres
+ * ({@code JwtAuthenticationFilter}, {@code ApiKeyAuthenticationFilter}) sont
+ * de toute façon auto-détectés par {@code @WebMvcTest} (ce sont des beans
+ * {@code Filter}) ; seules leurs dépendances sont mockées ici.
  */
 @WebMvcTest(MetriqueController.class)
-@Import(MethodSecurityTestConfig.class)
+@Import(SecurityConfig.class)
 class MetriqueControllerTest {
 
 	private static final int TAILLE_MAXIMALE = 5000;
@@ -46,6 +58,15 @@ class MetriqueControllerTest {
 
 	@MockitoBean
 	private MetriqueService metriqueService;
+
+	@MockitoBean
+	private JwtService jwtService;
+
+	@MockitoBean
+	private AppUserDetailsService appUserDetailsService;
+
+	@MockitoBean
+	private EquipementRepository equipementRepository;
 
 	// --- ingestion : correspondance agent / équipement ---
 
