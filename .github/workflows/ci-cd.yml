@@ -118,6 +118,9 @@ jobs:
       - name: Syntax check
         run: python -m compileall -q system network
 
+      - name: Lint
+        run: ruff check .
+
       - name: Test
         run: pytest
 

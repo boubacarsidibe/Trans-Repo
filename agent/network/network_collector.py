@@ -139,7 +139,7 @@ def snmp_get_counters(equipment: NetworkEquipment, timeout: float):
         logger.warning("Reponse SNMP invalide pour %s (%s)", equipment.nom, equipment.ip_address)
         return None
 
-    return dict(zip(keys, values))
+    return dict(zip(keys, values, strict=True))
 
 
 def compute_rates(previous: dict, current: dict, elapsed_seconds: float):
@@ -242,7 +242,7 @@ def main() -> None:
     try:
         equipments = load_equipments(config.equipments_config_path)
     except (OSError, json.JSONDecodeError, KeyError) as exc:
-        raise SystemExit(f"Impossible de charger {config.equipments_config_path} : {exc}")
+        raise SystemExit(f"Impossible de charger {config.equipments_config_path} : {exc}") from exc
 
     if not equipments:
         raise SystemExit(f"Aucun equipement defini dans {config.equipments_config_path}")

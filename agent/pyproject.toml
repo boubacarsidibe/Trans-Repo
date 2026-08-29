@@ -1,0 +1,12 @@
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.isort]
+# "checks" (agent/system) et "network_collector" (agent/network) sont des
+# modules locaux, pas des paquets tiers : sans ca, isort les fond dans le
+# meme bloc que psutil/requests/dotenv.
+known-first-party = ["checks", "network_collector"]
