@@ -1,76 +1,117 @@
-# Console de supervision — EPT / CRI
+# Trans-Repo — Système de Monitoring des Infrastructures EPT
 
-Projet de fin d'études : plateforme de supervision du parc réseau et des serveurs
-du Centre de Ressources Informatiques (CRI) de l'École Polytechnique de Thiès.
-Elle collecte les métriques des équipements (serveurs, routeurs, switches),
-évalue des seuils d'alerte, tient un historique de disponibilité et diffuse
-l'état du parc en temps réel à une console web.
+Plateforme de supervision des serveurs et équipements réseau de l'École
+Polytechnique de Thiès : collecte de métriques, alertes sur seuils,
+rapports, tout en temps réel.
+
+Projet de fin d'études — Khadija DIENG & Boubacar SIDIBE.
 
 ## Architecture
 
 ```
-                    ┌──────────────────┐
-   agents Python ──▶│  backend_trans   │◀── frontend (React)
-   (clé API par     │  Spring Boot     │    console de supervision
-    équipement)     │  + PostgreSQL    │    (JWT, WebSocket)
-                    └──────────────────┘
+agent/system   (Python)  --\
+agent/network  (Python)  ---+--> HTTP  --> backend_trans (Spring Boot)  <--> PostgreSQL
+                                              |
+                                              +--> WebSocket (STOMP, /ws) --> frontend (React)
 ```
 
-Trois sous-systèmes, déployés indépendamment :
+- **`backend_trans/`** — API Spring Boot (Java 17) : authentification JWT,
+  CRUD équipements, ingestion des métriques, moteur d'alertes, rapports,
+  notifications e-mail, journal d'audit, diffusion temps réel WebSocket.
+- **`frontend/`** — Application React (Vite) : tableaux de bord,
+  gestion des équipements/seuils/utilisateurs, alertes, rapports.
+- **`agent/system/`** — Agent Python collectant les métriques système
+  (CPU/RAM/disque) d'un serveur et les envoyant au backend.
+- **`agent/network/`** — Collecteur SNMP pour les équipements réseau
+  (disponibilité, état des interfaces).
 
-- **`backend_trans/`** — API Spring Boot (REST + WebSocket) et persistance
-  PostgreSQL. Reçoit les métriques des agents (authentifiés par clé API par
-  équipement), évalue les seuils, gère les alertes, la disponibilité, les
-  rapports et le journal d'audit. Diffuse les mises à jour temps réel sur
-  `/ws/metrics`, `/ws/alerts`, `/ws/status` (poignée de main authentifiée par
-  JWT). Voir [`backend_trans/README.md`](backend_trans/README.md).
-- **`frontend/`** — Console web React. Authentification par compte (JWT),
-  accès différencié par rôle (observateur / technicien / administrateur).
-  Voir [`frontend/README.md`](frontend/README.md).
-- **`agent/`** — Agents Python déployés sur les équipements supervisés.
-  `agent/system/` collecte les métriques d'une machine locale (CPU, mémoire,
-  disque, etc. via `psutil`) ; `agent/network/` interroge les équipements
-  réseau distants (ping, SNMP). Les deux poussent leurs relevés vers l'API par
-  cycle, avec une clé API propre à chaque équipement.
+## Exigences fonctionnelles couvertes (F1–F8)
 
-## Lancer en local
+| # | Exigence | Où |
+|---|---|---|
+| F1 | Authentification + rôles (Administrateur, Technicien, Observateur) | `backend_trans/.../auth` |
+| F2 | CRUD des équipements | `backend_trans/.../equipement`, page `Equipements` |
+| F3 | Disponibilité (équipement silencieux ⇒ indisponible) | `backend_trans/.../disponibilite` |
+| F4 | Ingestion des métriques système et réseau | `backend_trans/.../metrique`, `agent/` |
+| F5 | Diffusion temps réel (WebSocket) | `backend_trans/.../websocket` |
+| F6 | Moteur d'alertes sur seuils | `backend_trans/.../seuil`, `.../alerte` |
+| F7 | Notifications e-mail | `backend_trans/.../notification` |
+| F8 | Rapports à la demande (PDF) | `backend_trans/.../rapport`, page `Rapports` |
 
-Trois briques à démarrer séparément.
+F9 et au-delà (application mobile, Telegram, SMS) sont des évolutions
+futures, hors périmètre de cette version.
 
-### 1. Base de données
+## Modèle de données (aperçu)
 
-PostgreSQL, base `Transdb` (voir `backend_trans/src/main/resources/application.properties`
-pour les identifiants par défaut, surchargeables par variables d'environnement).
+`utilisateurs` · `equipements` · `metriques` · `seuils_alerte` · `alertes` ·
+`rapports` · `journal_audit` · `preferences_notification` — schéma détaillé
+dans les entités JPA (`backend_trans/src/main/java/.../*/entity`). Le
+schéma est créé/mis à jour automatiquement par Hibernate
+(`spring.jpa.hibernate.ddl-auto=update`), pas de migrations Flyway
+versionnées pour l'instant.
 
-### 2. Backend
+## Endpoints principaux
+
+| Domaine | Base path |
+|---|---|
+| Authentification | `POST /api/auth/login`, `/api/auth/refresh` |
+| Utilisateurs | `/api/v1/users` |
+| Équipements | `/api/v1/equipments` |
+| Métriques (ingestion agents, clé API) | `POST /api/v1/metrics/system`, `POST /api/v1/metrics/network` |
+| Métriques (lecture) | `GET /api/v1/equipments/{id}/metrics` |
+| Seuils | `/api/v1/thresholds` |
+| Alertes | `/api/v1/alerts` |
+| Rapports | `/api/v1/reports` |
+| Journal d'audit | `/api/v1/audit-log` |
+| Préférences de notification | `/api/v1/users/me/notifications` |
+| Santé | `GET /api/v1/health` |
+| Temps réel | `ws(s)://.../ws` (STOMP, topics `/topic/metrics/{id}`, `/topic/alerts`) |
+
+## Lancer le projet en local
+
+Prérequis : Docker + Docker Compose.
 
 ```bash
-cd backend_trans
-./mvnw spring-boot:run       # http://localhost:8080
+cp .env.example .env
+docker compose up --build
 ```
 
-### 3. Frontend
+- Frontend : http://localhost:5173
+- Backend : http://localhost:8080
+- PostgreSQL : localhost:5432
 
+### Sans Docker (développement au jour le jour)
+
+Backend :
+```bash
+cd backend_trans
+bash mvnw spring-boot:run
+```
+(nécessite un PostgreSQL local — voir `application.properties` pour les
+variables `DB_URL`/`DB_USERNAME`/`DB_PASSWORD`)
+
+Frontend :
 ```bash
 cd frontend
 npm install
-npm run dev                  # http://localhost:5173
+npm run dev
 ```
 
-Peut tourner sans backend ni base de données avec un jeu de données de
-démonstration : voir la section "Sans backend" de `frontend/README.md`.
+Agents : voir `agent/system/README.md` et `agent/network/README.md`.
 
-### 4. Agents (optionnel, nécessite un équipement déclaré côté backend)
+## Déploiement
 
-```bash
-cd agent/system    # ou agent/network
-pip install -r requirements.txt
-cp .env.example .env   # renseigner EQUIPMENT_ID et API_KEY de l'équipement
-python system_agent.py # ou network_collector.py
-```
+Voir `deploy/README.md` — cible : serveur CRI de l'EPT, `docker-compose.prod.yml`
++ reverse proxy nginx, images publiées sur GHCR par la CI (`.github/workflows/ci-cd.yml`).
 
-## Suivi
+## Variables d'environnement principales
 
-Le backlog restant est suivi dans les issues GitHub du dépôt (milestones
-Sprint 1 à Sprint 5). [`AUDIT.md`](AUDIT.md) trace les décisions techniques
-prises en cours de route et les points encore en attente d'arbitrage.
+| Variable | Rôle |
+|---|---|
+| `DB_URL` / `DB_USERNAME` / `DB_PASSWORD` | Connexion PostgreSQL |
+| `JWT_SECRET` | Signature des jetons d'authentification |
+| `CORS_ALLOWED_ORIGINS` | Origines autorisées côté API/WebSocket |
+| `VITE_API_BASE_URL` | URL du backend vue par le frontend (build) |
+| `SMTP_HOST`/`SMTP_PORT`/`SMTP_USERNAME`/`SMTP_PASSWORD` | Notifications e-mail (F7), désactivées si `SMTP_HOST` est vide |
+
+Liste complète : `backend_trans/src/main/resources/application.properties`.

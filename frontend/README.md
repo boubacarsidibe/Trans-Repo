@@ -40,6 +40,7 @@ build normal.
 | `/rapports` | tous | Rapports archivés, génération à la demande |
 | `/journal` | administrateur | Journal d'audit |
 | `/utilisateurs` | administrateur | Comptes du poste |
+| `/netvision-preview` | administrateur | Écran de style/démo (issue #11), hors périmètre fonctionnel — gardé pour la démonstration du PFE |
 
 ## Conception
 

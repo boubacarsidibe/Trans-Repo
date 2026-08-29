@@ -35,6 +35,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Audit dependencies
+        run: npm audit --audit-level=high
+
       # No "test" script in frontend/package.json: the build is the gate,
       # since "tsc -b" fails on any broken import or type error.
       - name: Build
@@ -96,6 +99,38 @@ jobs:
           path: backend_trans/target/*.jar
           if-no-files-found: ignore
 
+  dependency-check:
+    name: Backend (scan de dependances OWASP)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend_trans
+    # Sans NVD_API_KEY, l'API NIST est severement limitee en debit et peut
+    # faire echouer ou ralentir enormement ce job (jusqu'a plusieurs dizaines
+    # de minutes) : ne bloque pas le reste de la CI tant que le secret n'est
+    # pas configure (cf. https://github.com/settings/tokens -> NVD API key).
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      - name: Scanner les dependances (OWASP dependency-check)
+        run: bash mvnw -B -Psecurity-scan dependency-check:check -DnvdApiKey=${{ secrets.NVD_API_KEY }}
+
+      - name: Publier le rapport
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-check-report
+          path: backend_trans/target/dependency-check-report.*
+          if-no-files-found: ignore
+
   agent:
     name: Agents (Python)
     runs-on: ubuntu-latest
@@ -125,11 +160,56 @@ jobs:
     runs-on: ubuntu-latest
     needs: [frontend, backend, agent]
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.deploy))
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v4
 
-      - name: Deploy placeholder
-        run: |
-          echo "Configure your deployment target here."
-          echo "Examples: Azure, Vercel, Netlify, Docker, Kubernetes, or a custom server."
-          echo "This job currently validates the CD stage is wired, but does not deploy yet."
+      - name: Se connecter a GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Construire et publier l'image backend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend_trans
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/trans-repo-backend:latest
+            ghcr.io/${{ github.repository_owner }}/trans-repo-backend:${{ github.sha }}
+
+      - name: Construire et publier l'image frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/trans-repo-frontend:latest
+            ghcr.io/${{ github.repository_owner }}/trans-repo-frontend:${{ github.sha }}
+
+      # docker-compose.prod.yml + deploy/nginx.conf sont ce que le serveur
+      # CRI execute ; le .env qui porte les secrets reste local au serveur
+      # et n'est jamais touche ici (cf. deploy/README.md).
+      - name: Copier la configuration de deploiement sur le serveur CRI
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.CRI_HOST }}
+          username: ${{ secrets.CRI_USER }}
+          key: ${{ secrets.CRI_SSH_KEY }}
+          source: "docker-compose.prod.yml,deploy/nginx.conf"
+          target: ${{ secrets.CRI_DEPLOY_PATH }}
+
+      - name: Deployer sur le serveur CRI
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.CRI_HOST }}
+          username: ${{ secrets.CRI_USER }}
+          key: ${{ secrets.CRI_SSH_KEY }}
+          script: |
+            cd ${{ secrets.CRI_DEPLOY_PATH }}
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml up -d

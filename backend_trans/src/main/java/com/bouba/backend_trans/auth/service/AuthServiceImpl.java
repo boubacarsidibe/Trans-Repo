@@ -15,7 +15,6 @@ import com.bouba.backend_trans.auth.dto.AuthResponse;
 import com.bouba.backend_trans.auth.dto.ForgotPasswordRequest;
 import com.bouba.backend_trans.auth.dto.LoginRequest;
 import com.bouba.backend_trans.auth.dto.RefreshRequest;
-import com.bouba.backend_trans.auth.dto.RegisterRequest;
 import com.bouba.backend_trans.auth.dto.ResetPasswordRequest;
 import com.bouba.backend_trans.auth.entity.AppUser;
 import com.bouba.backend_trans.auth.entity.PasswordResetToken;
@@ -66,24 +65,6 @@ public class AuthServiceImpl implements AuthService {
 		this.passwordResetExpirationMinutes = passwordResetExpirationMinutes;
 		this.maxLoginAttempts = maxLoginAttempts;
 		this.lockoutMinutes = lockoutMinutes;
-	}
-
-	@Override
-	@Transactional
-	public AuthResponse register(RegisterRequest request) {
-		String normalizedEmail = request.getEmail().trim().toLowerCase();
-		if (appUserRepository.existsByEmail(normalizedEmail)) {
-			throw new IllegalStateException("An account with this email already exists.");
-		}
-
-		String encodedPassword = passwordEncoder.encode(request.getPassword());
-		AppUser user = authMapper.toEntity(request, encodedPassword);
-		AppUser savedUser = appUserRepository.save(user);
-
-		AuthResponse response = authMapper.toResponse(savedUser, "Registration successful.");
-		response.setToken(jwtService.generateToken(savedUser));
-		response.setRefreshToken(issueRefreshToken(savedUser).getToken());
-		return response;
 	}
 
 	@Override
