@@ -67,6 +67,9 @@ versionnées pour l'instant.
 | Santé | `GET /api/v1/health` |
 | Temps réel | `ws(s)://.../ws/metrics`, `/ws/alerts`, `/ws/status` (WebSocket natif, pas STOMP) |
 
+Documentation interactive (OpenAPI/Swagger, accès public) : `GET /v3/api-docs`,
+`GET /swagger-ui.html`.
+
 ## Lancer le projet en local
 
 Prérequis : Docker + Docker Compose.

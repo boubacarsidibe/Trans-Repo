@@ -47,6 +47,9 @@ public class SecurityConfig {
 				.authorizeHttpRequests(auth -> auth
 						.requestMatchers("/api/auth/**").permitAll()
 						.requestMatchers("/api/v1/health").permitAll()
+						// Documentation API : la lecture du contrat n'est pas une donnee
+						// sensible, contrairement aux endpoints qu'il decrit.
+						.requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
 						// Le handshake porte lui-même le contrôle du jeton (§8.4) :
 						// laisser passer ici, refuser dans JwtHandshakeInterceptor.
 						.requestMatchers("/ws/**").permitAll()
