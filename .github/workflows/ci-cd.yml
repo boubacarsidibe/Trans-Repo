@@ -35,6 +35,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Audit dependencies
+        run: npm audit --audit-level=high
+
       # No "test" script in frontend/package.json: the build is the gate,
       # since "tsc -b" fails on any broken import or type error.
       - name: Build
@@ -94,6 +97,38 @@ jobs:
         with:
           name: backend-jar
           path: backend_trans/target/*.jar
+          if-no-files-found: ignore
+
+  dependency-check:
+    name: Backend (scan de dependances OWASP)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend_trans
+    # Sans NVD_API_KEY, l'API NIST est severement limitee en debit et peut
+    # faire echouer ou ralentir enormement ce job (jusqu'a plusieurs dizaines
+    # de minutes) : ne bloque pas le reste de la CI tant que le secret n'est
+    # pas configure (cf. https://github.com/settings/tokens -> NVD API key).
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      - name: Scanner les dependances (OWASP dependency-check)
+        run: bash mvnw -B -Psecurity-scan dependency-check:check -DnvdApiKey=${{ secrets.NVD_API_KEY }}
+
+      - name: Publier le rapport
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-check-report
+          path: backend_trans/target/dependency-check-report.*
           if-no-files-found: ignore
 
   agent:
