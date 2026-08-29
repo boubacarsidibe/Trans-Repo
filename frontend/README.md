@@ -63,4 +63,10 @@ intranet-first, aucune police n'est chargée depuis un CDN.
 ```bash
 npm run build          # tsc -b puis vite build
 npm run lint           # oxlint
+npm run test           # vitest (Testing Library)
 ```
+
+Tests unitaires (Vitest + Testing Library, `src/**/*.test.tsx`) sur les
+écrans critiques : `LoginPage`, `EquipementsPage`, `AlertesPage`. Les
+contextes (`AuthContext`, `SupervisionContext`) et `api/endpoints` sont
+mockés — pas de backend ni de réseau requis.
