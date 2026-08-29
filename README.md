@@ -65,7 +65,10 @@ versionnées pour l'instant.
 | Journal d'audit | `/api/v1/audit-log` |
 | Préférences de notification | `/api/v1/users/me/notifications` |
 | Santé | `GET /api/v1/health` |
-| Temps réel | `ws(s)://.../ws` (STOMP, topics `/topic/metrics/{id}`, `/topic/alerts`) |
+| Temps réel | `ws(s)://.../ws/metrics`, `/ws/alerts`, `/ws/status` (WebSocket natif, pas STOMP) |
+
+Documentation interactive (OpenAPI/Swagger, accès public) : `GET /v3/api-docs`,
+`GET /swagger-ui.html`.
 
 ## Lancer le projet en local
 
