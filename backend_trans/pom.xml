@@ -12,19 +12,22 @@
 	<artifactId>backend_trans</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>backend_trans</name>
-	<description/>
-	<url/>
+	<description>API de supervision du parc reseau et serveurs de l'EPT (PFE)</description>
+	<url>https://github.com/boubacarsidibe/Trans-Repo</url>
 	<licenses>
 		<license/>
 	</licenses>
 	<developers>
-		<developer/>
+		<developer>
+			<name>Boubacar Sidibe</name>
+			<email>sboubacar@ept.sn</email>
+		</developer>
 	</developers>
 	<scm>
-		<connection/>
-		<developerConnection/>
-		<tag/>
-		<url/>
+		<connection>scm:git:https://github.com/boubacarsidibe/Trans-Repo.git</connection>
+		<developerConnection>scm:git:https://github.com/boubacarsidibe/Trans-Repo.git</developerConnection>
+		<tag>HEAD</tag>
+		<url>https://github.com/boubacarsidibe/Trans-Repo</url>
 	</scm>
 	<properties>
 		<java.version>17</java.version>
