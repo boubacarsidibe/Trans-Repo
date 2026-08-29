@@ -21,7 +21,14 @@ function App() {
 			<BrowserRouter>
 				<Routes>
 					<Route path="/login" element={<LoginPage />} />
-					<Route path="/netvision-preview" element={<NetVisionDashboardPage />} />
+					<Route
+						path="/netvision-preview"
+						element={
+							<ProtectedRoute>
+								<NetVisionDashboardPage />
+							</ProtectedRoute>
+						}
+					/>
 					<Route
 						element={
 							<ProtectedRoute>
