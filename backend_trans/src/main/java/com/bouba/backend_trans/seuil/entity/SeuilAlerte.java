@@ -24,8 +24,10 @@ import jakarta.persistence.UniqueConstraint;
  *
  * <p>Un seuil sans équipement est le <strong>défaut global</strong> ; un seuil
  * rattaché à un équipement le surcharge pour ce seul équipement, comme l'exige
- * la règle de gestion F3 (« configurables par équipement ou par défaut au
- * niveau global »).
+ * la règle de gestion F6 (« configurables par équipement ou par défaut au
+ * niveau global »). F3 désigne la règle de disponibilité (silence prolongé
+ * ⇒ équipement indisponible), pas les seuils — la référence précédente à F3
+ * ici était une erreur de numérotation.
  */
 @Entity
 @Table(name = "seuils_alerte", uniqueConstraints = @UniqueConstraint(
