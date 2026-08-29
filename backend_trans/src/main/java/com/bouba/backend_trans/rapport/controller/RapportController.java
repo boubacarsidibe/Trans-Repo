@@ -62,4 +62,17 @@ public class RapportController {
 								rapport.getTypeRapport().name().toLowerCase(), rapport.getId()))
 				.body(pdf);
 	}
+
+	@GetMapping("/{id}/download-csv")
+	public ResponseEntity<byte[]> downloadCsv(@PathVariable UUID id) {
+		Rapport rapport = rapportService.findById(id);
+		byte[] csv = rapportService.csv(id);
+
+		return ResponseEntity.ok()
+				.contentType(MediaType.parseMediaType("text/csv"))
+				.header(HttpHeaders.CONTENT_DISPOSITION,
+						"attachment; filename=\"rapport-%s-%s.csv\"".formatted(
+								rapport.getTypeRapport().name().toLowerCase(), rapport.getId()))
+				.body(csv);
+	}
 }
