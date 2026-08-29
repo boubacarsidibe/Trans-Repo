@@ -36,7 +36,9 @@ build normal.
 | `/` | tous | Synoptique : relevés du parc, alertes en cours, répartition |
 | `/equipements` | tous | Parc, fiche, enregistreur de métriques |
 | `/equipements/nouveau` | technicien | Déclaration + clé d'agent |
+| `/equipements/:id/modifier` | technicien | Modification d'un équipement déclaré |
 | `/alertes` | tous | Journal, prise en compte et résolution |
+| `/seuils` | technicien | Seuils d'alerte par équipement et type de métrique |
 | `/rapports` | tous | Rapports archivés, génération à la demande |
 | `/journal` | administrateur | Journal d'audit |
 | `/utilisateurs` | administrateur | Comptes du poste |
