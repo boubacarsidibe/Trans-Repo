@@ -167,4 +167,32 @@
 		</plugins>
 	</build>
 
+	<profiles>
+		<!--
+			Pas dans le build par defaut : dependency-check-maven telecharge et
+			interroge la base NVD, ce qui ralentirait "mvnw verify" a chaque
+			execution. Lance a part par le job dedie de ci-cd.yml
+			("mvnw -Psecurity-scan dependency-check:check").
+		-->
+		<profile>
+			<id>security-scan</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.owasp</groupId>
+						<artifactId>dependency-check-maven</artifactId>
+						<version>12.1.0</version>
+						<configuration>
+							<failBuildOnCVSS>9</failBuildOnCVSS>
+							<formats>
+								<format>HTML</format>
+								<format>SARIF</format>
+							</formats>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+
 </project>

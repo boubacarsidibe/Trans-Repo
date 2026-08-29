@@ -65,35 +65,44 @@ sont vraiment remplis.
 
 ## Documentation
 
-- [ ] README à la racine du dépôt : vue d'ensemble de l'architecture
-      (backend Spring Boot / frontend React / agents Python), schéma simple
-      des flux (agent → API → base → WebSocket/rapport), instructions de
-      lancement local de l'ensemble, principales variables d'environnement.
-  - Critères : un nouvel arrivant peut lancer backend + frontend + un agent
-    en suivant uniquement ce README.
+- [x] README à la racine du dépôt : vue d'ensemble de l'architecture
+      (backend Spring Boot / frontend React / agents Python), mapping F1-F8,
+      endpoints principaux, instructions de lancement local (Docker et sans
+      Docker).
 
-- [ ] Documentation des agents (`agent/system/README.md`,
+- [x] Documentation des agents (`agent/system/README.md`,
       `agent/network/README.md`) : installation, configuration (`.env`),
-      lancement, et une méthode simple pour les faire tourner en continu
-      (service systemd ou tâche planifiée) sur un poste Linux du CRI.
-  - Critères : README par agent avec exemple de fichier `.env` complété et
-    la commande/unit systemd d'exemple.
+      lancement, unit systemd d'exemple pour tourner en continu.
 
 ## Déploiement
 
-- [ ] Conteneurisation Docker : `Dockerfile` backend, `Dockerfile` frontend,
-      `docker-compose.yml` de développement (backend + frontend + Postgres),
-      cohérent avec la mention « déploiement conteneurisé (specs 12.3) »
-      déjà présente dans `application.properties`.
-  - Critères : `docker compose up` démarre les trois services et le
-    frontend peut se connecter au backend sans configuration
-    supplémentaire.
+- [x] Conteneurisation Docker : `Dockerfile` backend, `Dockerfile` frontend,
+      `docker-compose.yml` de développement (backend + frontend + Postgres).
+      `docker compose config` valide (build réel non vérifiable ici, pas de
+      daemon Docker dans cet environnement — à confirmer en local/CRI).
+
+- [x] `docker-compose.prod.yml` + reverse proxy nginx (`deploy/nginx.conf`,
+      route `/api` et `/ws` vers le backend, sert le frontend) + job
+      `deploy` (`ci-cd.yml`) publiant sur GHCR et déployant sur le serveur
+      CRI par SSH. Secrets GitHub (`CRI_HOST`/`CRI_USER`/`CRI_SSH_KEY`/
+      `CRI_DEPLOY_PATH`) et accès réel au serveur CRI encore à mettre en
+      place — voir `deploy/README.md`.
 
 ## Sécurité
 
 - [ ] Revue de sécurité de l'API et du frontend (OWASP Top 10 : injection,
       auth, contrôle d'accès, exposition de données sensibles, CORS,
       en-têtes de sécurité) et correction des failles trouvées.
-  - Critères : liste des points vérifiés consignée dans le commit ou dans
-    `DECISIONS.md` si un correctif implique un choix, aucune régression sur
-    `bash mvnw test` / `npm run build`.
+  - Déjà en place : BCrypt, JWT, CORS restreint (`app.cors.allowed-origins`),
+    verrouillage après échecs de connexion (`security.login.max-attempts`).
+  - Trouvé et à trancher : `POST /api/auth/register` est public et crée des
+    comptes avec un rôle `CLIENT` hors du modèle de rôles réel
+    (`ADMINISTRATEUR`/`TECHNICIEN`/`OBSERVATEUR`) — reliquat d'un template
+    générique. La vraie création d'utilisateurs est déjà admin-only
+    (`POST /api/v1/users`). Proposition : supprimer `/register` et les
+    rôles legacy (`ADMIN`/`MANAGER`/`OPERATOR`/`CLIENT`) de l'enum `Role`.
+
+## Nettoyage
+
+- [x] `backend_trans/agent/` retiré : copie périmée et divergente du vrai
+      `agent/` à la racine (sans README ni `checks.py`).
