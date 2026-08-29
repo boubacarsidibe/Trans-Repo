@@ -129,20 +129,22 @@ class TestPingEquipment:
         assert joignable is False
 
 
-class TestSnmpGetCounters:
+class TestSnmpGetValues:
     def test_renvoie_un_dictionnaire_indexe_par_cle_d_oid(self, monkeypatch):
-        valeurs = [100, 200, 0, 0, 10, 20]  # ordre de OID_TEMPLATES
+        # Ordre de OID_TEMPLATES : les 6 compteurs de trafic, puis if_oper_status, puis sys_up_time.
+        valeurs = [100, 200, 0, 0, 10, 20, 1, 123456]
 
         async def fausse_requete_snmp(*a, **k):
             return valeurs
 
         monkeypatch.setattr(network_collector, "_snmp_get_async", fausse_requete_snmp)
 
-        compteurs = network_collector.snmp_get_counters(fake_equipment(), timeout=3)
+        resultat = network_collector.snmp_get_values(fake_equipment(), timeout=3)
 
-        assert compteurs == {
+        assert resultat == {
             "in_octets": 100, "out_octets": 200, "in_errors": 0,
             "out_errors": 0, "in_packets": 10, "out_packets": 20,
+            "if_oper_status": 1, "sys_up_time": 123456,
         }
 
     def test_reponse_snmp_invalide_renvoie_none(self, monkeypatch):
@@ -151,7 +153,7 @@ class TestSnmpGetCounters:
 
         monkeypatch.setattr(network_collector, "_snmp_get_async", fausse_requete_snmp)
 
-        assert network_collector.snmp_get_counters(fake_equipment(), timeout=3) is None
+        assert network_collector.snmp_get_values(fake_equipment(), timeout=3) is None
 
     def test_erreur_reseau_renvoie_none_sans_lever(self, monkeypatch):
         async def fausse_requete_snmp(*a, **k):
@@ -159,7 +161,7 @@ class TestSnmpGetCounters:
 
         monkeypatch.setattr(network_collector, "_snmp_get_async", fausse_requete_snmp)
 
-        assert network_collector.snmp_get_counters(fake_equipment(), timeout=3) is None
+        assert network_collector.snmp_get_values(fake_equipment(), timeout=3) is None
 
 
 class TestSendNetworkMetrics:
@@ -189,7 +191,7 @@ class TestPollEquipment:
     def test_equipement_injoignable_envoie_un_payload_minimal_sans_snmp(self, monkeypatch):
         monkeypatch.setattr(network_collector, "ping_equipment", lambda *a, **k: (None, False))
         appelle_snmp = []
-        monkeypatch.setattr(network_collector, "snmp_get_counters", lambda *a, **k: appelle_snmp.append(1))
+        monkeypatch.setattr(network_collector, "snmp_get_values", lambda *a, **k: appelle_snmp.append(1))
         payloads = []
         monkeypatch.setattr(network_collector, "send_network_metrics", lambda cfg, eq, payload: payloads.append(payload))
 
@@ -198,12 +200,12 @@ class TestPollEquipment:
         assert payloads == [{"equipment_id": "eq-1"}]
         assert appelle_snmp == []
 
-    def test_premier_cycle_ne_calcule_aucun_debit_faute_de_reference(self, monkeypatch):
+    def test_premier_cycle_ne_calcule_aucun_debit_mais_donne_uptime_et_etat_interface(self, monkeypatch):
         monkeypatch.setattr(network_collector, "ping_equipment", lambda *a, **k: (3.5, True))
         monkeypatch.setattr(
-            network_collector, "snmp_get_counters",
+            network_collector, "snmp_get_values",
             lambda *a, **k: {"in_octets": 100, "out_octets": 100, "in_errors": 0, "out_errors": 0,
-                              "in_packets": 10, "out_packets": 10},
+                              "in_packets": 10, "out_packets": 10, "if_oper_status": 1, "sys_up_time": 500_000},
         )
         payloads = []
         monkeypatch.setattr(network_collector, "send_network_metrics", lambda cfg, eq, payload: payloads.append(payload))
@@ -213,15 +215,33 @@ class TestPollEquipment:
 
         assert payloads[0]["latency_ms"] == 3.5
         assert "bandwidth_mbps" not in payloads[0]
+        assert payloads[0]["uptime_seconds"] == 5000.0  # sys_up_time / 100
+        assert payloads[0]["interface_up"] == 1
         assert "eq-1" in previous_readings  # amorce pour le cycle suivant
+
+    def test_interface_down_est_reportee_comme_indisponible(self, monkeypatch):
+        monkeypatch.setattr(network_collector, "ping_equipment", lambda *a, **k: (3.5, True))
+        monkeypatch.setattr(
+            network_collector, "snmp_get_values",
+            lambda *a, **k: {"in_octets": 0, "out_octets": 0, "in_errors": 0, "out_errors": 0,
+                              "in_packets": 0, "out_packets": 0, "if_oper_status": 2, "sys_up_time": 100},
+        )
+        payloads = []
+        monkeypatch.setattr(network_collector, "send_network_metrics", lambda cfg, eq, payload: payloads.append(payload))
+
+        network_collector.poll_equipment(fake_config(), fake_equipment(equipment_id="eq-1"), {})
+
+        assert payloads[0]["interface_up"] == 0
 
     def test_second_cycle_calcule_bande_passante_et_taux_d_erreur(self, monkeypatch):
         monkeypatch.setattr(network_collector, "ping_equipment", lambda *a, **k: (2.0, True))
         compteurs_appel = iter([
-            {"in_octets": 0, "out_octets": 0, "in_errors": 0, "out_errors": 0, "in_packets": 0, "out_packets": 0},
-            {"in_octets": 1_000_000, "out_octets": 0, "in_errors": 0, "out_errors": 0, "in_packets": 100, "out_packets": 0},
+            {"in_octets": 0, "out_octets": 0, "in_errors": 0, "out_errors": 0, "in_packets": 0, "out_packets": 0,
+             "if_oper_status": 1, "sys_up_time": 0},
+            {"in_octets": 1_000_000, "out_octets": 0, "in_errors": 0, "out_errors": 0, "in_packets": 100,
+             "out_packets": 0, "if_oper_status": 1, "sys_up_time": 1000},
         ])
-        monkeypatch.setattr(network_collector, "snmp_get_counters", lambda *a, **k: next(compteurs_appel))
+        monkeypatch.setattr(network_collector, "snmp_get_values", lambda *a, **k: next(compteurs_appel))
         temps = iter([0.0, 10.0])
         monkeypatch.setattr(network_collector.time, "monotonic", lambda: next(temps))
         payloads = []
@@ -235,6 +255,7 @@ class TestPollEquipment:
         assert "bandwidth_mbps" in payloads[1]
         assert payloads[1]["bandwidth_mbps"] > 0
         assert payloads[1]["error_rate_percent"] == 0.0
+        assert payloads[1]["uptime_seconds"] == 10.0
 
 
 class FakeResponse:

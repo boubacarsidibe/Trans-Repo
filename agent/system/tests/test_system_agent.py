@@ -12,6 +12,8 @@ def fake_config(**overrides) -> AgentConfig:
         api_key="secret",
         interval_seconds=60,
         request_timeout_seconds=10,
+        send_max_retries=3,
+        send_retry_backoff_seconds=5,
         tcp_targets=[],
         tcp_check_timeout_seconds=2,
         dns_check_hostname="",
@@ -34,7 +36,10 @@ class TestLoadConfig:
     def test_charge_les_valeurs_par_defaut(self, monkeypatch):
         monkeypatch.setenv("EQUIPMENT_ID", "eq-1")
         monkeypatch.setenv("API_KEY", "cle-secrete")
-        for variable in ("BACKEND_URL", "INTERVAL_SECONDS", "REQUEST_TIMEOUT_SECONDS"):
+        for variable in (
+            "BACKEND_URL", "INTERVAL_SECONDS", "REQUEST_TIMEOUT_SECONDS",
+            "SEND_MAX_RETRIES", "SEND_RETRY_BACKOFF_SECONDS",
+        ):
             monkeypatch.delenv(variable, raising=False)
 
         config = system_agent.load_config()
@@ -43,6 +48,8 @@ class TestLoadConfig:
         assert config.api_key == "cle-secrete"
         assert config.backend_url == "http://localhost:8080"
         assert config.interval_seconds == 60
+        assert config.send_max_retries == 3
+        assert config.send_retry_backoff_seconds == 5
 
     def test_variables_obligatoires_manquantes_leve_system_exit(self, monkeypatch):
         monkeypatch.delenv("EQUIPMENT_ID", raising=False)
@@ -139,26 +146,57 @@ class TestSendMetrics:
         assert kwargs["headers"] == {"X-API-Key": "secret"}
         assert kwargs["json"]["equipment_id"] == "00000000-0000-0000-0000-000000000000"
 
-    def test_propage_l_erreur_reseau_sans_la_masquer(self, monkeypatch):
+    def test_reessaie_apres_un_echec_puis_reussit(self, monkeypatch):
+        reponses = iter([requests.RequestException("timeout"), FakeResponse(200)])
+        attentes = []
+
+        def fake_post(*a, **k):
+            reponse = next(reponses)
+            if isinstance(reponse, Exception):
+                raise reponse
+            return reponse
+
+        monkeypatch.setattr(system_agent.requests, "post", fake_post)
+        monkeypatch.setattr(system_agent.time, "sleep", lambda s: attentes.append(s))
+
+        system_agent.send_metrics(
+            fake_config(),
+            {"cpu_percent": 1, "memory_percent": 2, "disk_percent": 3, "swap_percent": 4, "process_count": 5},
+        )
+
+        assert attentes == [5]  # backoff x tentative 1
+
+    def test_abandonne_apres_epuisement_des_tentatives(self, monkeypatch):
         def toujours_en_echec(*a, **k):
             raise requests.RequestException("connexion refusee")
 
+        attentes = []
         monkeypatch.setattr(system_agent.requests, "post", toujours_en_echec)
+        monkeypatch.setattr(system_agent.time, "sleep", lambda s: attentes.append(s))
 
         with pytest.raises(requests.RequestException):
             system_agent.send_metrics(
-                fake_config(),
+                fake_config(send_max_retries=3),
                 {"cpu_percent": 1, "memory_percent": 2, "disk_percent": 3, "swap_percent": 4, "process_count": 5},
             )
 
-    def test_leve_une_erreur_sur_une_reponse_http_en_echec(self, monkeypatch):
-        monkeypatch.setattr(system_agent.requests, "post", lambda *a, **k: FakeResponse(500))
+        assert attentes == [5, 10]  # backoff x tentative (1 puis 2), rien apres la derniere
+
+    def test_une_reponse_http_en_echec_est_aussi_retentee(self, monkeypatch):
+        appels = []
+        monkeypatch.setattr(
+            system_agent.requests, "post",
+            lambda *a, **k: appels.append(1) or FakeResponse(500),
+        )
+        monkeypatch.setattr(system_agent.time, "sleep", lambda s: None)
 
         with pytest.raises(requests.HTTPError):
             system_agent.send_metrics(
-                fake_config(),
+                fake_config(send_max_retries=2),
                 {"cpu_percent": 1, "memory_percent": 2, "disk_percent": 3, "swap_percent": 4, "process_count": 5},
             )
+
+        assert len(appels) == 2  # HTTPError est une RequestException : elle aussi retentee
 
 
 class FakeResponse:
