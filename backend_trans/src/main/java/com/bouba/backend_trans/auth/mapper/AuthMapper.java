@@ -3,23 +3,10 @@ package com.bouba.backend_trans.auth.mapper;
 import org.springframework.stereotype.Component;
 
 import com.bouba.backend_trans.auth.dto.AuthResponse;
-import com.bouba.backend_trans.auth.dto.RegisterRequest;
 import com.bouba.backend_trans.auth.entity.AppUser;
-import com.bouba.backend_trans.auth.entity.Role;
-import com.bouba.backend_trans.auth.entity.UserType;
 
 @Component
 public class AuthMapper {
-
-	public AppUser toEntity(RegisterRequest request, String encodedPassword) {
-		AppUser user = new AppUser();
-		user.setUsername(request.getUsername().trim());
-		user.setEmail(request.getEmail().trim().toLowerCase());
-		user.setPasswordHash(encodedPassword);
-		user.setRole(Role.CLIENT);
-		user.setUserType(request.getUserType() == null ? UserType.INDIVIDUAL : request.getUserType());
-		return user;
-	}
 
 	public AuthResponse toResponse(AppUser user, String message) {
 		AuthResponse response = new AuthResponse();

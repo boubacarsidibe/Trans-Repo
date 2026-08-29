@@ -1,6 +1,5 @@
 package com.bouba.backend_trans.auth.controller;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -11,7 +10,6 @@ import com.bouba.backend_trans.auth.dto.AuthResponse;
 import com.bouba.backend_trans.auth.dto.ForgotPasswordRequest;
 import com.bouba.backend_trans.auth.dto.LoginRequest;
 import com.bouba.backend_trans.auth.dto.RefreshRequest;
-import com.bouba.backend_trans.auth.dto.RegisterRequest;
 import com.bouba.backend_trans.auth.dto.ResetPasswordRequest;
 import com.bouba.backend_trans.auth.service.AuthService;
 
@@ -25,12 +23,6 @@ public class AuthController {
 
 	public AuthController(AuthService authService) {
 		this.authService = authService;
-	}
-
-	@PostMapping("/register")
-	public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
-		AuthResponse response = authService.register(request);
-		return ResponseEntity.status(HttpStatus.CREATED).body(response);
 	}
 
 	@PostMapping("/login")

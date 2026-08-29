@@ -56,13 +56,9 @@ export const TYPE_RAPPORT: Record<TypeRapport, string> = {
 };
 
 export const ROLE: Record<Role, string> = {
-	ADMIN: "Administrateur",
 	ADMINISTRATEUR: "Administrateur",
 	TECHNICIEN: "Technicien",
 	OBSERVATEUR: "Observateur",
-	MANAGER: "Manager",
-	OPERATOR: "Opérateur",
-	CLIENT: "Client",
 };
 
 export const TYPE_METRIQUE: Record<TypeMetrique, string> = {
@@ -115,7 +111,7 @@ export const SEUILS: Partial<Record<TypeMetrique, { attention: number; critique:
 	TAUX_ERREUR: { attention: 1, critique: 5 },
 };
 
-export const estAdministrateur = (role?: string) => role === "ADMIN" || role === "ADMINISTRATEUR";
+export const estAdministrateur = (role?: string) => role === "ADMINISTRATEUR";
 
 /** Qui peut agir sur le parc : acquitter, créer, modifier, archiver. */
 export const peutIntervenir = (role?: string) => estAdministrateur(role) || role === "TECHNICIEN";
