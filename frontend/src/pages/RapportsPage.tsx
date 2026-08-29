@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { fetchRapports, genererRapport, telechargerRapport } from "../api/endpoints";
+import { fetchRapports, genererRapport, telechargerRapport, telechargerRapportCsv } from "../api/endpoints";
 import { useAuth } from "../auth/AuthContext";
 import { Champ } from "../components/Champ";
 import { EtatVide, Message } from "../components/Retours";
@@ -34,6 +34,21 @@ export function RapportsPage() {
 			setTimeout(() => URL.revokeObjectURL(url), 60_000);
 		} catch {
 			setErreur("Le fichier de ce rapport est introuvable sur le serveur.");
+		}
+	}
+
+	async function telechargerCsv(rapport: Rapport) {
+		setErreur(null);
+		try {
+			const csv = await telechargerRapportCsv(rapport.id);
+			const url = URL.createObjectURL(csv);
+			const lien = document.createElement("a");
+			lien.href = url;
+			lien.download = `rapport-${rapport.typeRapport.toLowerCase()}-${rapport.id}.csv`;
+			lien.click();
+			setTimeout(() => URL.revokeObjectURL(url), 60_000);
+		} catch {
+			setErreur("Le CSV de ce rapport n'a pas pu être généré.");
 		}
 	}
 
@@ -122,25 +137,34 @@ export function RapportsPage() {
 									{formatJour(rapport.periodeDebut)} → {formatJour(rapport.periodeFin)}
 								</span>
 								<span className="rangee-secondaire">{formatDateHeure(rapport.dateGeneration)}</span>
-								{rapport.fichierDisponible ? (
+								<div className="rangee-actions">
+									{rapport.fichierDisponible ? (
+										<button
+											className="bouton bouton-menu"
+											type="button"
+											onClick={() => void ouvrir(rapport.id)}
+										>
+											Ouvrir le PDF
+										</button>
+									) : (
+										<span className="etat etat-calme">PDF pas encore produit</span>
+									)}
 									<button
 										className="bouton bouton-menu"
 										type="button"
-										onClick={() => void ouvrir(rapport.id)}
+										onClick={() => void telechargerCsv(rapport)}
 									>
-										Ouvrir le PDF
+										CSV
 									</button>
-								) : (
-									<span className="etat etat-calme">PDF pas encore produit</span>
-								)}
+								</div>
 							</div>
 						))}
 					</div>
 				</div>
 
 				<p className="champ-aide" style={{ marginTop: 12 }}>
-					Le contenu des rapports est calculé côté serveur ; l'export PDF n'est pas encore branché, les
-					entrées restent donc consultables sans fichier joint.
+					Le CSV est régénéré à la demande à partir des indicateurs de la période ; si l'écriture du PDF a
+					échoué, le rapport reste consultable sans fichier PDF joint.
 				</p>
 			</section>
 		</>
