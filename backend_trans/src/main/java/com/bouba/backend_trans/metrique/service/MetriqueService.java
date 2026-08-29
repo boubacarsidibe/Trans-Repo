@@ -84,6 +84,8 @@ public class MetriqueService {
 		lot.ajouter(TypeMetrique.BANDE_PASSANTE, request.getBandwidthMbps(), "Mb/s");
 		lot.ajouter(TypeMetrique.LATENCE, request.getLatencyMs(), "ms");
 		lot.ajouter(TypeMetrique.TAUX_ERREUR, request.getErrorRatePercent(), "%");
+		lot.ajouter(TypeMetrique.UPTIME, request.getUptimeSeconds(), "s");
+		lot.ajouter(TypeMetrique.DISPONIBILITE, request.getInterfaceUp(), "bool");
 
 		lot.diffuser();
 	}

@@ -22,6 +22,13 @@ public class NetworkMetricsRequest {
 	@JsonProperty("error_rate_percent")
 	private BigDecimal errorRatePercent;
 
+	@JsonProperty("uptime_seconds")
+	private BigDecimal uptimeSeconds;
+
+	/** 1 si l'interface est up (ifOperStatus SNMP), 0 sinon. */
+	@JsonProperty("interface_up")
+	private BigDecimal interfaceUp;
+
 	public UUID getEquipmentId() {
 		return equipmentId;
 	}
@@ -52,5 +59,21 @@ public class NetworkMetricsRequest {
 
 	public void setErrorRatePercent(BigDecimal errorRatePercent) {
 		this.errorRatePercent = errorRatePercent;
+	}
+
+	public BigDecimal getUptimeSeconds() {
+		return uptimeSeconds;
+	}
+
+	public void setUptimeSeconds(BigDecimal uptimeSeconds) {
+		this.uptimeSeconds = uptimeSeconds;
+	}
+
+	public BigDecimal getInterfaceUp() {
+		return interfaceUp;
+	}
+
+	public void setInterfaceUp(BigDecimal interfaceUp) {
+		this.interfaceUp = interfaceUp;
 	}
 }

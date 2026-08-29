@@ -6,8 +6,10 @@ reseau (routeurs, switches, points d'acces) definis dans equipments.json,
 puis pousse les resultats vers le backend (POST /api/v1/metrics/network),
 authentifie par la cle API propre a chaque equipement (en-tete X-API-Key).
 
-SNMP (v2c) donne la bande passante et le taux d'erreur via les compteurs
-MIB-II de l'interface (ifTable). ICMP donne la latence et la disponibilite.
+SNMP (v2c) donne la bande passante, le taux d'erreur et l'etat de
+l'interface via les compteurs MIB-II (ifTable), ainsi que l'uptime
+systeme (sysUpTime). ICMP donne la latence et la disponibilite au niveau
+reseau (independante de l'etat administratif de l'interface).
 """
 
 import asyncio
@@ -43,6 +45,10 @@ OID_TEMPLATES = {
     "out_errors": "1.3.6.1.2.1.2.2.1.20.{index}",
     "in_packets": "1.3.6.1.2.1.2.2.1.11.{index}",
     "out_packets": "1.3.6.1.2.1.2.2.1.17.{index}",
+    # ifOperStatus (MIB-II) : 1 = up, tout le reste (down, testing, ...) compte comme indisponible.
+    "if_oper_status": "1.3.6.1.2.1.2.2.1.8.{index}",
+    # sysUpTime (MIB-II) : pas indexe par interface, {index} reste tel quel dans le gabarit.
+    "sys_up_time": "1.3.6.1.2.1.1.3.0",
 }
 
 
@@ -124,8 +130,12 @@ async def _snmp_get_async(ip_address: str, port: int, community: str, oids: list
     return [int(value) for _, value in var_binds]
 
 
-def snmp_get_counters(equipment: NetworkEquipment, timeout: float):
-    keys = ["in_octets", "out_octets", "in_errors", "out_errors", "in_packets", "out_packets"]
+def snmp_get_values(equipment: NetworkEquipment, timeout: float):
+    """Interroge en un seul PDU les compteurs de trafic, l'etat d'interface et
+    l'uptime systeme. Un equipement qui ne repond pas (ou pas completement)
+    fait echouer l'ensemble du lot plutot que de renvoyer des valeurs
+    partielles."""
+    keys = list(OID_TEMPLATES.keys())
     oids = [OID_TEMPLATES[key].format(index=equipment.interface_index) for key in keys]
 
     try:
@@ -180,7 +190,7 @@ def poll_equipment(config: CollectorConfig, equipment: NetworkEquipment, previou
         payload["latency_ms"] = round(latency_ms, 2)
 
     if reachable:
-        counters = snmp_get_counters(equipment, config.snmp_timeout_seconds)
+        counters = snmp_get_values(equipment, config.snmp_timeout_seconds)
         if counters is not None:
             previous = previous_readings.get(equipment.equipment_id)
             if previous is not None:
@@ -189,6 +199,11 @@ def poll_equipment(config: CollectorConfig, equipment: NetworkEquipment, previou
                 if bandwidth_mbps is not None:
                     payload["bandwidth_mbps"] = round(bandwidth_mbps, 3)
                     payload["error_rate_percent"] = round(error_rate_percent, 3)
+
+            # sysUpTime est en centiemes de seconde (TimeTicks).
+            payload["uptime_seconds"] = round(counters["sys_up_time"] / 100, 1)
+            # ifOperStatus : 1 = up (RFC 1213), toute autre valeur compte comme indisponible.
+            payload["interface_up"] = 1 if counters["if_oper_status"] == 1 else 0
 
             counters["timestamp"] = now
             previous_readings[equipment.equipment_id] = counters
