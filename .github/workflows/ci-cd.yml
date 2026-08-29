@@ -113,12 +113,13 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r system/requirements.txt -r network/requirements.txt
+          pip install -r system/requirements.txt -r network/requirements.txt -r requirements-dev.txt
 
-      # No test suite yet: compileall catches syntax errors and, combined with
-      # the install step above, missing dependencies.
       - name: Syntax check
         run: python -m compileall -q system network
+
+      - name: Test
+        run: pytest
 
   deploy:
     name: Deploy
