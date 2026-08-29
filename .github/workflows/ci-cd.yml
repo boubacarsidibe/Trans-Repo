@@ -36,7 +36,7 @@ jobs:
         run: npm run lint
 
       - name: Test
-        run: npm run test
+        run: npm run test:coverage
 
       - name: Build
         run: npm run build
@@ -47,6 +47,14 @@ jobs:
         with:
           name: frontend-dist
           path: frontend/dist/
+          if-no-files-found: ignore
+
+      - name: Upload frontend coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: frontend/coverage/
           if-no-files-found: ignore
 
   backend:
@@ -95,6 +103,16 @@ jobs:
         with:
           name: backend-jar
           path: backend_trans/target/*.jar
+          if-no-files-found: ignore
+
+      # jacoco-maven-plugin (pom.xml) genere ce rapport via son execution
+      # "report", liee par defaut a la phase verify deja lancee ci-dessus.
+      - name: Upload backend coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: backend_trans/target/site/jacoco/
           if-no-files-found: ignore
 
   agent:
