@@ -180,7 +180,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Construire et publier l'image backend
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: ./backend_trans
           push: true
@@ -189,7 +189,7 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/trans-repo-backend:${{ github.sha }}
 
       - name: Construire et publier l'image frontend
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: ./frontend
           push: true
