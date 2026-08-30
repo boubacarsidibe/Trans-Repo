@@ -85,7 +85,10 @@ def load_config() -> CollectorConfig:
 
 
 def load_equipments(path: str) -> list[NetworkEquipment]:
-    with open(path, encoding="utf-8") as config_file:
+    # utf-8-sig tolere le BOM que les outils Windows (PowerShell Set-Content,
+    # Notepad "Enregistrer sous") ajoutent par defaut a l'UTF-8 ; il n'a aucun
+    # effet sur un fichier sans BOM.
+    with open(path, encoding="utf-8-sig") as config_file:
         raw_entries = json.load(config_file)
 
     equipments = []
