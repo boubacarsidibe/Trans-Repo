@@ -12,141 +12,210 @@ on:
         default: false
 
 jobs:
-  detect:
-    name: Detect project type
+  frontend:
+    name: Frontend (React / Vite)
     runs-on: ubuntu-latest
-    outputs:
-      has_node: ${{ steps.detect.outputs.has_node }}
-      has_python: ${{ steps.detect.outputs.has_python }}
-      has_java: ${{ steps.detect.outputs.has_java }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - id: detect
-        name: Detect stack
-        run: |
-          has_node=false
-          has_python=false
-          has_java=false
-
-          if [ -f package.json ] || [ -f pnpm-lock.yaml ] || [ -f yarn.lock ] || [ -f package-lock.json ]; then
-            has_node=true
-          fi
-
-          if [ -f pyproject.toml ] || [ -f requirements.txt ] || [ -f setup.py ] || [ -f Pipfile ]; then
-            has_python=true
-          fi
-
-          if [ -f pom.xml ] || [ -f build.gradle ] || [ -f build.gradle.kts ] || [ -f gradlew ]; then
-            has_java=true
-          fi
-
-          echo "has_node=$has_node" >> "$GITHUB_OUTPUT"
-          echo "has_python=$has_python" >> "$GITHUB_OUTPUT"
-          echo "has_java=$has_java" >> "$GITHUB_OUTPUT"
-
-  ci:
-    name: Build and test
-    runs-on: ubuntu-latest
-    needs: detect
+    defaults:
+      run:
+        working-directory: frontend
     steps:
       - uses: actions/checkout@v4
 
       - name: Set up Node.js
-        if: needs.detect.outputs.has_node == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
+          # Resolved from the repository root, not from working-directory.
+          cache-dependency-path: frontend/package-lock.json
 
-      - name: Install Node.js dependencies
-        if: needs.detect.outputs.has_node == 'true' && hashFiles('package-lock.json') != ''
+      - name: Install dependencies
         run: npm ci
 
-      - name: Install Node.js dependencies
-        if: needs.detect.outputs.has_node == 'true' && hashFiles('package-lock.json') == ''
-        run: npm install
+      - name: Lint
+        run: npm run lint
 
-      - name: Test Node.js project
-        if: needs.detect.outputs.has_node == 'true'
-        run: |
-          if npm run | grep -q " test"; then npm test; else echo "No npm test script found"; fi
+      - name: Audit dependencies
+        run: npm audit --audit-level=high
 
-      - name: Build Node.js project
-        if: needs.detect.outputs.has_node == 'true'
-        run: |
-          if npm run | grep -q " build"; then npm run build; else echo "No npm build script found"; fi
+      - name: Test
+        run: npm run test
+
+      - name: Build
+        run: npm run build
+
+      - name: Upload frontend build
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist/
+          if-no-files-found: ignore
+
+  backend:
+    name: Backend (Spring Boot)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend_trans
+
+    # BackendTransApplicationTests is a @SpringBootTest and JPA runs with
+    # ddl-auto=update, so Hibernate opens a real connection while the context
+    # starts. These values match the defaults in application.properties, so no
+    # environment override is needed.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: Transdb
+          POSTGRES_USER: admin
+          POSTGRES_PASSWORD: secretpassword
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      # Invoked through bash because mvnw is committed without the exec bit.
+      - name: Build and test
+        run: bash mvnw -B verify
+
+      - name: Upload backend jar
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-jar
+          path: backend_trans/target/*.jar
+          if-no-files-found: ignore
+
+  dependency-check:
+    name: Backend (scan de dependances OWASP)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend_trans
+    # Sans NVD_API_KEY, l'API NIST est severement limitee en debit et peut
+    # faire echouer ou ralentir enormement ce job (jusqu'a plusieurs dizaines
+    # de minutes) : ne bloque pas le reste de la CI tant que le secret n'est
+    # pas configure (cf. https://github.com/settings/tokens -> NVD API key).
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      - name: Scanner les dependances (OWASP dependency-check)
+        run: bash mvnw -B -Psecurity-scan dependency-check:check -DnvdApiKey=${{ secrets.NVD_API_KEY }}
+
+      - name: Publier le rapport
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-check-report
+          path: backend_trans/target/dependency-check-report.*
+          if-no-files-found: ignore
+
+  agent:
+    name: Agents (Python)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: agent
+    steps:
+      - uses: actions/checkout@v4
 
       - name: Set up Python
-        if: needs.detect.outputs.has_python == 'true'
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
-      - name: Install Python dependencies
-        if: needs.detect.outputs.has_python == 'true' && hashFiles('requirements.txt') != ''
-        run: python -m pip install --upgrade pip && pip install -r requirements.txt
-
-      - name: Install Python package
-        if: needs.detect.outputs.has_python == 'true' && hashFiles('pyproject.toml') != ''
-        run: python -m pip install --upgrade pip build
-
-      - name: Test Python project
-        if: needs.detect.outputs.has_python == 'true'
+      - name: Install dependencies
         run: |
-          if [ -d tests ] || [ -d test ]; then python -m pytest; else echo "No Python tests directory found"; fi
+          python -m pip install --upgrade pip
+          pip install -r system/requirements.txt -r network/requirements.txt -r requirements-dev.txt
 
-      - name: Build Python package
-        if: needs.detect.outputs.has_python == 'true' && hashFiles('pyproject.toml') != ''
-        run: python -m build
+      # compileall catches syntax errors; pytest actually imports the
+      # modules and exercises their logic (it would have caught, for
+      # instance, network_collector.py importing a pysnmp submodule that
+      # didn't exist yet in the pinned version).
+      - name: Syntax check
+        run: python -m compileall -q system network
 
-      - name: Set up Java
-        if: needs.detect.outputs.has_java == 'true'
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '21'
-          cache: maven
-
-      - name: Test Java project
-        if: needs.detect.outputs.has_java == 'true' && hashFiles('pom.xml') != ''
-        run: mvn -B test
-
-      - name: Build Java project
-        if: needs.detect.outputs.has_java == 'true' && hashFiles('pom.xml') != ''
-        run: mvn -B package -DskipTests
-
-      - name: Test Gradle project
-        if: needs.detect.outputs.has_java == 'true' && hashFiles('pom.xml') == ''
-        run: |
-          if [ -x ./gradlew ]; then ./gradlew test; else gradle test; fi
-
-      - name: Build Gradle project
-        if: needs.detect.outputs.has_java == 'true' && hashFiles('pom.xml') == ''
-        run: |
-          if [ -x ./gradlew ]; then ./gradlew build -x test; else gradle build -x test; fi
-
-      - name: Upload packaged artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-artifacts
-          path: |
-            dist/
-            build/
-            target/
-          if-no-files-found: ignore
+      - name: Test
+        run: python -m pytest
 
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
-    needs: ci
+    needs: [frontend, backend, agent]
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.deploy))
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v4
 
-      - name: Deploy placeholder
-        run: |
-          echo "Configure your deployment target here."
-          echo "Examples: Azure, Vercel, Netlify, Docker, Kubernetes, or a custom server."
-          echo "This job currently validates the CD stage is wired, but does not deploy yet."
+      - name: Se connecter a GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Construire et publier l'image backend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend_trans
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/trans-repo-backend:latest
+            ghcr.io/${{ github.repository_owner }}/trans-repo-backend:${{ github.sha }}
+
+      - name: Construire et publier l'image frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/trans-repo-frontend:latest
+            ghcr.io/${{ github.repository_owner }}/trans-repo-frontend:${{ github.sha }}
+
+      # docker-compose.prod.yml + deploy/nginx.conf sont ce que le serveur
+      # CRI execute ; le .env qui porte les secrets reste local au serveur
+      # et n'est jamais touche ici (cf. deploy/README.md).
+      - name: Copier la configuration de deploiement sur le serveur CRI
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.CRI_HOST }}
+          username: ${{ secrets.CRI_USER }}
+          key: ${{ secrets.CRI_SSH_KEY }}
+          source: "docker-compose.prod.yml,deploy/nginx.conf"
+          target: ${{ secrets.CRI_DEPLOY_PATH }}
+
+      - name: Deployer sur le serveur CRI
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.CRI_HOST }}
+          username: ${{ secrets.CRI_USER }}
+          key: ${{ secrets.CRI_SSH_KEY }}
+          script: |
+            cd ${{ secrets.CRI_DEPLOY_PATH }}
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml up -d

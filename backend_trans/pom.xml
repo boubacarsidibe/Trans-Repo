@@ -12,19 +12,22 @@
 	<artifactId>backend_trans</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>backend_trans</name>
-	<description/>
-	<url/>
+	<description>API de supervision du parc reseau et serveurs de l'EPT (PFE)</description>
+	<url>https://github.com/boubacarsidibe/Trans-Repo</url>
 	<licenses>
 		<license/>
 	</licenses>
 	<developers>
-		<developer/>
+		<developer>
+			<name>Boubacar Sidibe</name>
+			<email>sboubacar@ept.sn</email>
+		</developer>
 	</developers>
 	<scm>
-		<connection/>
-		<developerConnection/>
-		<tag/>
-		<url/>
+		<connection>scm:git:https://github.com/boubacarsidibe/Trans-Repo.git</connection>
+		<developerConnection>scm:git:https://github.com/boubacarsidibe/Trans-Repo.git</developerConnection>
+		<tag>HEAD</tag>
+		<url>https://github.com/boubacarsidibe/Trans-Repo</url>
 	</scm>
 	<properties>
 		<java.version>17</java.version>
@@ -37,6 +40,64 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-webmvc</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-websocket</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-mail</artifactId>
+		</dependency>
+		<!-- Export PDF des rapports (F8). LGPL/MPL : aucune licence payante (§8.3). -->
+		<dependency>
+			<groupId>com.github.librepdf</groupId>
+			<artifactId>openpdf</artifactId>
+			<version>2.0.3</version>
+		</dependency>
+		<!-- Documentation API : /v3/api-docs (OpenAPI) et /swagger-ui.html. -->
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+			<version>3.1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-validation</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-crypto</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
+		<!--
+			@Auditable / AuditAspect (issue #44) : journal d'audit generique.
+			"spring-boot-starter-aspectj" (Spring Boot 4) remplace l'ancien
+			"spring-boot-starter-aop" des versions 3.x et anterieures.
+		-->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-aspectj</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-api</artifactId>
+			<version>0.12.6</version>
+		</dependency>
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-impl</artifactId>
+			<version>0.12.6</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-jackson</artifactId>
+			<version>0.12.6</version>
+			<scope>runtime</scope>
 		</dependency>
 
 		<dependency>
@@ -111,5 +172,33 @@
 			</plugin>
 		</plugins>
 	</build>
+
+	<profiles>
+		<!--
+			Pas dans le build par defaut : dependency-check-maven telecharge et
+			interroge la base NVD, ce qui ralentirait "mvnw verify" a chaque
+			execution. Lance a part par le job dedie de ci-cd.yml
+			("mvnw -Psecurity-scan dependency-check:check").
+		-->
+		<profile>
+			<id>security-scan</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.owasp</groupId>
+						<artifactId>dependency-check-maven</artifactId>
+						<version>12.1.0</version>
+						<configuration>
+							<failBuildOnCVSS>9</failBuildOnCVSS>
+							<formats>
+								<format>HTML</format>
+								<format>SARIF</format>
+							</formats>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 
 </project>
