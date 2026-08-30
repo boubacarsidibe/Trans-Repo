@@ -1,22 +1,34 @@
 .cadre {
 	display: flex;
-	flex-direction: column;
+	align-items: stretch;
 	min-height: 100%;
 }
 
-/* ── Rail de façade : la plaque signalétique vissée en haut du panneau ─────── */
+.cadre-corps {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	min-width: 0;
+}
+
+/* ── Rail de façade : la plaque signalétique vissée sur le flanc du panneau ── */
 
 .rail {
 	position: sticky;
 	top: 0;
+	align-self: flex-start;
 	z-index: 10;
 	display: flex;
+	flex-direction: column;
 	align-items: stretch;
+	flex-shrink: 0;
 	gap: 28px;
-	height: 52px;
-	padding: 0 20px;
+	width: 220px;
+	height: 100vh;
+	padding: 20px 16px;
+	overflow-y: auto;
 	background: var(--rail);
-	border-bottom: 1px solid var(--trait-fort);
+	border-right: 1px solid var(--trait-fort);
 	backdrop-filter: blur(var(--flou-verre));
 	color: var(--rail-encre);
 }
@@ -30,7 +42,6 @@
 	font-stretch: 112%;
 	letter-spacing: 0.2em;
 	text-transform: uppercase;
-	white-space: nowrap;
 }
 
 .rail-marque-faible {
@@ -41,18 +52,19 @@
 
 .rail-nav {
 	display: flex;
+	flex-direction: column;
 	align-items: stretch;
 	gap: 2px;
 	flex: 1;
-	overflow-x: auto;
-	scrollbar-width: none;
+	overflow-y: auto;
 }
 
 .rail-lien {
 	display: flex;
 	align-items: center;
-	padding: 0 12px;
-	border-bottom: 2px solid transparent;
+	padding: 10px 12px;
+	border-left: 2px solid transparent;
+	border-radius: var(--rayon-bouton);
 	color: var(--rail-encre-faible);
 	font-size: 10.5px;
 	font-weight: 600;
@@ -69,23 +81,26 @@
 
 .rail-lien-actif {
 	color: var(--rail-encre);
-	border-bottom-color: var(--bleu-vif);
+	background: rgba(255, 255, 255, 0.05);
+	border-left-color: var(--bleu-vif);
 }
 
 .rail-poste {
 	display: flex;
-	align-items: center;
-	gap: 14px;
-	white-space: nowrap;
+	flex-direction: column;
+	align-items: stretch;
+	gap: 10px;
+	margin-top: auto;
+	padding-top: 14px;
+	border-top: 1px solid var(--trait-fort);
 }
 
 .rail-identite {
 	display: flex;
 	flex-direction: column;
-	justify-content: center;
 	gap: 3px;
 	line-height: 1.1;
-	text-align: right;
+	text-align: left;
 }
 
 .rail-identite-nom {
@@ -103,6 +118,7 @@
 }
 
 .rail-bouton {
+	width: 100%;
 	padding: 6px 10px;
 	background: transparent;
 	border: 1px solid var(--trait-fort);
@@ -795,19 +811,31 @@
 /* ── Écrans étroits : la baie se déplie ───────────────────────────────────── */
 
 @media (max-width: 760px) {
+	.cadre {
+		flex-direction: column;
+	}
+
 	.rail {
+		position: sticky;
+		width: auto;
 		height: auto;
+		flex-direction: row;
 		flex-wrap: wrap;
+		align-self: stretch;
 		gap: 0 18px;
 		padding: 10px 14px;
+		overflow: visible;
+		border-right: none;
+		border-bottom: 1px solid var(--trait-fort);
 	}
 
 	.rail-nav {
 		order: 3;
+		flex-direction: row;
 		flex-wrap: wrap;
 		width: 100%;
 		margin-top: 8px;
-		overflow-x: visible;
+		overflow: visible;
 	}
 
 	.section-entete {
@@ -821,10 +849,32 @@
 
 	.rail-lien {
 		padding: 8px 10px 6px 0;
+		border-left: none;
+		border-bottom: 2px solid transparent;
+		border-radius: 0;
+	}
+
+	.rail-lien-actif {
+		background: none;
+		border-left-color: transparent;
+		border-bottom-color: var(--bleu-vif);
 	}
 
 	.rail-poste {
+		flex-direction: row;
+		align-items: center;
+		margin-top: 0;
 		margin-left: auto;
+		padding-top: 0;
+		border-top: none;
+	}
+
+	.rail-identite {
+		text-align: right;
+	}
+
+	.rail-bouton {
+		width: auto;
 	}
 
 	.contenu {

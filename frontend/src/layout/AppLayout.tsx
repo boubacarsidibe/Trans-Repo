@@ -41,7 +41,7 @@ export function AppLayout() {
 				Aller au contenu
 			</a>
 
-			<header className="rail">
+			<aside className="rail">
 				<span className="rail-marque">
 					<Marque />
 					Supervision EPT
@@ -76,13 +76,15 @@ export function AppLayout() {
 						Se déconnecter
 					</button>
 				</div>
-			</header>
+			</aside>
 
-			<BandeauSynoptique />
+			<div className="cadre-corps">
+				<BandeauSynoptique />
 
-			<main className="contenu" id="contenu">
-				<Outlet />
-			</main>
+				<main className="contenu" id="contenu">
+					<Outlet />
+				</main>
+			</div>
 		</div>
 	);
 }
