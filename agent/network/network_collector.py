@@ -107,6 +107,9 @@ def ping_equipment(equipment: NetworkEquipment, timeout: float):
         result = icmp_ping(equipment.ip_address, count=1, timeout=timeout, privileged=False)
         if result.is_alive:
             return result.avg_rtt, True
+        logger.warning(
+            "Ping KO pour %s (%s) : equipement injoignable au niveau reseau, SNMP non tente.",
+            equipment.nom, equipment.ip_address)
         return None, False
     except Exception:
         logger.exception("Erreur ICMP vers %s (%s)", equipment.nom, equipment.ip_address)
@@ -146,7 +149,11 @@ def snmp_get_values(equipment: NetworkEquipment, timeout: float):
         return None
 
     if values is None:
-        logger.warning("Reponse SNMP invalide pour %s (%s)", equipment.nom, equipment.ip_address)
+        logger.warning(
+            "SNMP KO pour %s (%s:%s, communaute \"%s\") : reseau joignable (ping OK) mais pas de "
+            "reponse SNMP valide. Verifiez que le service SNMP est actif sur l'equipement, que la "
+            "communaute correspond, et qu'aucun pare-feu ne bloque le port.",
+            equipment.nom, equipment.ip_address, equipment.snmp_port, equipment.snmp_community)
         return None
 
     return dict(zip(keys, values))
