@@ -1,91 +1,93 @@
 /*
- * Panneau synoptique — jetons de conception
- *
- * Le panneau reprend l'habillage « verre de nuit » de l'écran de connexion :
- * surfaces translucides posées sur un dégradé bleu nuit, contours fins et
- * lueur d'accent. La finition « jour » est la même scène éclairée en plein
- * jour, pas un système différent — mêmes proportions, mêmes rayons, mêmes
- * jetons.
+ * Jetons de conception — finition sobre inspirée des consoles d'exploitation
+ * (type Zabbix) : surfaces plates, bordures fines, un rail sombre neutre et
+ * la même police partout. Peu de couleur : noir/blanc/gris pour le chrome de
+ * l'interface, les seules teintes réservées aux trois états de supervision
+ * (nominal, à surveiller, critique).
  */
 
 :root {
-	color-scheme: dark;
+	color-scheme: light;
 
-	/* Scène de fond — dégradé profond, cf. .scene-fond */
-	--fond: #10141a;
-	--fond-bas: #1b3a57;
+	/* Fond de page et surfaces — plates, opaques, aucun dégradé */
+	--fond: #eef0f2;
+	--fond-bas: #eef0f2;
 
-	/* Surfaces — verre posé sur la scène */
-	--plaque: rgba(27, 58, 87, 0.4);
-	--plaque-survol: rgba(46, 84, 122, 0.5);
-	--plaque-creuse: rgba(12, 16, 22, 0.55);
-	--rail: rgba(13, 17, 23, 0.72);
-	--rail-encre: #dfe2eb;
-	--rail-encre-faible: #9aa1b0;
+	--plaque: #ffffff;
+	--plaque-survol: #f3f4f5;
+	--plaque-creuse: #f3f4f5;
+
+	/* Rail de façade : toujours sombre, quelle que soit la finition */
+	--rail: #202429;
+	--rail-encre: #f1f2f3;
+	--rail-encre-faible: #9198a0;
 
 	/* Encres */
-	--encre: #dfe2eb;
-	--encre-faible: #9aa1b0;
-	--encre-inverse: #00204a;
+	--encre: #1c2024;
+	--encre-faible: #666d75;
+	--encre-inverse: #ffffff;
 
-	/* Traits — contour de verre plutôt que gravure métal */
-	--trait: rgba(120, 156, 214, 0.18);
-	--trait-fort: rgba(120, 156, 214, 0.32);
+	/* Traits — bordures fines et nettes, pas de contour lumineux */
+	--trait: #dde1e4;
+	--trait-fort: #c7cbd0;
 
-	/* Lampes de signalisation et accent d'interface */
-	--vert: #35d488;
-	--ambre: #e0a63b;
-	--rouge: #e2564c;
-	--bleu: #a9c7ff;
-	--bleu-vif: #5391ec;
+	/* Lampes de signalisation : les seules couleurs de l'interface */
+	--vert: #2f7a4d;
+	--ambre: #a8690a;
+	--rouge: #b93327;
 
-	/* Reliefs : un panneau de verre, pas de tôle embossée */
-	--bevel-haut: rgba(255, 255, 255, 0.06);
-	--bevel-bas: rgba(0, 0, 0, 0.4);
-	--halo-ombre: 0 0 9px var(--lampe-couleur, transparent);
+	/* Accent neutre (liens, focus, action principale, ligne active) — noir, pas de bleu */
+	--bleu: #4b5157;
+	--bleu-vif: #17191c;
 
-	/* Typographie */
-	--f-plaque: "Archivo Variable", "Segoe UI", sans-serif;
-	--f-donnee: "IBM Plex Mono", ui-monospace, "Cascadia Mono", monospace;
+	/* Design plat : pas de relief ni de lueur */
+	--bevel-haut: transparent;
+	--bevel-bas: transparent;
+	--halo-ombre: none;
 
-	/* Verre : rayons et flou partagés par toutes les surfaces */
-	--rayon-carte: 14px;
-	--rayon-bouton: 8px;
+	/* Typographie — la même famille que la console d'exploitation de référence */
+	--f-plaque: "Inter Variable", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+	--f-donnee: var(--f-plaque);
+
+	/* Rayons discrets, cartes essentiellement carrées */
+	--rayon-carte: 4px;
+	--rayon-bouton: 3px;
 	--rayon-pastille: 999px;
-	--flou-verre: 14px;
+	--flou-verre: 0px;
 
 	--pas: 4px;
 	--largeur-max: 1240px;
 }
 
-[data-theme="jour"] {
-	color-scheme: light;
+[data-theme="nuit"] {
+	color-scheme: dark;
 
-	/* Même scène, à la lumière du jour : ciel pâle plutôt que nuit d'encre. */
-	--fond: #eef2f8;
-	--fond-bas: #d8e6f7;
+	--fond: #16171a;
+	--fond-bas: #16171a;
 
-	--plaque: rgba(255, 255, 255, 0.6);
-	--plaque-survol: rgba(255, 255, 255, 0.82);
-	--plaque-creuse: rgba(216, 227, 245, 0.55);
-	--rail: rgba(16, 24, 38, 0.85);
-	--rail-encre: #eef2f8;
-	--rail-encre-faible: #aab6cc;
+	--plaque: #1e2024;
+	--plaque-survol: #26282c;
+	--plaque-creuse: #131416;
 
-	--encre: #1c2534;
-	--encre-faible: #4d5b71;
-	--encre-inverse: #ffffff;
+	--rail: #0e0f11;
+	--rail-encre: #e8e9ea;
+	--rail-encre-faible: #82868c;
 
-	--trait: rgba(58, 111, 214, 0.16);
-	--trait-fort: rgba(58, 111, 214, 0.3);
+	--encre: #e6e7e9;
+	--encre-faible: #8b9096;
+	--encre-inverse: #16171a;
 
-	--vert: #1f9d63;
-	--ambre: #b8790a;
-	--rouge: #c23327;
-	--bleu: #3a6fd6;
-	--bleu-vif: #1d4fb0;
+	--trait: #2b2d31;
+	--trait-fort: #3a3d42;
 
-	--bevel-haut: rgba(255, 255, 255, 0.65);
-	--bevel-bas: rgba(20, 40, 70, 0.1);
-	--halo-ombre: 0 0 9px var(--lampe-couleur, transparent);
+	--vert: #4f9d72;
+	--ambre: #cc9640;
+	--rouge: #d97267;
+
+	--bleu: #a9adb2;
+	--bleu-vif: #f0f1f2;
+
+	--bevel-haut: transparent;
+	--bevel-bas: transparent;
+	--halo-ombre: none;
 }

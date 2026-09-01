@@ -75,8 +75,7 @@
 
 .legende dd {
 	color: var(--encre-faible);
-	font-size: 10.5px;
-	letter-spacing: 0.06em;
+	font-size: 11px;
 }
 
 /* ── Équipements ──────────────────────────────────────────────────────────── */
@@ -114,15 +113,13 @@
 	display: block;
 	margin-bottom: 5px;
 	color: var(--encre-faible);
-	font-size: 9.5px;
-	font-weight: 600;
-	letter-spacing: 0.18em;
-	text-transform: uppercase;
+	font-size: 11px;
+	font-weight: 500;
 }
 
 .fiche-valeur {
 	font-family: var(--f-donnee);
-	font-size: 12.5px;
+	font-size: 13px;
 	overflow-wrap: anywhere;
 }
 
@@ -172,10 +169,8 @@
 	gap: 6px 18px;
 	padding: 10px 2px 4px;
 	color: var(--encre-faible);
-	font-size: 10px;
-	font-weight: 600;
-	letter-spacing: 0.12em;
-	text-transform: uppercase;
+	font-size: 11px;
+	font-weight: 500;
 }
 
 .enregistreur-seuil {
@@ -237,9 +232,9 @@
 	background: var(--plaque);
 	border: 1px solid var(--trait-fort);
 	border-radius: var(--rayon-bouton);
-	backdrop-filter: blur(var(--flou-verre));
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 	font-family: var(--f-donnee);
-	font-size: 11.5px;
+	font-size: 12px;
 	line-height: 1.5;
 }
 
@@ -256,7 +251,6 @@
 	background: var(--plaque-creuse);
 	border: 1px solid var(--trait-fort);
 	border-radius: var(--rayon-bouton);
-	box-shadow: inset 0 2px 3px var(--bevel-bas);
 	font-family: var(--f-donnee);
 	font-size: 14px;
 	overflow-wrap: anywhere;
@@ -268,10 +262,9 @@
 	padding: 12px 14px;
 	background: var(--rail);
 	border-radius: var(--rayon-bouton);
-	backdrop-filter: blur(var(--flou-verre));
 	color: var(--rail-encre);
 	font-family: var(--f-donnee);
-	font-size: 11.5px;
+	font-size: 12px;
 	line-height: 1.7;
 	overflow-x: auto;
 	white-space: pre;
@@ -300,7 +293,10 @@
 	width: 100%;
 	min-width: 0;
 	padding: 6px 8px;
+	background: var(--plaque);
+	border: 1px solid var(--trait-fort);
 	border-radius: var(--rayon-bouton);
+	color: var(--encre);
 	font-size: 12px;
 }
 
