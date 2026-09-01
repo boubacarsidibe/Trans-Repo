@@ -19,6 +19,7 @@ import com.bouba.backend_trans.audit.Auditable;
 import com.bouba.backend_trans.auth.entity.AppUser;
 import com.bouba.backend_trans.equipement.entity.EtatEquipement;
 import com.bouba.backend_trans.equipement.entity.Equipement;
+import com.bouba.backend_trans.maintenance.service.FenetreMaintenanceService;
 import com.bouba.backend_trans.websocket.DiffusionSupervision;
 import com.bouba.backend_trans.websocket.TypeEvenement;
 
@@ -30,10 +31,16 @@ public class AlerteService {
 
 	private final AlerteRepository alerteRepository;
 	private final DiffusionSupervision diffusionSupervision;
+	private final FenetreMaintenanceService fenetreMaintenanceService;
 
-	public AlerteService(AlerteRepository alerteRepository, DiffusionSupervision diffusionSupervision) {
+	public AlerteService(
+			AlerteRepository alerteRepository,
+			DiffusionSupervision diffusionSupervision,
+			FenetreMaintenanceService fenetreMaintenanceService
+	) {
 		this.alerteRepository = alerteRepository;
 		this.diffusionSupervision = diffusionSupervision;
+		this.fenetreMaintenanceService = fenetreMaintenanceService;
 	}
 
 	@Transactional(readOnly = true)
@@ -103,6 +110,13 @@ public class AlerteService {
 				alerteRepository.save(alerte);
 				diffuser(TypeEvenement.ALERT_UPDATED, alerte);
 			}
+			return;
+		}
+
+		// Issue #160 : une fenêtre de maintenance active tait la création d'une
+		// alerte nouvelle pour cet équipement, quelle que soit l'anomalie — les
+		// alertes déjà ouvertes avant la fenêtre ne sont ni closes ni modifiées.
+		if (fenetreMaintenanceService.estActive(equipement.getId())) {
 			return;
 		}
 
