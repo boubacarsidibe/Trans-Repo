@@ -132,9 +132,12 @@ public class AuthServiceImpl implements AuthService {
 			resetToken.setExpiryDate(LocalDateTime.now().plusMinutes(passwordResetExpirationMinutes));
 			passwordResetTokenRepository.save(resetToken);
 
-			// L'envoi d'e-mail (SMTP) n'est pas encore branché : le lien est journalisé
-			// pour permettre les tests en attendant l'intégration d'un service d'envoi.
-			log.info("Password reset requested for {}. Token (dev only): {}", user.getEmail(), resetToken.getToken());
+			// L'envoi d'e-mail (SMTP) n'est pas encore branché : le jeton n'est journalisé
+			// qu'en DEBUG (désactivé par défaut en prod) pour permettre les tests en
+			// attendant l'intégration d'un service d'envoi. Ne jamais journaliser le
+			// jeton en clair à un niveau actif par défaut (INFO).
+			log.info("Password reset requested for {}.", user.getEmail());
+			log.debug("Password reset token (dev only) for {}: {}", user.getEmail(), resetToken.getToken());
 		});
 	}
 
