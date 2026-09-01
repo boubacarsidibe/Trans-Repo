@@ -53,7 +53,7 @@ public class SecurityConfig {
 						// Le handshake porte lui-même le contrôle du jeton (§8.4) :
 						// laisser passer ici, refuser dans JwtHandshakeInterceptor.
 						.requestMatchers("/ws/**").permitAll()
-						.requestMatchers("/api/v1/metrics/**").hasRole("AGENT")
+						.requestMatchers("/api/v1/metrics/**", "/api/v1/agents/**").hasRole("AGENT")
 						.anyRequest().authenticated()
 				)
 				.addFilterBefore(apiKeyAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

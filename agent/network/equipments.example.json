@@ -1,11 +1,3 @@
 [
-  {
-    "nom": "Switch-Coeur-CRI",
-    "equipment_id": "00000000-0000-0000-0000-000000000000",
-    "api_key": "change-me",
-    "ip_address": "10.0.0.1",
-    "snmp_community": "public",
-    "snmp_port": 161,
-    "interface_index": 1
-  }
+  "cle-api-affichee-a-la-declaration-de-l-equipement"
 ]

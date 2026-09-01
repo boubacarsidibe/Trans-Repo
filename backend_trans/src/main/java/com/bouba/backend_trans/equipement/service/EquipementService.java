@@ -80,6 +80,14 @@ public class EquipementService {
 		if (request.getCleApi() != null && !request.getCleApi().isBlank()) {
 			equipement.setCleApi(request.getCleApi());
 		}
+
+		// Mêmes valeurs par défaut que celles qu'appliquait jusqu'ici le collecteur
+		// réseau lui-même : aucun comportement ne change pour un équipement existant.
+		equipement.setSnmpCommunity(
+				request.getSnmpCommunity() == null || request.getSnmpCommunity().isBlank()
+						? "public" : request.getSnmpCommunity());
+		equipement.setSnmpPort(request.getSnmpPort() == null ? 161 : request.getSnmpPort());
+		equipement.setInterfaceIndex(request.getInterfaceIndex() == null ? 1 : request.getInterfaceIndex());
 	}
 
 	/**

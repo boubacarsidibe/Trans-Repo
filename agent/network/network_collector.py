@@ -6,6 +6,12 @@ reseau (routeurs, switches, points d'acces) definis dans equipments.json,
 puis pousse les resultats vers le backend (POST /api/v1/metrics/network),
 authentifie par la cle API propre a chaque equipement (en-tete X-API-Key).
 
+equipments.json ne contient plus que la liste des cles API : l'adresse IP et
+les parametres SNMP (communaute, port, index d'interface) sont lus a chaque
+cycle depuis la fiche de l'equipement (GET /api/v1/agents/self), la meme
+qu'affiche l'interface web. Ainsi, changer l'IP ou la communaute SNMP d'un
+equipement dans l'interface suffit ; rien a recopier ici.
+
 SNMP (v2c) donne la bande passante, le taux d'erreur et l'etat de
 l'interface via les compteurs MIB-II (ifTable), ainsi que l'uptime
 systeme (sysUpTime). ICMP donne la latence et la disponibilite au niveau
@@ -84,25 +90,44 @@ def load_config() -> CollectorConfig:
     )
 
 
-def load_equipments(path: str) -> list[NetworkEquipment]:
+def load_api_keys(path: str) -> list[str]:
+    """Charge la liste des cles API des equipements a superviser.
+
+    Seule la cle API est encore locale : c'est le seul secret que le
+    backend ne peut pas transmettre lui-meme (il faut bien, une fois,
+    la transporter depuis l'ecran "Declarer un equipement" jusqu'ici)."""
     # utf-8-sig tolere le BOM que les outils Windows (PowerShell Set-Content,
     # Notepad "Enregistrer sous") ajoutent par defaut a l'UTF-8 ; il n'a aucun
     # effet sur un fichier sans BOM.
     with open(path, encoding="utf-8-sig") as config_file:
         raw_entries = json.load(config_file)
 
-    equipments = []
-    for entry in raw_entries:
-        equipments.append(NetworkEquipment(
-            nom=entry["nom"],
-            equipment_id=entry["equipment_id"],
-            api_key=entry["api_key"],
-            ip_address=entry["ip_address"],
-            snmp_community=entry.get("snmp_community", "public"),
-            snmp_port=int(entry.get("snmp_port", 161)),
-            interface_index=int(entry.get("interface_index", 1)),
-        ))
-    return equipments
+    return [str(entry) for entry in raw_entries]
+
+
+def fetch_equipment_config(backend_url: str, api_key: str, timeout: float) -> NetworkEquipment | None:
+    """Recupere aupres du backend la fiche de l'equipement identifie par cette
+    cle API (nom, adresse IP, parametres SNMP) : la meme fiche que celle
+    affichee dans l'interface, toujours a jour, sans duplication locale."""
+    url = f"{backend_url}/api/v1/agents/self"
+
+    try:
+        response = requests.get(url, headers={"X-API-Key": api_key}, timeout=timeout)
+        response.raise_for_status()
+        data = response.json()
+    except requests.RequestException:
+        logger.exception("Impossible de recuperer la configuration de l'equipement aupres du backend.")
+        return None
+
+    return NetworkEquipment(
+        nom=data["nom"],
+        equipment_id=data["id"],
+        api_key=api_key,
+        ip_address=data["adresseIp"],
+        snmp_community=data.get("snmpCommunity") or "public",
+        snmp_port=int(data.get("snmpPort") or 161),
+        interface_index=int(data.get("interfaceIndex") or 1),
+    )
 
 
 def ping_equipment(equipment: NetworkEquipment, timeout: float):
@@ -232,18 +257,21 @@ class GracefulShutdown:
         self.stop_requested = True
 
 
-def run(config: CollectorConfig, equipments: list) -> None:
+def run(config: CollectorConfig, api_keys: list[str]) -> None:
     shutdown = GracefulShutdown()
     previous_readings: dict = {}
 
     logger.info(
         "Collecteur reseau demarre (%d equipements, backend=%s, intervalle=%ss)",
-        len(equipments), config.backend_url, config.interval_seconds,
+        len(api_keys), config.backend_url, config.interval_seconds,
     )
 
     while not shutdown.stop_requested:
         cycle_start = time.monotonic()
-        for equipment in equipments:
+        for api_key in api_keys:
+            equipment = fetch_equipment_config(config.backend_url, api_key, config.request_timeout_seconds)
+            if equipment is None:
+                continue
             try:
                 poll_equipment(config, equipment, previous_readings)
             except Exception:
@@ -265,14 +293,14 @@ def main() -> None:
     config = load_config()
 
     try:
-        equipments = load_equipments(config.equipments_config_path)
-    except (OSError, json.JSONDecodeError, KeyError) as exc:
+        api_keys = load_api_keys(config.equipments_config_path)
+    except (OSError, json.JSONDecodeError) as exc:
         raise SystemExit(f"Impossible de charger {config.equipments_config_path} : {exc}")
 
-    if not equipments:
-        raise SystemExit(f"Aucun equipement defini dans {config.equipments_config_path}")
+    if not api_keys:
+        raise SystemExit(f"Aucune cle API definie dans {config.equipments_config_path}")
 
-    run(config, equipments)
+    run(config, api_keys)
 
 
 if __name__ == "__main__":

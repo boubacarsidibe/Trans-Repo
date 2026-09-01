@@ -220,6 +220,15 @@ function Fiche({ poste }: { poste: Equipement }) {
 						<span className="fiche-libelle">Description</span>
 						<span className="fiche-valeur">{poste.description ?? "—"}</span>
 					</div>
+					{poste.type !== "SERVEUR" && (
+						<div className="fiche-case">
+							<span className="fiche-libelle">SNMP</span>
+							<span className="fiche-valeur">
+								{poste.snmpCommunity ?? "public"} : {poste.snmpPort ?? 161} · ifIndex{" "}
+								{poste.interfaceIndex ?? 1}
+							</span>
+						</div>
+					)}
 				</div>
 
 				<MetricChart equipementId={poste.id} equipementNom={poste.nom} />

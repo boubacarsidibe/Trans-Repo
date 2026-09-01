@@ -22,7 +22,9 @@ import jakarta.servlet.http.HttpServletResponse;
 public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
 
 	private static final String API_KEY_HEADER = "X-API-Key";
-	private static final String METRICS_PATH_PREFIX = "/api/v1/metrics/";
+
+	/** Routes réservées aux agents : ingestion de métriques et auto-configuration. */
+	private static final List<String> AGENT_PATH_PREFIXES = List.of("/api/v1/metrics/", "/api/v1/agents/");
 
 	private final EquipementRepository equipementRepository;
 
@@ -36,7 +38,8 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
 			HttpServletResponse response,
 			FilterChain filterChain
 	) throws ServletException, IOException {
-		if (!request.getRequestURI().startsWith(METRICS_PATH_PREFIX)) {
+		String uri = request.getRequestURI();
+		if (AGENT_PATH_PREFIXES.stream().noneMatch(uri::startsWith)) {
 			filterChain.doFilter(request, response);
 			return;
 		}

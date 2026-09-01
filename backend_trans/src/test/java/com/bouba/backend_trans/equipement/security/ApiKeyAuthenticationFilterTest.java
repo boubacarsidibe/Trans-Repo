@@ -117,6 +117,22 @@ class ApiKeyAuthenticationFilterTest {
 	}
 
 	@Test
+	void authentifie_egalement_les_requetes_vers_l_auto_configuration_de_l_agent() throws Exception {
+		Equipement equipement = equipement(EtatEquipement.ACTIF);
+		when(equipementRepository.findByCleApi(CLE_API)).thenReturn(Optional.of(equipement));
+
+		MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/v1/agents/self");
+		request.addHeader("X-API-Key", CLE_API);
+		MockHttpServletResponse response = new MockHttpServletResponse();
+		FilterChain chain = mock(FilterChain.class);
+
+		filter.doFilterInternal(request, response, chain);
+
+		assertThat(SecurityContextHolder.getContext().getAuthentication()).isNotNull();
+		assertThat(SecurityContextHolder.getContext().getAuthentication().getPrincipal()).isEqualTo(equipement.getId());
+	}
+
+	@Test
 	void n_applique_aucun_controle_de_cle_api_en_dehors_des_routes_d_ingestion() throws Exception {
 		MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/v1/equipments");
 		request.addHeader("X-API-Key", CLE_API);

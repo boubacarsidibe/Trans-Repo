@@ -36,6 +36,9 @@ function equipement(partiel: Partial<Equipement>): Equipement {
 		etat: "ACTIF",
 		description: null,
 		derniereMesure: new Date().toISOString(),
+		snmpCommunity: null,
+		snmpPort: null,
+		interfaceIndex: null,
 		...partiel,
 	};
 }
