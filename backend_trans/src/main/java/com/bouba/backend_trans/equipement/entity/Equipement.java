@@ -47,6 +47,21 @@ public class Equipement {
 	private String cleApi;
 
 	/**
+	 * Paramètres SNMP (routeur/switch/point d'accès uniquement). Renseignés une
+	 * fois dans la fiche de l'équipement, ils sont ensuite lus automatiquement
+	 * par le collecteur réseau via {@code GET /api/v1/agents/self} — plus besoin
+	 * de les recopier à la main dans un fichier de configuration séparé.
+	 */
+	@Column(name = "snmp_community", length = 100)
+	private String snmpCommunity;
+
+	@Column(name = "snmp_port")
+	private Integer snmpPort;
+
+	@Column(name = "interface_index")
+	private Integer interfaceIndex;
+
+	/**
 	 * Équipement dont celui-ci dépend pour être joignable — typiquement le
 	 * commutateur ou le routeur qui le dessert.
 	 *
@@ -136,6 +151,30 @@ public class Equipement {
 
 	public void setCleApi(String cleApi) {
 		this.cleApi = cleApi;
+	}
+
+	public String getSnmpCommunity() {
+		return snmpCommunity;
+	}
+
+	public void setSnmpCommunity(String snmpCommunity) {
+		this.snmpCommunity = snmpCommunity;
+	}
+
+	public Integer getSnmpPort() {
+		return snmpPort;
+	}
+
+	public void setSnmpPort(Integer snmpPort) {
+		this.snmpPort = snmpPort;
+	}
+
+	public Integer getInterfaceIndex() {
+		return interfaceIndex;
+	}
+
+	public void setInterfaceIndex(Integer interfaceIndex) {
+		this.interfaceIndex = interfaceIndex;
 	}
 
 	public Equipement getDependDe() {

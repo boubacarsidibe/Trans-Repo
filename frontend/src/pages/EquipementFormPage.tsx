@@ -15,6 +15,9 @@ const VIDE = {
 	etat: "ACTIF" as EtatEquipement,
 	localisation: "",
 	description: "",
+	snmpCommunity: "public",
+	snmpPort: "161",
+	interfaceIndex: "1",
 };
 
 export function EquipementFormPage() {
@@ -38,6 +41,9 @@ export function EquipementFormPage() {
 					etat: poste.etat,
 					localisation: poste.localisation ?? "",
 					description: poste.description ?? "",
+					snmpCommunity: poste.snmpCommunity ?? "public",
+					snmpPort: String(poste.snmpPort ?? 161),
+					interfaceIndex: String(poste.interfaceIndex ?? 1),
 				}),
 			)
 			.catch(() => setErreur("Cet équipement n'a pas pu être lu."))
@@ -52,10 +58,14 @@ export function EquipementFormPage() {
 		evenement.preventDefault();
 		setEnvoi(true);
 		setErreur(null);
+		const reseau = saisie.type !== "SERVEUR";
 		const corps = {
 			...saisie,
 			localisation: saisie.localisation.trim() || null,
 			description: saisie.description.trim() || null,
+			snmpCommunity: reseau ? saisie.snmpCommunity.trim() || undefined : undefined,
+			snmpPort: reseau ? Number(saisie.snmpPort) || undefined : undefined,
+			interfaceIndex: reseau ? Number(saisie.interfaceIndex) || undefined : undefined,
 		};
 		try {
 			if (id) {
@@ -170,6 +180,49 @@ export function EquipementFormPage() {
 							/>
 						)}
 					</Champ>
+
+					{saisie.type !== "SERVEUR" && (
+						<>
+							<Champ libelle="Communauté SNMP">
+								{(champ) => (
+									<input
+										className="champ-saisie"
+										id={champ}
+										value={saisie.snmpCommunity}
+										onChange={(e) => modifier("snmpCommunity", e.target.value)}
+										placeholder="public"
+									/>
+								)}
+							</Champ>
+
+							<Champ libelle="Port SNMP">
+								{(champ) => (
+									<input
+										className="champ-saisie"
+										id={champ}
+										type="number"
+										min={1}
+										max={65535}
+										value={saisie.snmpPort}
+										onChange={(e) => modifier("snmpPort", e.target.value)}
+									/>
+								)}
+							</Champ>
+
+							<Champ libelle="Index d'interface" aide="Index SNMP de l'interface à surveiller (ifTable).">
+								{(champ) => (
+									<input
+										className="champ-saisie"
+										id={champ}
+										type="number"
+										min={1}
+										value={saisie.interfaceIndex}
+										onChange={(e) => modifier("interfaceIndex", e.target.value)}
+									/>
+								)}
+							</Champ>
+						</>
+					)}
 				</div>
 
 				{erreur && (
@@ -192,9 +245,13 @@ export function EquipementFormPage() {
 }
 
 /**
- * La clé n'est renvoyée qu'à la création. On la montre une fois, avec le
- * fichier de configuration de l'agent déjà rempli — c'est le seul moment où
- * elle peut encore être copiée.
+ * La clé n'est renvoyée qu'à la création. On la montre une fois — c'est le
+ * seul moment où elle peut encore être copiée.
+ *
+ * Pour un équipement réseau, c'est tout ce qu'il y a à transporter : le
+ * collecteur relit ensuite lui-même l'IP et les paramètres SNMP de cette
+ * fiche à chaque cycle (`GET /api/v1/agents/self`), donc les modifier ici
+ * plus tard suffit — rien à resynchroniser côté agent.
  */
 function CleGeneree({ poste }: { poste: Equipement }) {
 	const [copie, setCopie] = useState(false);
@@ -202,7 +259,7 @@ function CleGeneree({ poste }: { poste: Equipement }) {
 
 	const configuration = agentSysteme
 		? `BACKEND_URL=${BASE_URL}\nEQUIPMENT_ID=${poste.id}\nAPI_KEY=${poste.cleApi}\nINTERVAL_SECONDS=60`
-		: `{\n  "nom": "${poste.nom}",\n  "equipment_id": "${poste.id}",\n  "api_key": "${poste.cleApi}",\n  "ip_address": "${poste.adresseIp}",\n  "snmp_community": "public",\n  "snmp_port": 161,\n  "interface_index": 1\n}`;
+		: poste.cleApi ?? "";
 
 	return (
 		<section className="section section-premiere">
@@ -219,7 +276,9 @@ function CleGeneree({ poste }: { poste: Equipement }) {
 				</p>
 
 				<p className="etat-vide-titre" style={{ marginTop: 22 }}>
-					{agentSysteme ? "Fichier agent/system/.env" : "Entrée dans agent/network/equipments.json"}
+					{agentSysteme
+						? "Fichier agent/system/.env"
+						: "À ajouter à la liste agent/network/equipments.json"}
 				</p>
 				<code className="cle-commande">{configuration}</code>
 

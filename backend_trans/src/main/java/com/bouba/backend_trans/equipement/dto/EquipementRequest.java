@@ -30,6 +30,37 @@ public class EquipementRequest {
 	/** Équipement dont celui-ci dépend pour être joignable. */
 	private UUID dependDeId;
 
+	/** Paramètres SNMP (routeur/switch/point d'accès) ; ignorés pour un serveur. */
+	private String snmpCommunity;
+
+	private Integer snmpPort;
+
+	private Integer interfaceIndex;
+
+	public String getSnmpCommunity() {
+		return snmpCommunity;
+	}
+
+	public void setSnmpCommunity(String snmpCommunity) {
+		this.snmpCommunity = snmpCommunity;
+	}
+
+	public Integer getSnmpPort() {
+		return snmpPort;
+	}
+
+	public void setSnmpPort(Integer snmpPort) {
+		this.snmpPort = snmpPort;
+	}
+
+	public Integer getInterfaceIndex() {
+		return interfaceIndex;
+	}
+
+	public void setInterfaceIndex(Integer interfaceIndex) {
+		this.interfaceIndex = interfaceIndex;
+	}
+
 	public UUID getDependDeId() {
 		return dependDeId;
 	}

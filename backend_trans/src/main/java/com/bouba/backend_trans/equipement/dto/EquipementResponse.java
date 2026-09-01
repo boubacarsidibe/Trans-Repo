@@ -20,6 +20,9 @@ public class EquipementResponse {
 	private LocalDateTime derniereMesure;
 	private UUID dependDeId;
 	private String dependDeNom;
+	private String snmpCommunity;
+	private Integer snmpPort;
+	private Integer interfaceIndex;
 
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	private String cleApi;
@@ -40,6 +43,9 @@ public class EquipementResponse {
 		response.derniereMesure = equipement.getDerniereMesure();
 		response.dependDeId = equipement.getDependDe() == null ? null : equipement.getDependDe().getId();
 		response.dependDeNom = equipement.getDependDe() == null ? null : equipement.getDependDe().getNom();
+		response.snmpCommunity = equipement.getSnmpCommunity();
+		response.snmpPort = equipement.getSnmpPort();
+		response.interfaceIndex = equipement.getInterfaceIndex();
 		if (includeApiKey) {
 			response.cleApi = equipement.getCleApi();
 		}
@@ -132,5 +138,29 @@ public class EquipementResponse {
 
 	public void setCleApi(String cleApi) {
 		this.cleApi = cleApi;
+	}
+
+	public String getSnmpCommunity() {
+		return snmpCommunity;
+	}
+
+	public void setSnmpCommunity(String snmpCommunity) {
+		this.snmpCommunity = snmpCommunity;
+	}
+
+	public Integer getSnmpPort() {
+		return snmpPort;
+	}
+
+	public void setSnmpPort(Integer snmpPort) {
+		this.snmpPort = snmpPort;
+	}
+
+	public Integer getInterfaceIndex() {
+		return interfaceIndex;
+	}
+
+	public void setInterfaceIndex(Integer interfaceIndex) {
+		this.interfaceIndex = interfaceIndex;
 	}
 }

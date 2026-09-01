@@ -92,6 +92,33 @@ class EquipementServiceTest {
 	}
 
 	@Test
+	void applique_des_parametres_snmp_par_defaut_quand_aucun_n_est_fourni() {
+		EquipementRequest request = requete("Switch", "10.0.0.2", TypeEquipement.SWITCH);
+		when(equipementRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+		Equipement cree = equipementService.create(request);
+
+		assertThat(cree.getSnmpCommunity()).isEqualTo("public");
+		assertThat(cree.getSnmpPort()).isEqualTo(161);
+		assertThat(cree.getInterfaceIndex()).isEqualTo(1);
+	}
+
+	@Test
+	void conserve_les_parametres_snmp_explicitement_fournis() {
+		EquipementRequest request = requete("Switch", "10.0.0.2", TypeEquipement.SWITCH);
+		request.setSnmpCommunity("prive");
+		request.setSnmpPort(1161);
+		request.setInterfaceIndex(3);
+		when(equipementRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+		Equipement cree = equipementService.create(request);
+
+		assertThat(cree.getSnmpCommunity()).isEqualTo("prive");
+		assertThat(cree.getSnmpPort()).isEqualTo(1161);
+		assertThat(cree.getInterfaceIndex()).isEqualTo(3);
+	}
+
+	@Test
 	void applique_l_etat_actif_par_defaut_quand_aucun_etat_n_est_precise() {
 		EquipementRequest request = requete("Switch", "10.0.0.2", TypeEquipement.SWITCH);
 		when(equipementRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));

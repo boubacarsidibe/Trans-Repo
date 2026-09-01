@@ -54,6 +54,10 @@ export interface Equipement {
 	derniereMesure: string | null;
 	/** Only returned by POST /equipments, once, at creation. */
 	cleApi?: string;
+	/** Paramètres SNMP (routeur/switch/point d'accès) ; sans objet pour un serveur. */
+	snmpCommunity: string | null;
+	snmpPort: number | null;
+	interfaceIndex: number | null;
 }
 
 export interface EquipementRequest {
@@ -63,6 +67,9 @@ export interface EquipementRequest {
 	localisation?: string | null;
 	etat?: EtatEquipement;
 	description?: string | null;
+	snmpCommunity?: string;
+	snmpPort?: number;
+	interfaceIndex?: number;
 }
 
 export type TypeMetrique =

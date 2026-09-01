@@ -26,10 +26,13 @@ cp equipments.example.json equipments.json
 | `EQUIPMENTS_CONFIG_PATH` | Chemin vers `equipments.json` |
 | `INTERVAL_SECONDES` | Fréquence de collecte |
 
-`equipments.json` : un objet par équipement réseau à superviser —
-`equipment_id`/`api_key` créés côté backend, `ip_address`,
-`snmp_community`, `snmp_port`, `interface_index` (index SNMP de
-l'interface à surveiller, cf. `ifTable`).
+`equipments.json` : une liste des clés API des équipements réseau à
+superviser (une par routeur/switch/point d'accès déclaré dans
+l'interface). C'est tout ce qu'il y a à transporter jusqu'ici — nom,
+adresse IP, communauté/port/index SNMP sont lus automatiquement à
+chaque cycle depuis la fiche de l'équipement (`GET /api/v1/agents/self`),
+la même que celle affichée dans l'interface. Modifier ces champs dans
+l'interface suffit, rien à recopier ici.
 
 ## Lancement
 

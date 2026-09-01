@@ -34,33 +34,68 @@ def fake_equipment(**overrides) -> NetworkEquipment:
     return NetworkEquipment(**base)
 
 
-class TestLoadEquipments:
-    def test_applique_les_valeurs_par_defaut(self, tmp_path):
+class TestLoadApiKeys:
+    def test_charge_la_liste_des_cles_api(self, tmp_path):
         chemin = tmp_path / "equipments.json"
-        chemin.write_text(json.dumps([
-            {"nom": "sw-core-01", "equipment_id": "eq-1", "api_key": "cle-1", "ip_address": "10.0.0.1"},
-        ]))
+        chemin.write_text(json.dumps(["cle-1", "cle-2"]))
 
-        equipements = network_collector.load_equipments(str(chemin))
+        assert network_collector.load_api_keys(str(chemin)) == ["cle-1", "cle-2"]
 
-        assert len(equipements) == 1
-        equipement = equipements[0]
+    def test_tolere_le_bom_ajoute_par_les_outils_windows(self, tmp_path):
+        chemin = tmp_path / "equipments.json"
+        chemin.write_bytes(json.dumps(["cle-1"]).encode("utf-8-sig"))
+
+        assert network_collector.load_api_keys(str(chemin)) == ["cle-1"]
+
+
+class TestFetchEquipmentConfig:
+    def test_construit_l_equipement_a_partir_de_la_reponse_du_backend(self, monkeypatch):
+        appels = []
+
+        def fausse_requete_get(url, headers, timeout):
+            appels.append((url, headers, timeout))
+            return FakeJsonResponse(200, {
+                "id": "eq-1", "nom": "sw-core-01", "adresseIp": "10.0.0.1",
+                "snmpCommunity": "prive", "snmpPort": 1161, "interfaceIndex": 3,
+            })
+
+        monkeypatch.setattr(network_collector.requests, "get", fausse_requete_get)
+
+        equipement = network_collector.fetch_equipment_config("http://backend.local", "cle-du-switch", timeout=10)
+
+        assert equipement == fake_equipment(
+            nom="sw-core-01", equipment_id="eq-1", api_key="cle-du-switch", ip_address="10.0.0.1",
+            snmp_community="prive", snmp_port=1161, interface_index=3,
+        )
+        url, headers, timeout = appels[0]
+        assert url == "http://backend.local/api/v1/agents/self"
+        assert headers == {"X-API-Key": "cle-du-switch"}
+        assert timeout == 10
+
+    def test_applique_les_valeurs_par_defaut_absentes_de_la_reponse(self, monkeypatch):
+        monkeypatch.setattr(
+            network_collector.requests, "get",
+            lambda *a, **k: FakeJsonResponse(200, {"id": "eq-1", "nom": "sw-core-01", "adresseIp": "10.0.0.1"}),
+        )
+
+        equipement = network_collector.fetch_equipment_config("http://backend.local", "cle", timeout=10)
+
         assert equipement.snmp_community == "public"
         assert equipement.snmp_port == 161
         assert equipement.interface_index == 1
 
-    def test_les_valeurs_explicites_ne_sont_pas_ecrasees(self, tmp_path):
-        chemin = tmp_path / "equipments.json"
-        chemin.write_text(json.dumps([{
-            "nom": "sw-core-01", "equipment_id": "eq-1", "api_key": "cle-1", "ip_address": "10.0.0.1",
-            "snmp_community": "prive", "snmp_port": 1161, "interface_index": 3,
-        }]))
+    def test_erreur_reseau_renvoie_none_sans_lever(self, monkeypatch):
+        def leve(*a, **k):
+            raise requests.RequestException("connexion refusee")
 
-        equipement = network_collector.load_equipments(str(chemin))[0]
+        monkeypatch.setattr(network_collector.requests, "get", leve)
 
-        assert equipement.snmp_community == "prive"
-        assert equipement.snmp_port == 1161
-        assert equipement.interface_index == 3
+        assert network_collector.fetch_equipment_config("http://backend.local", "cle", timeout=10) is None
+
+    def test_cle_api_inconnue_ou_revoquee_renvoie_none_sans_lever(self, monkeypatch):
+        monkeypatch.setattr(network_collector.requests, "get", lambda *a, **k: FakeJsonResponse(403, {}))
+
+        assert network_collector.fetch_equipment_config("http://backend.local", "cle", timeout=10) is None
 
 
 class TestComputeRates:
@@ -265,6 +300,15 @@ class FakeResponse:
     def raise_for_status(self):
         if self.status_code >= 400:
             raise requests.HTTPError(f"HTTP {self.status_code}")
+
+
+class FakeJsonResponse(FakeResponse):
+    def __init__(self, status_code: int, payload: dict):
+        super().__init__(status_code)
+        self._payload = payload
+
+    def json(self):
+        return self._payload
 
 
 class FakePingResult:
