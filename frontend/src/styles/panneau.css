@@ -11,7 +11,7 @@
 	min-width: 0;
 }
 
-/* ── Rail de façade : la plaque signalétique vissée sur le flanc du panneau ── */
+/* ── Rail de façade : la navigation, toujours sur fond sombre neutre ─────── */
 
 .rail {
 	position: sticky;
@@ -29,7 +29,6 @@
 	overflow-y: auto;
 	background: var(--rail);
 	border-right: 1px solid var(--trait-fort);
-	backdrop-filter: blur(var(--flou-verre));
 	color: var(--rail-encre);
 }
 
@@ -37,17 +36,14 @@
 	display: flex;
 	align-items: center;
 	gap: 10px;
-	font-size: 12px;
+	font-size: 13px;
 	font-weight: 700;
-	font-stretch: 112%;
-	letter-spacing: 0.2em;
-	text-transform: uppercase;
+	white-space: nowrap;
 }
 
 .rail-marque-faible {
 	color: var(--rail-encre-faible);
 	font-weight: 500;
-	letter-spacing: 0.16em;
 }
 
 .rail-nav {
@@ -62,27 +58,26 @@
 .rail-lien {
 	display: flex;
 	align-items: center;
-	padding: 10px 12px;
+	padding: 8px 12px;
 	border-left: 2px solid transparent;
 	border-radius: var(--rayon-bouton);
 	color: var(--rail-encre-faible);
-	font-size: 10.5px;
-	font-weight: 600;
-	letter-spacing: 0.16em;
+	font-size: 13px;
+	font-weight: 500;
 	text-decoration: none;
-	text-transform: uppercase;
 	white-space: nowrap;
 }
 
 .rail-lien:hover {
 	color: var(--rail-encre);
-	background: rgba(255, 255, 255, 0.05);
+	background: rgba(255, 255, 255, 0.06);
 }
 
 .rail-lien-actif {
 	color: var(--rail-encre);
-	background: rgba(255, 255, 255, 0.05);
-	border-left-color: var(--bleu-vif);
+	background: rgba(255, 255, 255, 0.09);
+	border-left-color: var(--rail-encre);
+	font-weight: 600;
 }
 
 .rail-poste {
@@ -104,16 +99,13 @@
 }
 
 .rail-identite-nom {
-	font-family: var(--f-donnee);
-	font-size: 11.5px;
+	font-size: 13px;
+	font-weight: 600;
 	color: var(--rail-encre);
 }
 
 .rail-identite-role {
-	font-size: 9px;
-	font-weight: 600;
-	letter-spacing: 0.16em;
-	text-transform: uppercase;
+	font-size: 11px;
 	color: var(--rail-encre-faible);
 }
 
@@ -124,10 +116,8 @@
 	border: 1px solid var(--trait-fort);
 	border-radius: var(--rayon-bouton);
 	color: var(--rail-encre-faible);
-	font-size: 10px;
-	font-weight: 600;
-	letter-spacing: 0.14em;
-	text-transform: uppercase;
+	font-size: 12px;
+	font-weight: 500;
 	cursor: pointer;
 }
 
@@ -143,10 +133,8 @@
 	flex-wrap: wrap;
 	gap: 0 28px;
 	padding: 14px 20px 10px;
-	background: var(--plaque-creuse);
+	background: var(--plaque);
 	border-bottom: 1px solid var(--trait-fort);
-	backdrop-filter: blur(var(--flou-verre));
-	box-shadow: inset 0 2px 3px var(--bevel-bas);
 }
 
 .bandeau-groupe {
@@ -164,8 +152,7 @@
 .bandeau-vide {
 	padding: 6px 0 10px;
 	color: var(--encre-faible);
-	font-size: 11px;
-	letter-spacing: 0.08em;
+	font-size: 12px;
 }
 
 /* Témoin de liaison : l'opérateur doit savoir si le panneau est vivant ou
@@ -178,33 +165,27 @@
 	align-self: flex-start;
 	padding-top: 2px;
 	color: var(--encre-faible);
-	font-size: 10px;
-	letter-spacing: 0.1em;
-	text-transform: uppercase;
+	font-size: 11px;
 	white-space: nowrap;
 }
 
 .liaison-temoin {
-	width: 6px;
-	height: 6px;
+	width: 7px;
+	height: 7px;
 	border-radius: 50%;
 	background: var(--encre-faible);
-	box-shadow: inset 0 1px 1px var(--bevel-bas);
 }
 
 .liaison-temoin-actif {
-	--lampe-couleur: var(--vert);
 	background: var(--vert);
-	box-shadow: var(--halo-ombre);
 }
 
 .liaison-heure {
 	font-family: var(--f-donnee);
-	font-size: 10px;
-	letter-spacing: 0;
+	font-size: 11px;
 }
 
-/* Douille : la lampe dans son embase, et son étiquette gravée. */
+/* Douille : la lampe et son étiquette. */
 .douille {
 	display: flex;
 	flex-direction: column;
@@ -216,12 +197,10 @@
 	border-radius: var(--rayon-bouton);
 	color: inherit;
 	text-decoration: none;
-	animation: allumage 220ms ease-out both;
-	animation-delay: calc(var(--i, 0) * 22ms);
 }
 
 .douille:hover {
-	background: var(--plaque);
+	background: var(--plaque-survol);
 	border-color: var(--trait);
 }
 
@@ -229,9 +208,7 @@
 	max-width: 100%;
 	overflow: hidden;
 	color: var(--encre-faible);
-	font-family: var(--f-donnee);
-	font-size: 9.5px;
-	letter-spacing: -0.02em;
+	font-size: 11px;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
@@ -240,16 +217,7 @@
 	color: var(--encre);
 }
 
-@keyframes allumage {
-	from {
-		opacity: 0;
-	}
-	to {
-		opacity: 1;
-	}
-}
-
-/* ── La lampe ─────────────────────────────────────────────────────────────── */
+/* ── La lampe : plate, différenciée par la forme autant que par la teinte ─── */
 
 .lampe {
 	flex: none;
@@ -257,11 +225,7 @@
 	height: 10px;
 	border-radius: 50%;
 	background: var(--lampe-couleur, transparent);
-	box-shadow:
-		inset 0 1px 1.5px rgba(255, 255, 255, 0.4),
-		inset 0 -1px 1.5px rgba(0, 0, 0, 0.3),
-		0 0 0 1px var(--trait-fort),
-		var(--halo-ombre, 0 0 0 transparent);
+	box-shadow: inset 0 0 0 1px var(--trait-fort);
 }
 
 .lampe-verte {
@@ -283,7 +247,7 @@
 	height: 4px;
 	margin: 3px;
 	border-radius: 50%;
-	background: rgba(0, 0, 0, 0.5);
+	background: rgba(0, 0, 0, 0.45);
 }
 
 .lampe-rouge {
@@ -293,9 +257,7 @@
 /* Éteinte : c'est ainsi qu'un panneau dit « plus aucun signal ». */
 .lampe-eteinte {
 	background: var(--plaque-creuse);
-	box-shadow:
-		inset 0 1px 2px rgba(0, 0, 0, 0.35),
-		0 0 0 1px var(--trait-fort);
+	box-shadow: inset 0 0 0 1px var(--trait-fort);
 }
 
 /*
@@ -323,7 +285,7 @@
 	height: 13px;
 }
 
-/* ── Contenu : plaques vissées sur le panneau ─────────────────────────────── */
+/* ── Contenu ──────────────────────────────────────────────────────────────── */
 
 .contenu {
 	/* `width` est indispensable : les marges auto d'un enfant flex annulent
@@ -357,18 +319,13 @@
 	background: var(--plaque);
 	border: 1px solid var(--trait-fort);
 	border-radius: var(--rayon-carte);
-	backdrop-filter: blur(var(--flou-verre));
-	box-shadow:
-		inset 0 1px 0 var(--bevel-haut),
-		0 20px 60px var(--bevel-bas);
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
 .encart-creux {
 	background: var(--plaque-creuse);
 	border: 1px solid var(--trait-fort);
 	border-radius: var(--rayon-carte);
-	backdrop-filter: blur(var(--flou-verre));
-	box-shadow: inset 0 2px 3px var(--bevel-bas);
 }
 
 /* ── Relevés : le plus gros caractère de la page est une valeur machine ───── */
@@ -392,14 +349,13 @@
 .releve-valeur {
 	display: block;
 	font-family: var(--f-donnee);
-	font-size: 40px;
+	font-size: 38px;
 	font-weight: 300;
 	line-height: 1.05;
-	letter-spacing: -0.03em;
 }
 
 .releve-unite {
-	font-size: 17px;
+	font-size: 16px;
 	color: var(--encre-faible);
 }
 
@@ -407,10 +363,8 @@
 	display: block;
 	margin-top: 8px;
 	color: var(--encre-faible);
-	font-size: 9.5px;
-	font-weight: 600;
-	letter-spacing: 0.18em;
-	text-transform: uppercase;
+	font-size: 11px;
+	font-weight: 500;
 }
 
 .releve-alarme .releve-valeur {
@@ -433,7 +387,7 @@
 	grid-template-columns: 16px 190px 130px 128px minmax(0, 1fr) 14px;
 	align-items: center;
 	gap: 14px;
-	min-height: 44px;
+	min-height: 42px;
 	padding: 0 16px;
 	border-bottom: 1px solid var(--trait);
 	color: inherit;
@@ -467,48 +421,25 @@
 
 .rangee-active {
 	background: var(--plaque-survol);
-	box-shadow: inset 3px 0 0 var(--bleu);
+	box-shadow: inset 3px 0 0 var(--bleu-vif);
 }
 
 /*
- * Rangée critique non prise en compte : au clignotement de la lampe s'ajoute
- * une lueur portée par la rangée elle-même, pour qu'elle se voie même quand
- * l'œil n'est pas sur la colonne des lampes. Même traitement partout où une
- * rangée peut représenter un état critique — alertes, équipements en panne.
+ * Rangée critique non prise en compte : un simple filet rouge, sans lueur.
+ * Même traitement partout où une rangée peut représenter un état critique —
+ * alertes, équipements en panne.
  */
 .rangee-critique {
-	animation: pulsation-critique 2.2s ease-in-out infinite;
+	box-shadow: inset 3px 0 0 var(--rouge);
 }
 
-@keyframes pulsation-critique {
-	0%,
-	100% {
-		box-shadow: inset 3px 0 0 var(--rouge);
-	}
-	50% {
-		box-shadow:
-			inset 3px 0 0 var(--rouge),
-			0 0 16px color-mix(in srgb, var(--rouge) 45%, transparent);
-	}
-}
-
-/* Douille critique : la même lueur, en anneau, pour la lampe murale du bandeau. */
+/* Douille critique : le même filet, en anneau, pour la lampe murale du bandeau. */
 .douille-critique {
-	animation: pulsation-critique-douille 2.2s ease-in-out infinite;
+	box-shadow: 0 0 0 1px var(--rouge);
 	border-radius: 4px;
 }
 
-@keyframes pulsation-critique-douille {
-	0%,
-	100% {
-		box-shadow: none;
-	}
-	50% {
-		box-shadow: 0 0 0 1px var(--rouge), 0 0 14px color-mix(in srgb, var(--rouge) 45%, transparent);
-	}
-}
-
-/* ── Relevés vitrés : les mêmes chiffres clés, en cartes détachées ───────── */
+/* ── Relevés détachés : les mêmes chiffres clés, en cartes ────────────────── */
 
 .releves-vitrees {
 	display: grid;
@@ -523,17 +454,11 @@
 	background: var(--plaque);
 	border: 1px solid var(--trait-fort);
 	border-radius: var(--rayon-carte);
-	backdrop-filter: blur(var(--flou-verre));
-	box-shadow:
-		inset 0 1px 0 var(--bevel-haut),
-		0 8px 20px var(--bevel-bas);
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
 .releves-vitrees .releve-alarme {
 	border-color: var(--rouge);
-	box-shadow:
-		inset 0 1px 0 var(--bevel-haut),
-		0 0 16px color-mix(in srgb, var(--rouge) 30%, transparent);
 }
 
 .rangee-entete {
@@ -541,16 +466,12 @@
 	background: var(--plaque-creuse);
 	border-bottom: 1px solid var(--trait-fort);
 	color: var(--encre-faible);
-	font-size: 9.5px;
+	font-size: 11px;
 	font-weight: 600;
-	font-stretch: 88%;
-	letter-spacing: 0.16em;
-	text-transform: uppercase;
 }
 
 .rangee-nom {
 	overflow: hidden;
-	font-family: var(--f-donnee);
 	font-size: 13px;
 	text-overflow: ellipsis;
 	white-space: nowrap;
@@ -561,23 +482,19 @@
 	overflow: hidden;
 	color: var(--encre-faible);
 	font-family: var(--f-donnee);
-	font-size: 11.5px;
+	font-size: 12px;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
 
 .rangee-genre {
-	font-size: 9.5px;
-	font-weight: 600;
-	font-stretch: 88%;
-	letter-spacing: 0.14em;
-	text-transform: uppercase;
+	font-size: 11px;
+	font-weight: 500;
 	color: var(--encre-faible);
 }
 
 .rangee-fleche {
 	color: var(--encre-faible);
-	font-family: var(--f-donnee);
 	font-size: 13px;
 	text-align: right;
 }
@@ -593,11 +510,9 @@
 	align-items: center;
 	gap: 7px;
 	overflow: hidden;
-	font-size: 10px;
+	font-size: 12px;
 	font-weight: 600;
-	letter-spacing: 0.14em;
 	text-overflow: ellipsis;
-	text-transform: uppercase;
 	white-space: nowrap;
 }
 
@@ -620,31 +535,24 @@
 	align-items: center;
 	justify-content: center;
 	gap: 8px;
-	padding: 8px 14px;
+	padding: 7px 14px;
 	background: var(--plaque);
 	border: 1px solid var(--trait-fort);
 	border-radius: var(--rayon-bouton);
-	backdrop-filter: blur(var(--flou-verre));
-	box-shadow:
-		inset 0 1px 0 var(--bevel-haut),
-		inset 0 -1px 0 var(--bevel-bas);
 	color: var(--encre);
-	font-size: 10.5px;
-	font-weight: 600;
-	letter-spacing: 0.14em;
-	text-transform: uppercase;
+	font-size: 12.5px;
+	font-weight: 500;
 	text-decoration: none;
 	cursor: pointer;
 }
 
 .bouton:hover {
 	background: var(--plaque-survol);
+	border-color: var(--encre-faible);
 }
 
-/* Un bouton de panneau s'enfonce. */
 .bouton:active {
 	transform: translateY(1px);
-	box-shadow: inset 0 1px 2px var(--bevel-bas);
 }
 
 .bouton:disabled {
@@ -656,8 +564,8 @@
 .bouton-principal {
 	background: var(--bleu-vif);
 	border-color: var(--bleu-vif);
-	box-shadow: 0 10px 26px rgba(83, 145, 236, 0.28);
 	color: var(--encre-inverse);
+	font-weight: 600;
 }
 
 .bouton-principal:hover {
@@ -667,7 +575,7 @@
 
 .bouton-menu {
 	padding: 6px 11px;
-	font-size: 9.5px;
+	font-size: 12px;
 }
 
 .bouton-large {
@@ -686,7 +594,7 @@
 	gap: 8px;
 }
 
-/* ── Saisie : les champs sont creusés dans la tôle ────────────────────────── */
+/* ── Saisie ───────────────────────────────────────────────────────────────── */
 
 .champ {
 	display: flex;
@@ -696,25 +604,22 @@
 
 .champ-libelle {
 	color: var(--encre-faible);
-	font-size: 9.5px;
-	font-weight: 600;
-	letter-spacing: 0.18em;
-	text-transform: uppercase;
+	font-size: 12px;
+	font-weight: 500;
 }
 
 .champ-saisie {
 	width: 100%;
-	padding: 9px 11px;
-	background: var(--plaque-creuse);
+	padding: 8px 11px;
+	background: var(--plaque);
 	border: 1px solid var(--trait-fort);
 	border-radius: var(--rayon-bouton);
-	box-shadow: inset 0 2px 3px var(--bevel-bas);
 	font-family: var(--f-donnee);
 	font-size: 13px;
 }
 
 .champ-saisie:focus {
-	border-color: var(--bleu);
+	border-color: var(--bleu-vif);
 	outline: none;
 }
 
@@ -759,7 +664,6 @@
 .etat-vide-titre {
 	font-size: 13px;
 	font-weight: 600;
-	letter-spacing: 0.06em;
 }
 
 .etat-vide-texte {
@@ -772,39 +676,19 @@
 .chargement {
 	padding: 40px 20px;
 	color: var(--encre-faible);
-	font-family: var(--f-donnee);
 	font-size: 12px;
-	letter-spacing: 0.1em;
 	text-align: center;
-	text-transform: uppercase;
 }
 
 /* ── Accessibilité : le mouvement n'est jamais le seul porteur d'état ─────── */
 
 @media (prefers-reduced-motion: reduce) {
-	.douille {
-		animation: none;
-	}
-
 	.lampe-clignote {
 		animation: none;
 		box-shadow:
-			inset 0 1px 1.5px rgba(255, 255, 255, 0.4),
 			0 0 0 1px var(--rouge),
 			0 0 0 3px var(--plaque-creuse),
 			0 0 0 4px var(--rouge);
-	}
-
-	.rangee-critique {
-		animation: none;
-		box-shadow:
-			inset 3px 0 0 var(--rouge),
-			0 0 0 1px var(--rouge);
-	}
-
-	.douille-critique {
-		animation: none;
-		box-shadow: 0 0 0 1px var(--rouge);
 	}
 }
 
@@ -857,7 +741,7 @@
 	.rail-lien-actif {
 		background: none;
 		border-left-color: transparent;
-		border-bottom-color: var(--bleu-vif);
+		border-bottom-color: var(--rail-encre);
 	}
 
 	.rail-poste {
@@ -911,7 +795,7 @@
 	}
 
 	.releve-valeur {
-		font-size: 30px;
+		font-size: 28px;
 	}
 
 	/* Le rôle repasse sur le nom : le rail n'a plus la place pour deux lignes. */

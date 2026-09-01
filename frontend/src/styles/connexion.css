@@ -1,69 +1,42 @@
 /*
- * Écran de connexion — habillage « salle de supervision de nuit ».
- * Scène isolée : ses jetons ne fuient pas vers le reste du panneau, qui garde
- * sa propre finition jour/nuit indépendamment de cet écran d'accueil.
+ * Écran de connexion — même finition sobre que le reste du poste : une carte
+ * blanche sur fond gris clair, sans effet de verre ni dégradé.
  */
 
 .scene-connexion {
-	--sc-fond-haut: #10141a;
-	--sc-fond-bas: #1b3a57;
-	--sc-verre: rgba(27, 58, 87, 0.4);
-	--sc-verre-trait: rgba(58, 123, 213, 0.25);
-	--sc-accent: #a9c7ff;
-	--sc-accent-vif: #5391ec;
-	--sc-texte: #dfe2eb;
-	--sc-texte-faible: #9aa1b0;
-	--sc-saisie-fond: #181c22;
-	--sc-saisie-trait: #363c46;
-	--sc-vert: #35d488;
+	--sc-fond: #eef0f2;
+	--sc-carte: #ffffff;
+	--sc-trait: #d7dbdf;
+	--sc-texte: #1c2024;
+	--sc-texte-faible: #666d75;
+	--sc-saisie-fond: #ffffff;
+	--sc-saisie-trait: #c7cbd0;
+	--sc-accent: #17191c;
+	--sc-accent-encre: #ffffff;
+	--sc-vert: #2f7a4d;
 
 	position: relative;
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	min-height: 100%;
-	overflow: hidden;
 	padding: 40px 20px;
-	background: var(--sc-fond-haut);
+	background: var(--sc-fond);
 	color: var(--sc-texte);
 }
 
 .scene-fond {
-	position: absolute;
-	inset: 0;
-	z-index: 0;
-	background:
-		linear-gradient(160deg, var(--sc-fond-haut) 0%, var(--sc-fond-bas) 130%),
-		repeating-linear-gradient(0deg, rgba(58, 123, 213, 0.05) 0 1px, transparent 1px 40px),
-		repeating-linear-gradient(90deg, rgba(58, 123, 213, 0.05) 0 1px, transparent 1px 40px);
+	display: none;
 }
 
 .scene-lueur {
-	position: absolute;
-	width: 380px;
-	height: 380px;
-	border-radius: 50%;
-	filter: blur(110px);
-	opacity: 0.55;
-}
-
-.scene-lueur-a {
-	top: -60px;
-	left: -80px;
-	background: var(--sc-accent);
-}
-
-.scene-lueur-b {
-	right: -100px;
-	bottom: -100px;
-	background: var(--sc-accent-vif);
+	display: none;
 }
 
 .carte-connexion {
 	position: relative;
-	z-index: 1;
 	width: 100%;
-	max-width: 400px;
+	max-width: 380px;
 }
 
 .carte-entete {
@@ -71,7 +44,7 @@
 	flex-direction: column;
 	align-items: center;
 	gap: 6px;
-	margin-bottom: 26px;
+	margin-bottom: 22px;
 	text-align: center;
 }
 
@@ -79,50 +52,43 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	width: 56px;
-	height: 56px;
+	width: 48px;
+	height: 48px;
 	margin-bottom: 6px;
-	background: var(--sc-verre);
-	border: 1px solid var(--sc-verre-trait);
-	border-radius: 14px;
-	color: var(--sc-accent);
-	backdrop-filter: blur(10px);
+	background: var(--sc-carte);
+	border: 1px solid var(--sc-trait);
+	border-radius: 6px;
+	color: var(--sc-texte);
 }
 
 .carte-nom {
-	font-size: 24px;
+	font-size: 20px;
 	font-weight: 700;
-	font-stretch: 112%;
-	letter-spacing: 0.02em;
 }
 
 .carte-nom-accent {
-	color: var(--sc-accent);
+	color: var(--sc-texte);
 }
 
 .carte-sous-nom {
 	color: var(--sc-texte-faible);
-	font-size: 10px;
-	font-weight: 600;
-	letter-spacing: 0.2em;
-	text-transform: uppercase;
+	font-size: 12px;
 }
 
 .carte-verre {
-	padding: 28px;
-	background: var(--sc-verre);
-	border: 1px solid var(--sc-verre-trait);
-	border-radius: 18px;
-	box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
-	backdrop-filter: blur(14px);
+	padding: 26px;
+	background: var(--sc-carte);
+	border: 1px solid var(--sc-trait);
+	border-radius: 6px;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .carte-verre-entete {
-	margin-bottom: 20px;
+	margin-bottom: 18px;
 }
 
 .carte-verre-entete h2 {
-	font-size: 19px;
+	font-size: 17px;
 	font-weight: 700;
 }
 
@@ -146,10 +112,8 @@
 
 .champ-verre label {
 	color: var(--sc-texte-faible);
-	font-size: 10px;
-	font-weight: 600;
-	letter-spacing: 0.14em;
-	text-transform: uppercase;
+	font-size: 12px;
+	font-weight: 500;
 }
 
 .champ-verre-saisie {
@@ -167,17 +131,17 @@
 
 .champ-verre-saisie input {
 	width: 100%;
-	padding: 11px 14px 11px 38px;
+	padding: 10px 14px 10px 38px;
 	background: var(--sc-saisie-fond);
 	border: 1px solid var(--sc-saisie-trait);
-	border-radius: 8px;
+	border-radius: 4px;
 	color: var(--sc-texte);
 	font-size: 13.5px;
 }
 
 .champ-verre-saisie input::placeholder {
 	color: var(--sc-texte-faible);
-	opacity: 0.6;
+	opacity: 0.7;
 }
 
 .champ-verre-saisie input:focus {
@@ -194,20 +158,18 @@
 	align-items: center;
 	justify-content: center;
 	gap: 8px;
-	padding: 12px;
+	padding: 11px;
 	background: var(--sc-accent);
-	border: none;
-	border-radius: 8px;
-	box-shadow: 0 10px 26px rgba(83, 145, 236, 0.28);
-	color: #00204a;
-	font-size: 12.5px;
-	font-weight: 700;
-	letter-spacing: 0.06em;
+	border: 1px solid var(--sc-accent);
+	border-radius: 4px;
+	color: var(--sc-accent-encre);
+	font-size: 13px;
+	font-weight: 600;
 	cursor: pointer;
 }
 
 .bouton-verre:hover {
-	background: #bcd3ff;
+	background: #2b2f34;
 }
 
 .bouton-verre:active {
@@ -220,15 +182,15 @@
 }
 
 .carte-verre .message {
-	background: rgba(147, 0, 10, 0.25);
-	border-color: rgba(255, 180, 171, 0.35);
-	color: #ffb4ab;
+	background: #fbeceb;
+	border-color: #e3b3ae;
+	color: #8a2a20;
 }
 
 .carte-pied {
 	display: flex;
 	justify-content: center;
-	margin-top: 22px;
+	margin-top: 20px;
 }
 
 .temoin-actif {
@@ -236,13 +198,12 @@
 	align-items: center;
 	gap: 7px;
 	padding: 5px 12px;
-	background: rgba(255, 255, 255, 0.04);
-	border: 1px solid var(--sc-verre-trait);
+	background: var(--sc-carte);
+	border: 1px solid var(--sc-trait);
 	border-radius: 999px;
 	color: var(--sc-texte-faible);
 	font-family: var(--f-donnee);
-	font-size: 10px;
-	letter-spacing: 0.04em;
+	font-size: 11px;
 	word-break: break-all;
 }
 
@@ -252,11 +213,10 @@
 	flex: none;
 	border-radius: 50%;
 	background: var(--sc-vert);
-	box-shadow: 0 0 8px var(--sc-vert);
 }
 
 @media (max-width: 460px) {
 	.carte-verre {
-		padding: 22px;
+		padding: 20px;
 	}
 }

@@ -12,7 +12,7 @@ body,
 
 body {
 	margin: 0;
-	background: linear-gradient(160deg, var(--fond) 0%, var(--fond-bas) 130%) fixed;
+	background: var(--fond);
 	color: var(--encre);
 	font-family: var(--f-plaque);
 	font-size: 14px;
@@ -50,21 +50,18 @@ a {
 
 ::selection {
 	background: var(--bleu-vif);
-	color: #fff;
+	color: var(--encre-inverse);
 }
 
-/* Engraved plate label: the panel's smallest unit of language. */
+/* En-tête de section : simple étiquette grise suivie d'un filet. */
 .plaque-titre {
 	display: flex;
 	align-items: center;
 	gap: 10px;
 	margin: 0;
 	color: var(--encre-faible);
-	font-size: 10.5px;
+	font-size: 12px;
 	font-weight: 600;
-	font-stretch: 100%;
-	letter-spacing: 0.18em;
-	text-transform: uppercase;
 	white-space: nowrap;
 }
 
@@ -78,7 +75,6 @@ a {
 .donnee {
 	font-family: var(--f-donnee);
 	font-size: 12.5px;
-	letter-spacing: -0.01em;
 }
 
 .donnee-faible {
@@ -94,9 +90,7 @@ a {
 	padding: 10px 16px;
 	background: var(--plaque);
 	border: 1px solid var(--trait-fort);
-	font-size: 11px;
-	letter-spacing: 0.14em;
-	text-transform: uppercase;
+	font-size: 12px;
 }
 
 .saut-contenu:focus {
