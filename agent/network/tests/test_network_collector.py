@@ -1,4 +1,6 @@
 import json
+import urllib.error
+import urllib.request
 
 import pytest
 import requests
@@ -256,6 +258,128 @@ class TestPollEquipment:
         assert payloads[1]["bandwidth_mbps"] > 0
         assert payloads[1]["error_rate_percent"] == 0.0
         assert payloads[1]["uptime_seconds"] == 10.0
+
+
+class TestValidateRedundancyConfig:
+    def test_role_unique_par_defaut_ne_leve_pas(self):
+        network_collector.validate_redundancy_config(fake_config())
+
+    def test_role_primaire_ne_leve_pas(self):
+        network_collector.validate_redundancy_config(fake_config(collector_role="primaire"))
+
+    def test_role_inconnu_leve(self):
+        with pytest.raises(SystemExit):
+            network_collector.validate_redundancy_config(fake_config(collector_role="tertiaire"))
+
+    def test_secondaire_sans_url_de_la_primaire_leve(self):
+        with pytest.raises(SystemExit):
+            network_collector.validate_redundancy_config(
+                fake_config(collector_role="secondaire", peer_heartbeat_url=""))
+
+    def test_secondaire_avec_url_de_la_primaire_ne_leve_pas(self):
+        network_collector.validate_redundancy_config(
+            fake_config(collector_role="secondaire", peer_heartbeat_url="http://primaire:8091/heartbeat"))
+
+
+class TestHeartbeatServer:
+    def test_repond_actif_sur_heartbeat(self):
+        server = network_collector.start_heartbeat_server(0, "collecteur-test")
+        try:
+            port = server.server_address[1]
+            with urllib.request.urlopen(f"http://127.0.0.1:{port}/heartbeat", timeout=2) as reponse:
+                corps = json.loads(reponse.read())
+
+            assert reponse.status == 200
+            assert corps == {"collector_id": "collecteur-test", "actif": True}
+        finally:
+            server.shutdown()
+
+    def test_renvoie_404_sur_une_autre_route(self):
+        server = network_collector.start_heartbeat_server(0, "collecteur-test")
+        try:
+            port = server.server_address[1]
+            try:
+                urllib.request.urlopen(f"http://127.0.0.1:{port}/autre", timeout=2)
+                assert False, "une reponse 404 aurait du lever une HTTPError"
+            except urllib.error.HTTPError as exc:
+                assert exc.code == 404
+        finally:
+            server.shutdown()
+
+
+class TestPollPeerHeartbeat:
+    def test_reponse_ok_renvoie_true(self, monkeypatch):
+        monkeypatch.setattr(network_collector.requests, "get", lambda *a, **k: FakeResponse(200))
+
+        assert network_collector.poll_peer_heartbeat("http://primaire:8091/heartbeat", timeout=2) is True
+
+    def test_erreur_reseau_renvoie_false_sans_lever(self, monkeypatch):
+        def leve(*a, **k):
+            raise requests.RequestException("connexion refusee")
+
+        monkeypatch.setattr(network_collector.requests, "get", leve)
+
+        assert network_collector.poll_peer_heartbeat("http://primaire:8091/heartbeat", timeout=2) is False
+
+    def test_code_erreur_http_renvoie_false(self, monkeypatch):
+        monkeypatch.setattr(network_collector.requests, "get", lambda *a, **k: FakeResponse(500))
+
+        assert network_collector.poll_peer_heartbeat("http://primaire:8091/heartbeat", timeout=2) is False
+
+
+class TestEvaluateStandbyCycle:
+    def test_heartbeat_present_reinitialise_le_compteur(self, monkeypatch):
+        monkeypatch.setattr(network_collector, "poll_peer_heartbeat", lambda *a, **k: True)
+
+        bascule, compteur = network_collector.evaluate_standby_cycle(
+            fake_config(collector_role="secondaire", failover_cycles_toleres=3), consecutive_failures=2)
+
+        assert bascule is False
+        assert compteur == 0
+
+    def test_bascule_uniquement_au_seuil_configure(self, monkeypatch):
+        monkeypatch.setattr(network_collector, "poll_peer_heartbeat", lambda *a, **k: False)
+        config = fake_config(collector_role="secondaire", failover_cycles_toleres=3)
+
+        bascule_1, compteur_1 = network_collector.evaluate_standby_cycle(config, consecutive_failures=0)
+        bascule_2, compteur_2 = network_collector.evaluate_standby_cycle(config, consecutive_failures=compteur_1)
+        bascule_3, compteur_3 = network_collector.evaluate_standby_cycle(config, consecutive_failures=compteur_2)
+
+        assert (bascule_1, compteur_1) == (False, 1)
+        assert (bascule_2, compteur_2) == (False, 2)
+        assert (bascule_3, compteur_3) == (True, 3)
+
+
+class TestSendCollectorHeartbeat:
+    def test_envoie_le_heartbeat_quand_id_et_cle_sont_configures(self, monkeypatch):
+        appels = []
+        monkeypatch.setattr(network_collector.requests, "post", lambda *a, **k: appels.append((a, k)) or FakeResponse(201))
+        config = fake_config(collector_id="collecteur-1", collector_api_key="cle-collecteur")
+
+        network_collector.send_collector_heartbeat(config, actif=True)
+
+        assert len(appels) == 1
+        args, kwargs = appels[0]
+        assert args[0] == "http://backend.local/api/v1/collectors/heartbeat"
+        assert kwargs["headers"] == {"X-Collector-Key": "cle-collecteur"}
+        assert kwargs["json"] == {"collector_id": "collecteur-1", "actif": True}
+
+    def test_aucun_appel_sans_identifiant_ni_cle(self, monkeypatch):
+        appels = []
+        monkeypatch.setattr(network_collector.requests, "post", lambda *a, **k: appels.append(1))
+
+        network_collector.send_collector_heartbeat(fake_config(), actif=True)
+
+        assert appels == []
+
+    def test_erreur_reseau_est_absorbee_sans_lever(self, monkeypatch):
+        def leve(*a, **k):
+            raise requests.RequestException("connexion refusee")
+
+        monkeypatch.setattr(network_collector.requests, "post", leve)
+        config = fake_config(collector_id="collecteur-1", collector_api_key="cle-collecteur")
+
+        network_collector.send_collector_heartbeat(config, actif=True)
 
 
 class FakeResponse:
