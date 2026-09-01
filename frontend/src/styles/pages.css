@@ -3,6 +3,72 @@
  * remplacent celle par défaut à spécificité égale, sans surcharge imbriquée.
  */
 
+/* ── Cartographie ─────────────────────────────────────────────────────────── */
+
+/* Défile horizontalement plutôt que de faire déborder la page : un parc large
+   pousse la carte au-delà de la largeur de l'écran, pas le panneau entier. */
+.carte-cadre {
+	overflow-x: auto;
+	padding: 20px 16px 26px;
+}
+
+.carte-svg {
+	display: block;
+}
+
+.carte-arete {
+	stroke: var(--trait-fort);
+	stroke-width: 1.5px;
+}
+
+.carte-arete-risque {
+	stroke: var(--rouge);
+	stroke-width: 2px;
+	stroke-dasharray: 4 3;
+}
+
+.carte-noeud {
+	cursor: pointer;
+}
+
+.carte-noeud:focus-visible {
+	outline: 2px solid var(--bleu-vif);
+	outline-offset: 3px;
+}
+
+.carte-noeud-cercle {
+	stroke: var(--trait-fort);
+	stroke-width: 1px;
+}
+
+.carte-noeud-verte .carte-noeud-cercle {
+	fill: var(--vert);
+}
+
+.carte-noeud-ambre .carte-noeud-cercle {
+	fill: var(--ambre);
+}
+
+.carte-noeud-rouge .carte-noeud-cercle {
+	fill: var(--rouge);
+}
+
+.carte-noeud-eteinte .carte-noeud-cercle {
+	fill: var(--plaque-creuse);
+}
+
+.carte-noeud-nom {
+	font: 600 11px var(--f-plaque);
+	fill: var(--encre);
+	text-anchor: middle;
+}
+
+.carte-noeud-genre {
+	font: 400 10px var(--f-plaque);
+	fill: var(--encre-faible);
+	text-anchor: middle;
+}
+
 /* ── Synoptique ───────────────────────────────────────────────────────────── */
 
 .grille-synoptique {

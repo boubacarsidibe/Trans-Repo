@@ -36,6 +36,8 @@ function equipement(partiel: Partial<Equipement>): Equipement {
 		etat: "ACTIF",
 		description: null,
 		derniereMesure: new Date().toISOString(),
+		dependDeId: null,
+		dependDeNom: null,
 		...partiel,
 	};
 }
