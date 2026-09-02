@@ -1,19 +1,21 @@
 /*
- * Écran de connexion — même finition sobre que le reste du poste : une carte
- * blanche sur fond gris clair, sans effet de verre ni dégradé.
+ * Écran de connexion — même finition « salle de supervision » que le reste
+ * du poste : panneau sombre, carte à bordure fine, accent bleu. Ses jetons
+ * restent propres à cet écran (affiché avant que la finition jour/nuit ne
+ * soit pertinente) mais reprennent la même palette que styles/tokens.css.
  */
 
 .scene-connexion {
-	--sc-fond: #eef0f2;
-	--sc-carte: #ffffff;
-	--sc-trait: #d7dbdf;
-	--sc-texte: #1c2024;
-	--sc-texte-faible: #666d75;
-	--sc-saisie-fond: #ffffff;
-	--sc-saisie-trait: #c7cbd0;
-	--sc-accent: #17191c;
-	--sc-accent-encre: #ffffff;
-	--sc-vert: #2f7a4d;
+	--sc-fond: #080d14;
+	--sc-carte: #101823;
+	--sc-trait: #233143;
+	--sc-texte: #edf3fa;
+	--sc-texte-faible: #8794a7;
+	--sc-saisie-fond: #0d151f;
+	--sc-saisie-trait: #233143;
+	--sc-accent: #5b8cff;
+	--sc-accent-encre: #071022;
+	--sc-vert: #32d17b;
 
 	position: relative;
 	display: flex;
@@ -57,8 +59,8 @@
 	margin-bottom: 6px;
 	background: var(--sc-carte);
 	border: 1px solid var(--sc-trait);
-	border-radius: 6px;
-	color: var(--sc-texte);
+	border-radius: 9px;
+	color: var(--sc-accent);
 }
 
 .carte-nom {
@@ -79,8 +81,7 @@
 	padding: 26px;
 	background: var(--sc-carte);
 	border: 1px solid var(--sc-trait);
-	border-radius: 6px;
-	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+	border-radius: 9px;
 }
 
 .carte-verre-entete {
@@ -134,7 +135,7 @@
 	padding: 10px 14px 10px 38px;
 	background: var(--sc-saisie-fond);
 	border: 1px solid var(--sc-saisie-trait);
-	border-radius: 4px;
+	border-radius: 6px;
 	color: var(--sc-texte);
 	font-size: 13.5px;
 }
@@ -161,7 +162,7 @@
 	padding: 11px;
 	background: var(--sc-accent);
 	border: 1px solid var(--sc-accent);
-	border-radius: 4px;
+	border-radius: 6px;
 	color: var(--sc-accent-encre);
 	font-size: 13px;
 	font-weight: 600;
@@ -169,7 +170,8 @@
 }
 
 .bouton-verre:hover {
-	background: #2b2f34;
+	background: #7ea6ff;
+	border-color: #7ea6ff;
 }
 
 .bouton-verre:active {
@@ -182,9 +184,9 @@
 }
 
 .carte-verre .message {
-	background: #fbeceb;
-	border-color: #e3b3ae;
-	color: #8a2a20;
+	background: rgba(255, 89, 107, 0.12);
+	border-color: rgba(255, 89, 107, 0.35);
+	color: #ff8a97;
 }
 
 .carte-pied {

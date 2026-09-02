@@ -214,8 +214,9 @@
 .enregistreur-valeur {
 	font-family: var(--f-donnee);
 	font-size: 30px;
-	font-weight: 300;
-	letter-spacing: -0.03em;
+	font-weight: 600;
+	letter-spacing: -0.02em;
+	color: var(--bleu);
 }
 
 .enregistreur-unite {
@@ -268,15 +269,14 @@
 }
 
 /*
- * Habillage du tracé. Recharts produit son propre balisage : on le teinte par
- * CSS plutôt que par attributs, pour que le passage jour/nuit suive sans code.
+ * Habillage du tracé. La couleur du tracé et de son aplat sont posées en
+ * attribut sur `<Area>` (via `var(--bleu)`) pour suivre le passage jour/nuit
+ * sans dépendre du balisage interne de Recharts ; la grille reste discrète,
+ * en CSS, façon quadrillage de fond de la maquette.
  */
-.enregistreur .trace-ligne .recharts-curve {
-	stroke: var(--encre);
-}
-
 .enregistreur .trace-grille line {
 	stroke: var(--trait);
+	opacity: 0.6;
 }
 
 .enregistreur .trace-axe line {
@@ -303,10 +303,10 @@
 
 .infobulle {
 	padding: 8px 10px;
-	background: var(--plaque);
+	background: var(--plaque-creuse);
 	border: 1px solid var(--trait-fort);
 	border-radius: var(--rayon-bouton);
-	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
 	font-family: var(--f-donnee);
 	font-size: 12px;
 	line-height: 1.5;

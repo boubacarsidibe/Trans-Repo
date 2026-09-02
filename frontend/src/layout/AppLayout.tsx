@@ -6,18 +6,41 @@ import { Marque } from "../components/Marque";
 import { ROLE, estAdministrateur, peutIntervenir } from "../supervision/libelles";
 import { appliquerFinition, finitionInitiale, type Finition } from "../theme";
 
-const ECRANS = [
-	{ to: "/", libelle: "Synoptique", exact: true },
-	{ to: "/equipements", libelle: "Équipements" },
-	{ to: "/cartographie", libelle: "Cartographie" },
-	{ to: "/alertes", libelle: "Alertes" },
-	{ to: "/evenements", libelle: "Événements" },
-	// Lecture ouverte au technicien, écriture réservée à l'administrateur (§4.4).
-	{ to: "/seuils", libelle: "Seuils", intervenant: true },
-	{ to: "/rapports", libelle: "Rapports" },
-	{ to: "/journal", libelle: "Journal", administrateur: true },
-	{ to: "/utilisateurs", libelle: "Utilisateurs", administrateur: true },
-];
+/*
+ * Sections façon panneau NOC : les mêmes écrans qu'avant, seulement groupés
+ * par famille sous un petit label de section — la nav elle-même ne change
+ * pas de route ni de garde d'accès.
+ */
+const SECTIONS = [
+	{
+		titre: "Vue d'ensemble",
+		ecrans: [{ to: "/", libelle: "Synoptique", exact: true }],
+	},
+	{
+		titre: "Infrastructure",
+		ecrans: [
+			{ to: "/equipements", libelle: "Équipements" },
+			{ to: "/cartographie", libelle: "Cartographie" },
+		],
+	},
+	{
+		titre: "Supervision",
+		ecrans: [
+			{ to: "/alertes", libelle: "Alertes" },
+			{ to: "/evenements", libelle: "Événements" },
+			// Lecture ouverte au technicien, écriture réservée à l'administrateur (§4.4).
+			{ to: "/seuils", libelle: "Seuils", intervenant: true },
+			{ to: "/rapports", libelle: "Rapports" },
+		],
+	},
+	{
+		titre: "Administration",
+		ecrans: [
+			{ to: "/journal", libelle: "Journal", administrateur: true },
+			{ to: "/utilisateurs", libelle: "Utilisateurs", administrateur: true },
+		],
+	},
+] as const;
 
 export function AppLayout() {
 	const { user, logout } = useAuth();
@@ -51,18 +74,29 @@ export function AppLayout() {
 				</span>
 
 				<nav className="rail-nav" aria-label="Écrans du poste">
-					{ECRANS.filter(
-						(ecran) => (!ecran.administrateur || administrateur) && (!ecran.intervenant || intervenant),
-					).map((ecran) => (
-						<NavLink
-							key={ecran.to}
-							to={ecran.to}
-							end={ecran.exact}
-							className={({ isActive }) => (isActive ? "rail-lien rail-lien-actif" : "rail-lien")}
-						>
-							{ecran.libelle}
-						</NavLink>
-					))}
+					{SECTIONS.map((section) => {
+						const ecrans = section.ecrans.filter(
+							(ecran) =>
+								(!("administrateur" in ecran && ecran.administrateur) || administrateur) &&
+								(!("intervenant" in ecran && ecran.intervenant) || intervenant),
+						);
+						if (ecrans.length === 0) return null;
+						return (
+							<div className="rail-section" key={section.titre}>
+								<p className="rail-section-titre">{section.titre}</p>
+								{ecrans.map((ecran) => (
+									<NavLink
+										key={ecran.to}
+										to={ecran.to}
+										end={"exact" in ecran ? ecran.exact : false}
+										className={({ isActive }) => (isActive ? "rail-lien rail-lien-actif" : "rail-lien")}
+									>
+										{ecran.libelle}
+									</NavLink>
+								))}
+							</div>
+						);
+					})}
 				</nav>
 
 				<div className="rail-poste">

@@ -1,91 +1,93 @@
 /*
- * Jetons de conception — finition sobre inspirée des consoles d'exploitation
- * (type Zabbix) : surfaces plates, bordures fines, un rail sombre neutre et
- * la même police partout. Peu de couleur : noir/blanc/gris pour le chrome de
- * l'interface, les seules teintes réservées aux trois états de supervision
- * (nominal, à surveiller, critique).
+ * Jetons de conception — finition « salle de supervision » (NOC) : panneaux
+ * sombres, bordures fines bleutées, un rail de façade toujours sombre, et une
+ * palette de signalisation bleu/vert/jaune/rouge/cyan largement plus saturée
+ * que l'ancienne finition « Zabbix ». Toujours peu de couleur sur le chrome —
+ * elle reste réservée à l'accent et aux quatre états de supervision.
  */
 
 :root {
 	color-scheme: light;
 
 	/* Fond de page et surfaces — plates, opaques, aucun dégradé */
-	--fond: #eef0f2;
-	--fond-bas: #eef0f2;
+	--fond: #eef1f6;
+	--fond-bas: #eef1f6;
 
 	--plaque: #ffffff;
-	--plaque-survol: #f3f4f5;
-	--plaque-creuse: #f3f4f5;
+	--plaque-survol: #f2f5fa;
+	--plaque-creuse: #eef1f6;
 
 	/* Rail de façade : toujours sombre, quelle que soit la finition */
-	--rail: #202429;
-	--rail-encre: #f1f2f3;
-	--rail-encre-faible: #9198a0;
+	--rail: #0c131d;
+	--rail-encre: #edf3fa;
+	--rail-encre-faible: #8998ab;
 
 	/* Encres */
-	--encre: #1c2024;
-	--encre-faible: #666d75;
+	--encre: #101823;
+	--encre-faible: #5b6b80;
 	--encre-inverse: #ffffff;
 
 	/* Traits — bordures fines et nettes, pas de contour lumineux */
-	--trait: #dde1e4;
-	--trait-fort: #c7cbd0;
+	--trait: #d8dfe8;
+	--trait-fort: #c2ccd9;
 
-	/* Lampes de signalisation : les seules couleurs de l'interface */
-	--vert: #2f7a4d;
-	--ambre: #a8690a;
-	--rouge: #b93327;
+	/* Lampes de signalisation et pastilles d'état */
+	--vert: #1f9d5c;
+	--ambre: #a9780a;
+	--rouge: #c62839;
+	--cyan: #0f7a91;
 
-	/* Accent neutre (liens, focus, action principale, ligne active) — noir, pas de bleu */
-	--bleu: #4b5157;
-	--bleu-vif: #17191c;
+	/* Accent primaire (liens, focus, action principale, ligne active) */
+	--bleu: #5b8cff;
+	--bleu-vif: #3b66d6;
 
 	/* Design plat : pas de relief ni de lueur */
 	--bevel-haut: transparent;
 	--bevel-bas: transparent;
 	--halo-ombre: none;
 
-	/* Typographie — la même famille que la console d'exploitation de référence */
+	/* Typographie */
 	--f-plaque: "Inter Variable", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 	--f-donnee: var(--f-plaque);
 
-	/* Rayons discrets, cartes essentiellement carrées */
-	--rayon-carte: 4px;
-	--rayon-bouton: 3px;
+	/* Cartes aux coins nettement arrondis, façon maquette NOC */
+	--rayon-carte: 9px;
+	--rayon-bouton: 6px;
 	--rayon-pastille: 999px;
 	--flou-verre: 0px;
 
 	--pas: 4px;
-	--largeur-max: 1240px;
+	--largeur-max: 1280px;
 }
 
 [data-theme="nuit"] {
 	color-scheme: dark;
 
-	--fond: #16171a;
-	--fond-bas: #16171a;
+	--fond: #080d14;
+	--fond-bas: #080d14;
 
-	--plaque: #1e2024;
-	--plaque-survol: #26282c;
-	--plaque-creuse: #131416;
+	--plaque: #101823;
+	--plaque-survol: #16202d;
+	--plaque-creuse: #0d151f;
 
-	--rail: #0e0f11;
-	--rail-encre: #e8e9ea;
-	--rail-encre-faible: #82868c;
+	--rail: #0c131d;
+	--rail-encre: #edf3fa;
+	--rail-encre-faible: #8794a7;
 
-	--encre: #e6e7e9;
-	--encre-faible: #8b9096;
-	--encre-inverse: #16171a;
+	--encre: #edf3fa;
+	--encre-faible: #8794a7;
+	--encre-inverse: #080d14;
 
-	--trait: #2b2d31;
-	--trait-fort: #3a3d42;
+	--trait: #233143;
+	--trait-fort: #2c3c52;
 
-	--vert: #4f9d72;
-	--ambre: #cc9640;
-	--rouge: #d97267;
+	--vert: #32d17b;
+	--ambre: #f2c85b;
+	--rouge: #ff596b;
+	--cyan: #42c8e7;
 
-	--bleu: #a9adb2;
-	--bleu-vif: #f0f1f2;
+	--bleu: #7ea6ff;
+	--bleu-vif: #5b8cff;
 
 	--bevel-haut: transparent;
 	--bevel-bas: transparent;
