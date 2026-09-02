@@ -1,4 +1,5 @@
 import { BASE_URL, getToken } from "../api/client";
+import type { Metrique } from "../types/api";
 
 export type TypeEvenement =
 	| "metric_update"
@@ -12,6 +13,27 @@ export interface EvenementSupervision<P = unknown> {
 	type: TypeEvenement;
 	horodatage: string;
 	payload: P;
+}
+
+/**
+ * Charge utile de `equipment_status_changed` (`/ws/status`). La disponibilité
+ * est observée, elle ne remplace pas l'état administratif de l'équipement.
+ */
+export interface DisponibiliteEvenement {
+	equipementId: string;
+	nom: string;
+	disponible: boolean;
+	derniereMesure: string | null;
+}
+
+/**
+ * Charge utile de `metric_update` (`/ws/metrics`) : un agent remonte sa
+ * trentaine de métriques en un seul événement par cycle et par équipement.
+ */
+export interface MetriquesEvenement {
+	equipementId: string;
+	equipementNom: string;
+	metriques: Metrique[];
 }
 
 /** Les trois canaux du cahier de spécifications §8.2. */

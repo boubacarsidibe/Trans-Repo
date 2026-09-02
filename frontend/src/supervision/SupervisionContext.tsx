@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState, ty
 import { BASE_URL } from "../api/client";
 import { fetchAlertes, fetchEquipements } from "../api/endpoints";
 import type { Alerte, Equipement } from "../types/api";
-import { ouvrirCanaux, type EvenementSupervision } from "./canalTempsReel";
+import { ouvrirCanaux, type DisponibiliteEvenement, type EvenementSupervision } from "./canalTempsReel";
 
 /** Interrogation de repli quand le temps réel n'est pas établi. */
 const INTERVALLE_REPLI_MS = 15_000;
@@ -15,16 +15,18 @@ const INTERVALLE_REPLI_MS = 15_000;
 const INTERVALLE_FILET_MS = 300_000;
 
 /**
- * Charge utile de `/ws/status`. La disponibilité est observée, elle ne remplace
- * pas l'état administratif de l'équipement : les lampes se déduisent des
- * alertes ouvertes, qui arrivent par `/ws/alerts`.
+ * Une entrée du flux brut des événements (§8.3), telle que le journal en
+ * direct l'affiche. `id` est généré à la réception : les événements n'en
+ * portent pas côté serveur, et deux événements peuvent partager le même
+ * horodatage à la milliseconde.
  */
-interface DisponibiliteEvenement {
-	equipementId: string;
-	nom: string;
-	disponible: boolean;
-	derniereMesure: string | null;
+export interface EntreeFlux {
+	id: string;
+	evenement: EvenementSupervision;
 }
+
+/** Le journal ne garde que les derniers événements : le reste défile hors vue. */
+export const LIMITE_FLUX = 50;
 
 interface SupervisionValue {
 	equipements: Equipement[];
@@ -33,6 +35,8 @@ interface SupervisionValue {
 	erreur: string | null;
 	derniereLecture: Date | null;
 	tempsReel: boolean;
+	/** Les `LIMITE_FLUX` derniers événements reçus, le plus récent en premier. */
+	flux: EntreeFlux[];
 	rafraichir: () => void;
 	remplacerAlerte: (alerte: Alerte) => void;
 }
@@ -54,7 +58,9 @@ export function SupervisionProvider({ children }: { children: ReactNode }) {
 	const [erreur, setErreur] = useState<string | null>(null);
 	const [derniereLecture, setDerniereLecture] = useState<Date | null>(null);
 	const [tempsReel, setTempsReel] = useState(false);
+	const [flux, setFlux] = useState<EntreeFlux[]>([]);
 	const enCours = useRef(false);
+	const compteurFlux = useRef(0);
 
 	const lire = useCallback(async () => {
 		if (enCours.current) return;
@@ -89,6 +95,9 @@ export function SupervisionProvider({ children }: { children: ReactNode }) {
 	const surEvenement = useCallback(
 		(evenement: EvenementSupervision) => {
 			setDerniereLecture(new Date());
+			setFlux((actuels) =>
+				[{ id: `evt-${compteurFlux.current++}`, evenement }, ...actuels].slice(0, LIMITE_FLUX),
+			);
 
 			switch (evenement.type) {
 				case "alert_created":
@@ -147,6 +156,7 @@ export function SupervisionProvider({ children }: { children: ReactNode }) {
 				erreur,
 				derniereLecture,
 				tempsReel,
+				flux,
 				rafraichir: () => void lire(),
 				remplacerAlerte,
 			}}
