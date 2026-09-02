@@ -7,8 +7,10 @@ import java.util.stream.Collectors;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -74,6 +76,18 @@ public class AlerteController {
 	@PreAuthorize("hasAnyRole('ADMINISTRATEUR', 'TECHNICIEN')")
 	public AlerteResponse resolve(@PathVariable UUID id) {
 		return AlerteResponse.fromEntity(alerteService.resolve(id));
+	}
+
+	/**
+	 * Suppression réelle (issue #181), réservée à l'administrateur — plus
+	 * restrictive que la prise en compte/résolution. Le service refuse (409)
+	 * si l'alerte n'est pas au statut RESOLUE.
+	 */
+	@DeleteMapping("/{id}")
+	@PreAuthorize("hasRole('ADMINISTRATEUR')")
+	public ResponseEntity<Void> supprimer(@PathVariable UUID id) {
+		alerteService.supprimer(id);
+		return ResponseEntity.noContent().build();
 	}
 
 	private AppUser currentUser(Authentication authentication) {

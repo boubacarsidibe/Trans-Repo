@@ -314,6 +314,45 @@ class AlerteServiceTest {
 				.hasMessage("Alerte introuvable.");
 	}
 
+	// --- suppression (issue #181) ---
+
+	@Test
+	void supprime_une_alerte_resolue() {
+		Equipement equipement = equipement("Routeur coeur", EtatEquipement.ACTIF);
+		Alerte resolue = alerte(equipement, TypeAnomalie.CPU, Severite.CRITIQUE, StatutAlerte.RESOLUE);
+		when(alerteRepository.findById(resolue.getId())).thenReturn(Optional.of(resolue));
+
+		alerteService.supprimer(resolue.getId());
+
+		verify(alerteRepository).delete(resolue);
+	}
+
+	@Test
+	void refuse_de_supprimer_une_alerte_declenchee() {
+		Equipement equipement = equipement("Routeur coeur", EtatEquipement.ACTIF);
+		Alerte declenchee = alerte(equipement, TypeAnomalie.CPU, Severite.CRITIQUE, StatutAlerte.DECLENCHEE);
+		when(alerteRepository.findById(declenchee.getId())).thenReturn(Optional.of(declenchee));
+
+		assertThatThrownBy(() -> alerteService.supprimer(declenchee.getId()))
+				.isInstanceOf(IllegalStateException.class)
+				.hasMessage("Seule une alerte résolue peut être supprimée.");
+
+		verify(alerteRepository, never()).delete(any());
+	}
+
+	@Test
+	void refuse_de_supprimer_une_alerte_prise_en_compte() {
+		Equipement equipement = equipement("Routeur coeur", EtatEquipement.ACTIF);
+		Alerte priseEnCompte = alerte(equipement, TypeAnomalie.CPU, Severite.CRITIQUE, StatutAlerte.PRISE_EN_COMPTE);
+		when(alerteRepository.findById(priseEnCompte.getId())).thenReturn(Optional.of(priseEnCompte));
+
+		assertThatThrownBy(() -> alerteService.supprimer(priseEnCompte.getId()))
+				.isInstanceOf(IllegalStateException.class)
+				.hasMessage("Seule une alerte résolue peut être supprimée.");
+
+		verify(alerteRepository, never()).delete(any());
+	}
+
 	// --- fixtures ---
 
 	private Equipement equipement(String nom, EtatEquipement etat) {
