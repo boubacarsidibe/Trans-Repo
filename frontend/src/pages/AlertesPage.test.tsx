@@ -7,6 +7,7 @@ import type { Alerte } from "../types/api";
 
 const mockUseSupervision = vi.fn();
 const mockRemplacerAlerte = vi.fn();
+const mockRafraichir = vi.fn();
 
 vi.mock("../supervision/SupervisionContext", () => ({
 	useSupervision: () => mockUseSupervision(),
@@ -20,10 +21,12 @@ vi.mock("../auth/AuthContext", () => ({
 
 const mockPrendreEnCompteAlerte = vi.fn();
 const mockResoudreAlerte = vi.fn();
+const mockSupprimerAlerte = vi.fn();
 
 vi.mock("../api/endpoints", () => ({
 	prendreEnCompteAlerte: (id: string) => mockPrendreEnCompteAlerte(id),
 	resoudreAlerte: (id: string) => mockResoudreAlerte(id),
+	supprimerAlerte: (id: string) => mockSupprimerAlerte(id),
 }));
 
 function alerte(partiel: Partial<Alerte>): Alerte {
@@ -47,6 +50,7 @@ function rendre(alertes: Alerte[], role = "TECHNICIEN") {
 		chargement: false,
 		erreur: null,
 		remplacerAlerte: mockRemplacerAlerte,
+		rafraichir: mockRafraichir,
 	});
 	mockUseAuth.mockReturnValue({ user: role ? { role } : null });
 
@@ -62,8 +66,10 @@ describe("AlertesPage", () => {
 		mockUseSupervision.mockReset();
 		mockUseAuth.mockReset();
 		mockRemplacerAlerte.mockReset();
+		mockRafraichir.mockReset();
 		mockPrendreEnCompteAlerte.mockReset();
 		mockResoudreAlerte.mockReset();
+		mockSupprimerAlerte.mockReset();
 	});
 
 	it("affiche le journal des alertes et le compteur d'entrées", () => {
@@ -135,5 +141,64 @@ describe("AlertesPage", () => {
 
 		await userEvent.click(ligne);
 		expect(screen.queryByRole("heading", { name: /srv-moodle/ })).not.toBeInTheDocument();
+	});
+
+	it("affiche le bouton de suppression pour un administrateur seulement sur une alerte résolue", async () => {
+		const { unmount } = rendre(
+			[alerte({ id: "al-1", statut: "RESOLUE", dateResolution: new Date().toISOString() })],
+			"ADMINISTRATEUR",
+		);
+		await userEvent.click(screen.getByRole("button", { name: /srv-moodle/ }));
+		expect(screen.getByRole("button", { name: "Supprimer" })).toBeInTheDocument();
+		unmount();
+
+		rendre([alerte({ id: "al-1", statut: "DECLENCHEE" })], "ADMINISTRATEUR");
+		await userEvent.click(screen.getByRole("button", { name: /srv-moodle/ }));
+		expect(screen.queryByRole("button", { name: "Supprimer" })).not.toBeInTheDocument();
+	});
+
+	it("masque le bouton de suppression d'une alerte résolue pour un technicien", async () => {
+		rendre(
+			[alerte({ id: "al-1", statut: "RESOLUE", dateResolution: new Date().toISOString() })],
+			"TECHNICIEN",
+		);
+
+		await userEvent.click(screen.getByRole("button", { name: /srv-moodle/ }));
+
+		expect(screen.queryByRole("button", { name: "Supprimer" })).not.toBeInTheDocument();
+	});
+
+	it("supprime l'alerte résolue après confirmation par un second clic", async () => {
+		mockSupprimerAlerte.mockResolvedValue(undefined);
+		rendre(
+			[alerte({ id: "al-1", statut: "RESOLUE", dateResolution: new Date().toISOString() })],
+			"ADMINISTRATEUR",
+		);
+		await userEvent.click(screen.getByRole("button", { name: /srv-moodle/ }));
+
+		const bouton = screen.getByRole("button", { name: "Supprimer" });
+		await userEvent.click(bouton);
+		expect(screen.getByRole("button", { name: "Confirmer la suppression" })).toBeInTheDocument();
+		expect(mockSupprimerAlerte).not.toHaveBeenCalled();
+
+		await userEvent.click(screen.getByRole("button", { name: "Confirmer la suppression" }));
+		expect(mockSupprimerAlerte).toHaveBeenCalledWith("al-1");
+		expect(mockRafraichir).toHaveBeenCalled();
+	});
+
+	it("affiche tel quel le message de refus renvoyé par le backend", async () => {
+		mockSupprimerAlerte.mockRejectedValue({
+			response: { data: { message: "Seule une alerte résolue peut être supprimée." } },
+		});
+		rendre(
+			[alerte({ id: "al-1", statut: "RESOLUE", dateResolution: new Date().toISOString() })],
+			"ADMINISTRATEUR",
+		);
+		await userEvent.click(screen.getByRole("button", { name: /srv-moodle/ }));
+
+		await userEvent.click(screen.getByRole("button", { name: "Supprimer" }));
+		await userEvent.click(screen.getByRole("button", { name: "Confirmer la suppression" }));
+
+		expect(await screen.findByText("Seule une alerte résolue peut être supprimée.")).toBeInTheDocument();
 	});
 });

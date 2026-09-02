@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { supprimerAlerte } from "../api/endpoints";
 import { useAuth } from "../auth/AuthContext";
 import { ActionsAlerte } from "../components/ActionsAlerte";
 import { Lampe } from "../components/Lampe";
@@ -7,7 +8,7 @@ import { Releve } from "../components/Releve";
 import { EtatVide, Message } from "../components/Retours";
 import { useSupervision } from "../supervision/SupervisionContext";
 import { depuis, formatDateHeure } from "../supervision/format";
-import { SEVERITE, STATUT_ALERTE, TYPE_ANOMALIE, peutIntervenir } from "../supervision/libelles";
+import { SEVERITE, STATUT_ALERTE, TYPE_ANOMALIE, estAdministrateur, peutIntervenir } from "../supervision/libelles";
 import type { Alerte, Severite, StatutAlerte } from "../types/api";
 
 const FILTRES: { cle: StatutAlerte | "toutes"; libelle: string }[] = [
@@ -152,6 +153,26 @@ export function AlertesPage() {
 
 function Fiche({ alerte }: { alerte: Alerte }) {
 	const { user } = useAuth();
+	const { rafraichir } = useSupervision();
+	const [, setParametres] = useSearchParams();
+	const [confirmationSuppression, setConfirmationSuppression] = useState(false);
+	const [erreurSuppression, setErreurSuppression] = useState<string | null>(null);
+
+	/** Suppression réelle de la ligne (issue #181) : le message de refus vient du backend, tel quel. */
+	async function supprimer() {
+		if (!confirmationSuppression) {
+			setConfirmationSuppression(true);
+			return;
+		}
+		try {
+			await supprimerAlerte(alerte.id);
+			rafraichir();
+			setParametres({});
+		} catch (cause) {
+			const message = (cause as { response?: { data?: { message?: string } } })?.response?.data?.message;
+			setErreurSuppression(message ?? "La suppression a été refusée.");
+		}
+	}
 
 	return (
 		<section className="section">
@@ -163,12 +184,20 @@ function Fiche({ alerte }: { alerte: Alerte }) {
 					<Lampe etat={etatAlerte(alerte)} />
 					{STATUT_ALERTE[alerte.statut]}
 				</span>
-				{peutIntervenir(user?.role) && alerte.statut !== "RESOLUE" && (
+				{((peutIntervenir(user?.role) && alerte.statut !== "RESOLUE")
+					|| (estAdministrateur(user?.role) && alerte.statut === "RESOLUE")) && (
 					<div className="commandes">
 						<ActionsAlerte alerte={alerte} />
+						{estAdministrateur(user?.role) && alerte.statut === "RESOLUE" && (
+							<button className="bouton bouton-menu" type="button" onClick={() => void supprimer()}>
+								{confirmationSuppression ? "Confirmer la suppression" : "Supprimer"}
+							</button>
+						)}
 					</div>
 				)}
 			</div>
+
+			{erreurSuppression && <Message ton="echec">{erreurSuppression}</Message>}
 
 			<div className="encart">
 				<div className="fiche">

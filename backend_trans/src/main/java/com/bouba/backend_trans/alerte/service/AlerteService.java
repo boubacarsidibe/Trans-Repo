@@ -172,6 +172,24 @@ public class AlerteService {
 	}
 
 	/**
+	 * Suppression réelle de la ligne (issue #181), réservée à l'administrateur.
+	 * Contrairement aux équipements/utilisateurs (aucune trace du tout requise),
+	 * la contrainte ici porte sur le statut : une alerte encore active raconte
+	 * un incident en cours, la supprimer la ferait disparaître du radar.
+	 */
+	@Transactional
+	@Auditable("SUPPRESSION_ALERTE")
+	public void supprimer(UUID id) {
+		Alerte alerte = findById(id);
+
+		if (alerte.getStatut() != StatutAlerte.RESOLUE) {
+			throw new IllegalStateException("Seule une alerte résolue peut être supprimée.");
+		}
+
+		alerteRepository.delete(alerte);
+	}
+
+	/**
 	 * Remonte la chaîne de dépendance à la recherche d'un équipement déjà déclaré
 	 * indisponible.
 	 *

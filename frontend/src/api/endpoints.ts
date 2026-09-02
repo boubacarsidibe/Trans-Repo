@@ -73,6 +73,11 @@ export function resoudreAlerte(id: string) {
 	return apiClient.put<Alerte>(`/api/v1/alerts/${id}/resolve`).then((r) => r.data);
 }
 
+/** Suppression réelle de la ligne — réservée à l'administrateur, refusée si l'alerte n'est pas résolue. */
+export function supprimerAlerte(id: string) {
+	return apiClient.delete<void>(`/api/v1/alerts/${id}`).then(() => undefined);
+}
+
 export function fetchRapports() {
 	return apiClient.get<Rapport[]>("/api/v1/reports").then((r) => r.data);
 }
