@@ -93,21 +93,47 @@ describe("AlertesPage", () => {
 		expect(screen.getByText("Aucune alerte")).toBeInTheDocument();
 	});
 
-	it("prend en compte une alerte déclenchée au clic, pour un technicien", async () => {
+	it("ouvre la fiche d'une alerte au clic sur sa ligne", async () => {
+		rendre([alerte({ id: "al-1", equipementNom: "srv-moodle" })]);
+
+		await userEvent.click(screen.getByRole("button", { name: /srv-moodle/ }));
+
+		expect(screen.getByRole("heading", { name: /srv-moodle/ })).toBeInTheDocument();
+		expect(screen.getByRole("link", { name: "srv-moodle" })).toHaveAttribute(
+			"href",
+			"/equipements?poste=eq-1",
+		);
+	});
+
+	it("prend en compte une alerte déclenchée depuis sa fiche, pour un technicien", async () => {
 		const miseAJour = alerte({ id: "al-1", statut: "PRISE_EN_COMPTE" });
 		mockPrendreEnCompteAlerte.mockResolvedValueOnce(miseAJour);
 		rendre([alerte({ id: "al-1", statut: "DECLENCHEE" })]);
 
+		await userEvent.click(screen.getByRole("button", { name: /srv-moodle/ }));
 		await userEvent.click(screen.getByRole("button", { name: "Prendre en compte" }));
 
 		expect(mockPrendreEnCompteAlerte).toHaveBeenCalledWith("al-1");
 		expect(mockRemplacerAlerte).toHaveBeenCalledWith(miseAJour);
 	});
 
-	it("masque les actions pour un observateur", () => {
+	it("masque les actions de la fiche pour un observateur", async () => {
 		rendre([alerte({ id: "al-1", statut: "DECLENCHEE" })], "OBSERVATEUR");
+
+		await userEvent.click(screen.getByRole("button", { name: /srv-moodle/ }));
 
 		expect(screen.queryByRole("button", { name: "Prendre en compte" })).not.toBeInTheDocument();
 		expect(screen.queryByRole("button", { name: "Résoudre" })).not.toBeInTheDocument();
+	});
+
+	it("referme la fiche au second clic sur la même ligne", async () => {
+		rendre([alerte({ id: "al-1", equipementNom: "srv-moodle" })]);
+
+		const ligne = screen.getByRole("button", { name: /srv-moodle/ });
+		await userEvent.click(ligne);
+		expect(screen.getByRole("heading", { name: /srv-moodle/ })).toBeInTheDocument();
+
+		await userEvent.click(ligne);
+		expect(screen.queryByRole("heading", { name: /srv-moodle/ })).not.toBeInTheDocument();
 	});
 });

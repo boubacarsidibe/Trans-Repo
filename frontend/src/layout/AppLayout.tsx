@@ -11,6 +11,7 @@ const ECRANS = [
 	{ to: "/equipements", libelle: "Équipements" },
 	{ to: "/cartographie", libelle: "Cartographie" },
 	{ to: "/alertes", libelle: "Alertes" },
+	{ to: "/evenements", libelle: "Événements" },
 	// Lecture ouverte au technicien, écriture réservée à l'administrateur (§4.4).
 	{ to: "/seuils", libelle: "Seuils", intervenant: true },
 	{ to: "/rapports", libelle: "Rapports" },

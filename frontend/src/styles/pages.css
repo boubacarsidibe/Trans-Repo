@@ -81,9 +81,17 @@
 
 /* La colonne d'actions garde sa largeur même vide : sans quoi chaque rangée
    décalerait ses voisines selon les boutons qu'elle porte. */
-.rangee-alerte,
-.rangee-alerte-large {
+.rangee-alerte {
 	grid-template-columns: 16px 168px 140px 116px minmax(0, 1fr) 130px 232px;
+}
+
+/*
+ * Le journal des alertes (/alertes) ouvre une fiche au clic sur la ligne
+ * plutôt que de porter ses actions en ligne (même pattern que /equipements) :
+ * la dernière colonne est une flèche, pas une réserve pour des boutons.
+ */
+.rangee-alerte-large {
+	grid-template-columns: 16px 168px 140px 116px minmax(0, 1fr) 130px 14px;
 }
 
 .rangee-emplacement {
@@ -346,6 +354,12 @@
 	grid-template-columns: 152px 190px minmax(0, 1fr) 116px;
 }
 
+/* ── Flux d'événements ────────────────────────────────────────────────────── */
+
+.rangee-flux {
+	grid-template-columns: 16px 148px 190px 170px minmax(0, 1fr);
+}
+
 .rangee-utilisateur {
 	grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr) 152px 104px auto;
 }
@@ -404,6 +418,7 @@
 
 	.rangee-rapport,
 	.rangee-journal,
+	.rangee-flux,
 	.rangee-utilisateur,
 	.rangee-seuil {
 		grid-template-columns: minmax(0, 1fr);

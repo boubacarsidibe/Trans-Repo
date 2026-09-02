@@ -7,6 +7,7 @@ import { AlertesPage } from "./pages/AlertesPage";
 import { CartographiePage } from "./pages/CartographiePage";
 import { EquipementFormPage } from "./pages/EquipementFormPage";
 import { EquipementsPage } from "./pages/EquipementsPage";
+import { FluxEvenementsPage } from "./pages/FluxEvenementsPage";
 import { IntrouvablePage } from "./pages/IntrouvablePage";
 import { JournalPage } from "./pages/JournalPage";
 import { LoginPage } from "./pages/LoginPage";
@@ -45,6 +46,7 @@ function App() {
 						<Route path="/equipements/:id/modifier" element={<EquipementFormPage />} />
 						<Route path="/cartographie" element={<CartographiePage />} />
 						<Route path="/alertes" element={<AlertesPage />} />
+						<Route path="/evenements" element={<FluxEvenementsPage />} />
 						<Route path="/seuils" element={<SeuilsPage />} />
 						<Route path="/rapports" element={<RapportsPage />} />
 						<Route path="/journal" element={<JournalPage />} />
