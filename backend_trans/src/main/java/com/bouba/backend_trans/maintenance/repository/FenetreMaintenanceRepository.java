@@ -17,6 +17,9 @@ public interface FenetreMaintenanceRepository extends JpaRepository<FenetreMaint
 	/** Vrai si au moins une fenêtre de maintenance existe pour cet équipement — bloque sa suppression définitive. */
 	boolean existsByEquipementId(UUID equipementId);
 
+	/** Vrai si au moins une fenêtre de maintenance a été créée par cet utilisateur — bloque sa suppression définitive. */
+	boolean existsByCreeParId(Long utilisateurId);
+
 	/**
 	 * Vrai si une fenêtre non annulée de cet équipement couvre l'instant donné.
 	 * Utilisé par le moteur d'alertes (F6, issue #160) pour taire la création de

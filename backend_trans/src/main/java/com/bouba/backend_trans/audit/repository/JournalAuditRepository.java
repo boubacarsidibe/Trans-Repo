@@ -16,4 +16,7 @@ public interface JournalAuditRepository extends JpaRepository<JournalAudit, Long
 	/** Le journal ne cesse de croître : sa consultation est paginée (§7.9). */
 	@EntityGraph(attributePaths = "utilisateur")
 	List<JournalAudit> findAllByOrderByHorodatageDesc(Pageable pageable);
+
+	/** Vrai si au moins une entrée du journal référence cet utilisateur — bloque sa suppression définitive. */
+	boolean existsByUtilisateurId(Long utilisateurId);
 }

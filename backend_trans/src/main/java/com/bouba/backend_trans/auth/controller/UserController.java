@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,6 +20,7 @@ import com.bouba.backend_trans.auth.dto.UserCreateRequest;
 import com.bouba.backend_trans.auth.dto.UserResponse;
 import com.bouba.backend_trans.auth.dto.UserUpdateRequest;
 import com.bouba.backend_trans.auth.entity.AppUser;
+import com.bouba.backend_trans.auth.repository.AppUserRepository;
 import com.bouba.backend_trans.auth.service.UserService;
 
 import jakarta.validation.Valid;
@@ -29,9 +31,11 @@ import jakarta.validation.Valid;
 public class UserController {
 
 	private final UserService userService;
+	private final AppUserRepository appUserRepository;
 
-	public UserController(UserService userService) {
+	public UserController(UserService userService, AppUserRepository appUserRepository) {
 		this.userService = userService;
+		this.appUserRepository = appUserRepository;
 	}
 
 	@GetMapping
@@ -56,5 +60,23 @@ public class UserController {
 	public ResponseEntity<Void> deactivate(@PathVariable Long id) {
 		userService.deactivate(id);
 		return ResponseEntity.noContent().build();
+	}
+
+	/**
+	 * Suppression définitive (issue #179). Déjà réservée à l'administrateur par
+	 * la restriction de classe — pas besoin de la répéter ici, contrairement à
+	 * l'équivalent équipements dont le contrôleur autorise plus largement. Le
+	 * service refuse (409) si l'utilisateur conserve la moindre trace, ou s'il
+	 * s'agit du compte actuellement authentifié.
+	 */
+	@DeleteMapping("/{id}/definitif")
+	public ResponseEntity<Void> supprimerDefinitivement(@PathVariable Long id, Authentication authentication) {
+		userService.supprimerDefinitivement(id, currentUser(authentication));
+		return ResponseEntity.noContent().build();
+	}
+
+	private AppUser currentUser(Authentication authentication) {
+		return appUserRepository.findByEmail(authentication.getName())
+				.orElseThrow(() -> new IllegalStateException("Utilisateur authentifié introuvable."));
 	}
 }
