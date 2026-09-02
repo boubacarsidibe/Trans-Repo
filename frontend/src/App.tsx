@@ -4,6 +4,7 @@ import { ProtectedRoute } from "./auth/ProtectedRoute";
 import { AppLayout } from "./layout/AppLayout";
 import { SupervisionProvider } from "./supervision/SupervisionContext";
 import { AlertesPage } from "./pages/AlertesPage";
+import { CartographiePage } from "./pages/CartographiePage";
 import { EquipementFormPage } from "./pages/EquipementFormPage";
 import { EquipementsPage } from "./pages/EquipementsPage";
 import { IntrouvablePage } from "./pages/IntrouvablePage";
@@ -42,6 +43,7 @@ function App() {
 						<Route path="/equipements" element={<EquipementsPage />} />
 						<Route path="/equipements/nouveau" element={<EquipementFormPage />} />
 						<Route path="/equipements/:id/modifier" element={<EquipementFormPage />} />
+						<Route path="/cartographie" element={<CartographiePage />} />
 						<Route path="/alertes" element={<AlertesPage />} />
 						<Route path="/seuils" element={<SeuilsPage />} />
 						<Route path="/rapports" element={<RapportsPage />} />

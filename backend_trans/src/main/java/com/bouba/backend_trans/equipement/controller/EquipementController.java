@@ -16,9 +16,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.bouba.backend_trans.equipement.dto.CandidatEquipement;
 import com.bouba.backend_trans.equipement.dto.EquipementRequest;
 import com.bouba.backend_trans.equipement.dto.EquipementResponse;
+import com.bouba.backend_trans.equipement.dto.ScanRequest;
 import com.bouba.backend_trans.equipement.entity.Equipement;
+import com.bouba.backend_trans.equipement.service.EquipementScanService;
 import com.bouba.backend_trans.equipement.service.EquipementService;
 
 import jakarta.validation.Valid;
@@ -29,9 +32,11 @@ import jakarta.validation.Valid;
 public class EquipementController {
 
 	private final EquipementService equipementService;
+	private final EquipementScanService equipementScanService;
 
-	public EquipementController(EquipementService equipementService) {
+	public EquipementController(EquipementService equipementService, EquipementScanService equipementScanService) {
 		this.equipementService = equipementService;
+		this.equipementScanService = equipementScanService;
 	}
 
 	@GetMapping
@@ -64,5 +69,16 @@ public class EquipementController {
 	public ResponseEntity<Void> archive(@PathVariable UUID id) {
 		equipementService.archive(id);
 		return ResponseEntity.noContent().build();
+	}
+
+	/**
+	 * Scan de découverte (issue #152) sur une plage d'IP : ICMP puis GET SNMP
+	 * {@code sysDescr}/{@code sysObjectID}. Ne crée rien — l'administrateur
+	 * déclare ensuite manuellement les candidats retenus via {@link #create}.
+	 */
+	@PostMapping("/scan")
+	@PreAuthorize("hasAnyRole('ADMINISTRATEUR', 'TECHNICIEN')")
+	public List<CandidatEquipement> scan(@Valid @RequestBody ScanRequest request) {
+		return equipementScanService.scanner(request);
 	}
 }

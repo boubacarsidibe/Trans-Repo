@@ -14,7 +14,9 @@ public enum TypeEvenement {
 	ALERT_UPDATED("alert_updated", CanalSupervision.ALERTS),
 	ALERT_ACKNOWLEDGED("alert_acknowledged", CanalSupervision.ALERTS),
 	ALERT_RESOLVED("alert_resolved", CanalSupervision.ALERTS),
-	EQUIPMENT_STATUS_CHANGED("equipment_status_changed", CanalSupervision.STATUS);
+	EQUIPMENT_STATUS_CHANGED("equipment_status_changed", CanalSupervision.STATUS),
+	/** Bascule ou silence du collecteur réseau actif (issue #157). */
+	COLLECTOR_STATUS_CHANGED("collector_status_changed", CanalSupervision.STATUS);
 
 	private final String code;
 	private final CanalSupervision canal;

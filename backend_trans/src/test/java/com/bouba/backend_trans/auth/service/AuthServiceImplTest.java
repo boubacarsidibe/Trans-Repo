@@ -16,7 +16,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 
 import com.bouba.backend_trans.auth.dto.AuthResponse;
 import com.bouba.backend_trans.auth.dto.ForgotPasswordRequest;
@@ -249,6 +255,33 @@ class AuthServiceImplTest {
 		authService.forgotPassword(request);
 
 		verify(passwordResetTokenRepository, never()).save(any());
+	}
+
+	@Test
+	void ne_journalise_jamais_le_jeton_de_reinitialisation_au_niveau_info() {
+		AppUser user = utilisateur();
+		when(appUserRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
+
+		Logger logger = (Logger) LoggerFactory.getLogger(AuthServiceImpl.class);
+		ListAppender<ILoggingEvent> appender = new ListAppender<>();
+		appender.start();
+		logger.addAppender(appender);
+		try {
+			ForgotPasswordRequest request = new ForgotPasswordRequest();
+			request.setEmail(user.getEmail());
+			authService.forgotPassword(request);
+
+			ArgumentCaptor<PasswordResetToken> captor = ArgumentCaptor.forClass(PasswordResetToken.class);
+			verify(passwordResetTokenRepository).save(captor.capture());
+			String jeton = captor.getValue().getToken();
+
+			assertThat(appender.list)
+					.filteredOn(event -> event.getLevel().isGreaterOrEqual(Level.INFO))
+					.extracting(ILoggingEvent::getFormattedMessage)
+					.noneMatch(message -> message.contains(jeton));
+		} finally {
+			logger.detachAppender(appender);
+		}
 	}
 
 	// --- resetPassword ---

@@ -9,6 +9,7 @@ import { appliquerFinition, finitionInitiale, type Finition } from "../theme";
 const ECRANS = [
 	{ to: "/", libelle: "Synoptique", exact: true },
 	{ to: "/equipements", libelle: "Équipements" },
+	{ to: "/cartographie", libelle: "Cartographie" },
 	{ to: "/alertes", libelle: "Alertes" },
 	// Lecture ouverte au technicien, écriture réservée à l'administrateur (§4.4).
 	{ to: "/seuils", libelle: "Seuils", intervenant: true },

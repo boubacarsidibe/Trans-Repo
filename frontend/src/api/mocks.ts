@@ -18,24 +18,31 @@ import type {
 
 const equipements: Equipement[] = (
 	[
-	{ id: "e1", nom: "srv-peda-01", adresseIp: "10.20.4.11", type: "SERVEUR", localisation: "Salle serveurs — CRI", etat: "ACTIF", description: "Hyperviseur des TP réseau" },
-	{ id: "e2", nom: "srv-peda-02", adresseIp: "10.20.4.12", type: "SERVEUR", localisation: "Salle serveurs — CRI", etat: "ACTIF", description: "Hyperviseur des TP système" },
-	{ id: "e3", nom: "srv-moodle", adresseIp: "10.20.4.20", type: "SERVEUR", localisation: "Salle serveurs — CRI", etat: "ACTIF", description: "Plateforme pédagogique" },
-	{ id: "e4", nom: "srv-dns-01", adresseIp: "10.20.4.53", type: "SERVEUR", localisation: "Salle serveurs — CRI", etat: "EN_MAINTENANCE", description: "Résolveur DNS interne" },
-	{ id: "e5", nom: "srv-fichiers", adresseIp: "10.20.4.30", type: "SERVEUR", localisation: "Salle serveurs — CRI", etat: "ACTIF", description: null },
-	{ id: "e6", nom: "rt-core-01", adresseIp: "10.20.0.1", type: "ROUTEUR", localisation: "Local technique — cœur", etat: "ACTIF", description: "Routeur de cœur, VLAN 1-40" },
-	{ id: "e7", nom: "sw-core-01", adresseIp: "10.20.0.2", type: "SWITCH", localisation: "Local technique — cœur", etat: "ACTIF", description: null },
-	{ id: "e8", nom: "sw-core-02", adresseIp: "10.20.0.3", type: "SWITCH", localisation: "Local technique — cœur", etat: "INACTIF", description: "Ne répond plus depuis la coupure du 09/08" },
-	{ id: "e9", nom: "sw-git-01", adresseIp: "10.20.12.2", type: "SWITCH", localisation: "Bâtiment GIT", etat: "ACTIF", description: null },
-	{ id: "e10", nom: "ap-git-r1", adresseIp: "10.20.12.21", type: "POINT_ACCES", localisation: "Bâtiment GIT", etat: "ACTIF", description: "Amphi 1" },
-	{ id: "e11", nom: "ap-git-r2", adresseIp: "10.20.12.22", type: "POINT_ACCES", localisation: "Bâtiment GIT", etat: "ACTIF", description: "Salle TP réseau" },
-	{ id: "e12", nom: "ap-admin-01", adresseIp: "10.20.30.21", type: "POINT_ACCES", localisation: "Bâtiment administration", etat: "ACTIF", description: null },
-	] as Omit<Equipement, "derniereMesure">[]
+	// dependDeId reproduit une topologie plausible : le routeur de cœur dessert
+	// les deux commutateurs, qui desservent chacun leur segment — c'est cette
+	// chaîne que /cartographie trace en arêtes (issue #159).
+	{ id: "e1", nom: "srv-peda-01", adresseIp: "10.20.4.11", type: "SERVEUR", localisation: "Salle serveurs — CRI", etat: "ACTIF", description: "Hyperviseur des TP réseau", dependDeId: "e7" },
+	{ id: "e2", nom: "srv-peda-02", adresseIp: "10.20.4.12", type: "SERVEUR", localisation: "Salle serveurs — CRI", etat: "ACTIF", description: "Hyperviseur des TP système", dependDeId: "e7" },
+	{ id: "e3", nom: "srv-moodle", adresseIp: "10.20.4.20", type: "SERVEUR", localisation: "Salle serveurs — CRI", etat: "ACTIF", description: "Plateforme pédagogique", dependDeId: "e7" },
+	{ id: "e4", nom: "srv-dns-01", adresseIp: "10.20.4.53", type: "SERVEUR", localisation: "Salle serveurs — CRI", etat: "EN_MAINTENANCE", description: "Résolveur DNS interne", dependDeId: "e7" },
+	{ id: "e5", nom: "srv-fichiers", adresseIp: "10.20.4.30", type: "SERVEUR", localisation: "Salle serveurs — CRI", etat: "ACTIF", description: null, dependDeId: "e7" },
+	{ id: "e6", nom: "rt-core-01", adresseIp: "10.20.0.1", type: "ROUTEUR", localisation: "Local technique — cœur", etat: "ACTIF", description: "Routeur de cœur, VLAN 1-40", dependDeId: null },
+	{ id: "e7", nom: "sw-core-01", adresseIp: "10.20.0.2", type: "SWITCH", localisation: "Local technique — cœur", etat: "ACTIF", description: null, dependDeId: "e6" },
+	{ id: "e8", nom: "sw-core-02", adresseIp: "10.20.0.3", type: "SWITCH", localisation: "Local technique — cœur", etat: "INACTIF", description: "Ne répond plus depuis la coupure du 09/08", dependDeId: "e6" },
+	{ id: "e9", nom: "sw-git-01", adresseIp: "10.20.12.2", type: "SWITCH", localisation: "Bâtiment GIT", etat: "ACTIF", description: null, dependDeId: "e8" },
+	{ id: "e10", nom: "ap-git-r1", adresseIp: "10.20.12.21", type: "POINT_ACCES", localisation: "Bâtiment GIT", etat: "ACTIF", description: "Amphi 1", dependDeId: "e9" },
+	{ id: "e11", nom: "ap-git-r2", adresseIp: "10.20.12.22", type: "POINT_ACCES", localisation: "Bâtiment GIT", etat: "ACTIF", description: "Salle TP réseau", dependDeId: "e9" },
+	{ id: "e12", nom: "ap-admin-01", adresseIp: "10.20.30.21", type: "POINT_ACCES", localisation: "Bâtiment administration", etat: "ACTIF", description: null, dependDeId: "e7" },
+	] as Omit<Equipement, "derniereMesure" | "dependDeNom">[]
 ).map((equipement) => ({
 	...equipement,
 	// Le parc de démonstration remonte normalement ; seul l'équipement archivé
 	// reste muet, ce qui laisse voir le comportement du watchdog.
 	derniereMesure: equipement.etat === "INACTIF" ? null : new Date(Date.now() - 20_000).toISOString(),
+	dependDeNom: null as string | null,
+})).map((equipement, _index, tous) => ({
+	...equipement,
+	dependDeNom: tous.find((e) => e.id === equipement.dependDeId)?.nom ?? null,
 }));
 
 const minutesAgo = (n: number) => new Date(Date.now() - n * 60_000).toISOString();
