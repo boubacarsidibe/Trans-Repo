@@ -13,6 +13,9 @@ public interface EquipementRepository extends JpaRepository<Equipement, UUID> {
 
 	boolean existsByAdresseIp(String adresseIp);
 
+	/** Les équipements déjà déclarés parmi une liste d'IP — utilisé par le scan de découverte pour marquer les doublons. */
+	List<Equipement> findByAdresseIpIn(List<String> adresseIps);
+
 	Optional<Equipement> findByCleApi(String cleApi);
 
 	/** Parc réellement supervisé : tout sauf les équipements archivés. */
