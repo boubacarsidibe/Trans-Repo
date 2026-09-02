@@ -1,5 +1,11 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { createUtilisateur, desactiverUtilisateur, fetchUtilisateurs, updateUtilisateur } from "../api/endpoints";
+import {
+	createUtilisateur,
+	desactiverUtilisateur,
+	fetchUtilisateurs,
+	supprimerUtilisateurDefinitivement,
+	updateUtilisateur,
+} from "../api/endpoints";
 import { useAuth } from "../auth/AuthContext";
 import { RequireRole } from "../auth/RequireRole";
 import { Champ } from "../components/Champ";
@@ -30,6 +36,7 @@ function Contenu() {
 	const [formulaire, setFormulaire] = useState(false);
 	const [saisie, setSaisie] = useState({ username: "", email: "", password: "", role: "OBSERVATEUR" as Role });
 	const [envoi, setEnvoi] = useState(false);
+	const [confirmationSuppressionId, setConfirmationSuppressionId] = useState<number | null>(null);
 
 	useEffect(() => {
 		fetchUtilisateurs()
@@ -74,6 +81,23 @@ function Contenu() {
 			setComptes((actuels) => actuels.map((c) => (c.id === compte.id ? { ...c, active: false } : c)));
 		} catch {
 			setErreur(`Le compte ${compte.email} n'a pas pu être désactivé.`);
+		}
+	}
+
+	/** Suppression réelle de la ligne (issue #179) : le message de refus vient du backend, tel quel. */
+	async function supprimerDefinitivement(compte: Utilisateur) {
+		if (confirmationSuppressionId !== compte.id) {
+			setConfirmationSuppressionId(compte.id);
+			return;
+		}
+		try {
+			await supprimerUtilisateurDefinitivement(compte.id);
+			setComptes((actuels) => actuels.filter((c) => c.id !== compte.id));
+			setConfirmationSuppressionId(null);
+		} catch (cause) {
+			const message = (cause as { response?: { data?: { message?: string } } })?.response?.data?.message;
+			setErreur(message ?? "La suppression définitive a été refusée.");
+			setConfirmationSuppressionId(null);
 		}
 	}
 
@@ -192,17 +216,28 @@ function Contenu() {
 									))}
 								</select>
 								<span className="rangee-secondaire">{formatJour(compte.createdAt)}</span>
-								{compte.active ? (
+								<span className="rangee-actions">
+									{compte.active ? (
+										<button
+											className="bouton bouton-menu"
+											type="button"
+											onClick={() => void desactiver(compte)}
+										>
+											Désactiver
+										</button>
+									) : (
+										<span className="etat etat-calme">Désactivé</span>
+									)}
 									<button
 										className="bouton bouton-menu"
 										type="button"
-										onClick={() => void desactiver(compte)}
+										onClick={() => void supprimerDefinitivement(compte)}
 									>
-										Désactiver
+										{confirmationSuppressionId === compte.id
+											? "Confirmer la suppression définitive"
+											: "Supprimer définitivement"}
 									</button>
-								) : (
-									<span className="etat etat-calme">Désactivé</span>
-								)}
+								</span>
 							</div>
 						))}
 					</div>

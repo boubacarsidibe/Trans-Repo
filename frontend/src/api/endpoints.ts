@@ -130,3 +130,8 @@ export function updateUtilisateur(id: number, body: UtilisateurUpdate) {
 export function desactiverUtilisateur(id: number) {
 	return apiClient.delete<void>(`/api/v1/users/${id}`).then(() => undefined);
 }
+
+/** Suppression réelle de la ligne — réservée à l'administrateur, refusée si l'utilisateur conserve un historique. */
+export function supprimerUtilisateurDefinitivement(id: number) {
+	return apiClient.delete<void>(`/api/v1/users/${id}/definitif`).then(() => undefined);
+}
