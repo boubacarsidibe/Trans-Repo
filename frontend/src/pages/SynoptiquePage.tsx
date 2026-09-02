@@ -7,7 +7,8 @@ import { useSupervision } from "../supervision/SupervisionContext";
 import { alerteOuverte, etatPoste, grouperParEmplacement, trierParGravite } from "../supervision/etat";
 import { SEVERITE, STATUT_ALERTE, TYPE_ANOMALIE, TYPE_EQUIPEMENT } from "../supervision/libelles";
 import { depuis, formatDateHeure, formatHeureSeconde } from "../supervision/format";
-import type { Severite, TypeEquipement } from "../types/api";
+import type { Alerte, Equipement, Severite, TypeEquipement } from "../types/api";
+import { MetricChart } from "./MetricChart";
 
 const CLASSE_SEVERITE: Record<Severite, string> = {
 	CRITIQUE: "etat etat-critique",
@@ -16,6 +17,18 @@ const CLASSE_SEVERITE: Record<Severite, string> = {
 };
 
 const RANG_SEVERITE: Record<Severite, number> = { CRITIQUE: 0, AVERTISSEMENT: 1, INFO: 2 };
+
+const NB_GRAPHIQUES = 2;
+
+/** Les équipements les plus utiles à surveiller en un coup d'œil : ceux en alerte d'abord, complétés au besoin. */
+function equipementsAAfficher(equipements: Equipement[], ouvertes: Alerte[]): Equipement[] {
+	const idsEnAlerte = [...new Set(ouvertes.map((a) => a.equipementId))];
+	const enAlerte = idsEnAlerte
+		.map((id) => equipements.find((e) => e.id === id))
+		.filter((e): e is Equipement => e !== undefined);
+	const reste = equipements.filter((e) => !idsEnAlerte.includes(e.id));
+	return [...enAlerte, ...reste].slice(0, NB_GRAPHIQUES);
+}
 
 export function SynoptiquePage() {
 	const { equipements, alertes, erreur, derniereLecture } = useSupervision();
@@ -34,6 +47,8 @@ export function SynoptiquePage() {
 	const parNature = Object.keys(TYPE_EQUIPEMENT)
 		.map((nature) => [nature as TypeEquipement, equipements.filter((e) => e.type === nature).length] as const)
 		.filter(([, total]) => total > 0);
+
+	const graphiques = equipementsAAfficher(equipements, ouvertes);
 
 	return (
 		<>
@@ -108,6 +123,21 @@ export function SynoptiquePage() {
 					)}
 				</div>
 			</section>
+
+			{graphiques.length > 0 && (
+				<section className="section">
+					<div className="section-entete">
+						<h2 className="plaque-titre">Activité récente</h2>
+					</div>
+					<div className="grille-synoptique">
+						{graphiques.map((poste) => (
+							<div className="encart" key={poste.id}>
+								<MetricChart equipementId={poste.id} equipementNom={poste.nom} />
+							</div>
+						))}
+					</div>
+				</section>
+			)}
 
 			<div className="grille-synoptique">
 				<section>
