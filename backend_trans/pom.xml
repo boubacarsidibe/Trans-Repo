@@ -118,7 +118,13 @@
 			<scope>runtime</scope>
 		</dependency>
 		<!-- Migrations de schema versionnees (issue #139), a la place de
-			 spring.jpa.hibernate.ddl-auto=update. -->
+			 spring.jpa.hibernate.ddl-auto=update. Spring Boot 4 a scinde
+			 l'auto-configuration par fonctionnalite : flyway-core seul ne
+			 suffit plus, il faut aussi le module d'auto-configuration dedie. -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-flyway</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>org.flywaydb</groupId>
 			<artifactId>flyway-core</artifactId>
