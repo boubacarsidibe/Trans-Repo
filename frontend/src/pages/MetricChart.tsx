@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import {
+	Area,
+	AreaChart,
 	CartesianGrid,
-	Line,
-	LineChart,
 	ReferenceLine,
 	ResponsiveContainer,
 	Tooltip,
@@ -45,6 +45,7 @@ function Infobulle({ active, payload, label }: { active?: boolean; payload?: { v
  * cadre — lu contre les seuils qui déclenchent réellement les alertes.
  */
 export function MetricChart({ equipementId, equipementNom }: { equipementId: string; equipementNom: string }) {
+	const idDegrade = `enregistreur-degrade${useId().replace(/:/g, "")}`;
 	const [metriques, setMetriques] = useState<Metrique[]>([]);
 	const [mesure, setMesure] = useState<TypeMetrique | null>(null);
 	const [chargement, setChargement] = useState(true);
@@ -151,7 +152,13 @@ export function MetricChart({ equipementId, equipementNom }: { equipementId: str
 			</div>
 
 			<ResponsiveContainer width="100%" height={240}>
-				<LineChart data={points} margin={{ top: 10, right: 16, bottom: 0, left: 0 }}>
+				<AreaChart data={points} margin={{ top: 10, right: 16, bottom: 0, left: 0 }}>
+					<defs>
+						<linearGradient id={idDegrade} x1="0" y1="0" x2="0" y2="1">
+							<stop offset="5%" stopColor="var(--bleu)" stopOpacity={0.35} />
+							<stop offset="95%" stopColor="var(--bleu)" stopOpacity={0} />
+						</linearGradient>
+					</defs>
 					<CartesianGrid className="trace-grille" vertical={false} />
 					<XAxis dataKey="heure" className="trace-axe" tickLine={false} minTickGap={48} />
 					<YAxis className="trace-axe" tickLine={false} width={64} unit={unite} />
@@ -172,15 +179,17 @@ export function MetricChart({ equipementId, equipementNom }: { equipementId: str
 						/>
 					)}
 					<Tooltip content={<Infobulle />} cursor={{ strokeDasharray: "3 3" }} />
-					<Line
+					<Area
 						className="trace-ligne"
 						type="monotone"
 						dataKey="valeur"
+						stroke="var(--bleu)"
 						strokeWidth={2}
+						fill={`url(#${idDegrade})`}
 						dot={false}
 						isAnimationActive={false}
 					/>
-				</LineChart>
+				</AreaChart>
 			</ResponsiveContainer>
 
 			{(seuils?.attention !== undefined || seuils?.critique !== undefined) && (

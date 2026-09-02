@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { ActionsAlerte } from "../components/ActionsAlerte";
 import { Lampe } from "../components/Lampe";
+import { Releve } from "../components/Releve";
 import { EtatVide, Message } from "../components/Retours";
 import { useSupervision } from "../supervision/SupervisionContext";
 import { depuis, formatDateHeure } from "../supervision/format";
@@ -40,6 +41,11 @@ export function AlertesPage() {
 		.filter((a) => filtre === "toutes" || a.statut === filtre)
 		.sort((a, b) => b.dateDeclenchement.localeCompare(a.dateDeclenchement));
 
+	const critiques = alertes.filter((a) => a.severite === "CRITIQUE" && a.statut === "DECLENCHEE").length;
+	const avertissements = alertes.filter((a) => a.severite === "AVERTISSEMENT" && a.statut === "DECLENCHEE").length;
+	const prisesEnCompte = alertes.filter((a) => a.statut === "PRISE_EN_COMPTE").length;
+	const resolues = alertes.filter((a) => a.statut === "RESOLUE").length;
+
 	function selectionner(alerte: Alerte) {
 		setParametres(alerte.id === selectionnee?.id ? {} : { alerte: alerte.id });
 	}
@@ -50,6 +56,13 @@ export function AlertesPage() {
 				<div className="section-entete">
 					<h1 className="plaque-titre">Journal des alertes</h1>
 					<span className="donnee-faible">{visibles.length} entrées</span>
+				</div>
+
+				<div className="releves-vitrees" style={{ marginBottom: 20 }}>
+					<Releve valeur={critiques} libelle="Critiques en cours" alarme={critiques > 0} />
+					<Releve valeur={avertissements} libelle="Avertissements en cours" />
+					<Releve valeur={prisesEnCompte} libelle="Prises en compte" />
+					<Releve valeur={resolues} libelle="Résolues" />
 				</div>
 
 				<div className="filtres">

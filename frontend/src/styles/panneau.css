@@ -46,13 +46,36 @@
 	font-weight: 500;
 }
 
+/* Sections groupées : un petit label majuscule espacé au-dessus de chaque
+   famille d'écrans — façon panneau NOC — plutôt qu'une liste plate. */
 .rail-nav {
 	display: flex;
 	flex-direction: column;
 	align-items: stretch;
-	gap: 2px;
 	flex: 1;
 	overflow-y: auto;
+}
+
+.rail-section {
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	gap: 2px;
+}
+
+.rail-section + .rail-section {
+	margin-top: 18px;
+}
+
+.rail-section-titre {
+	margin: 0 0 6px;
+	padding: 0 12px;
+	color: var(--rail-encre-faible);
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	white-space: nowrap;
 }
 
 .rail-lien {
@@ -60,7 +83,7 @@
 	align-items: center;
 	padding: 8px 12px;
 	border-left: 2px solid transparent;
-	border-radius: var(--rayon-bouton);
+	border-radius: 0 var(--rayon-bouton) var(--rayon-bouton) 0;
 	color: var(--rail-encre-faible);
 	font-size: 13px;
 	font-weight: 500;
@@ -70,13 +93,13 @@
 
 .rail-lien:hover {
 	color: var(--rail-encre);
-	background: rgba(255, 255, 255, 0.06);
+	background: color-mix(in srgb, var(--bleu) 10%, transparent);
 }
 
 .rail-lien-actif {
-	color: var(--rail-encre);
-	background: rgba(255, 255, 255, 0.09);
-	border-left-color: var(--rail-encre);
+	color: var(--bleu);
+	background: color-mix(in srgb, var(--bleu) 14%, transparent);
+	border-left-color: var(--bleu);
 	font-weight: 600;
 }
 
@@ -228,6 +251,14 @@
 	box-shadow: inset 0 0 0 1px var(--trait-fort);
 }
 
+.lampe-verte,
+.lampe-ambre,
+.lampe-rouge {
+	box-shadow:
+		inset 0 0 0 1px var(--trait-fort),
+		0 0 6px 0 color-mix(in srgb, var(--lampe-couleur) 60%, transparent);
+}
+
 .lampe-verte {
 	--lampe-couleur: var(--vert);
 }
@@ -317,9 +348,8 @@
 
 .encart {
 	background: var(--plaque);
-	border: 1px solid var(--trait-fort);
+	border: 1px solid var(--trait);
 	border-radius: var(--rayon-carte);
-	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
 .encart-creux {
@@ -349,8 +379,8 @@
 .releve-valeur {
 	display: block;
 	font-family: var(--f-donnee);
-	font-size: 38px;
-	font-weight: 300;
+	font-size: 34px;
+	font-weight: 600;
 	line-height: 1.05;
 }
 
@@ -363,8 +393,10 @@
 	display: block;
 	margin-top: 8px;
 	color: var(--encre-faible);
-	font-size: 11px;
-	font-weight: 500;
+	font-size: 10.5px;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
 }
 
 .releve-alarme .releve-valeur {
@@ -443,31 +475,45 @@
 
 .releves-vitrees {
 	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-	gap: 10px;
+	grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+	gap: 12px;
 }
 
+/* Carte de statistique façon maquette : label discret en haut, gros chiffre
+   en dessous, liseré de couleur à gauche qui porte l'état de la carte. */
 .releves-vitrees .releve {
 	flex: none;
 	min-width: 0;
 	padding: 16px 18px 14px;
 	background: var(--plaque);
-	border: 1px solid var(--trait-fort);
+	border: 1px solid var(--trait);
+	border-left: 3px solid var(--bleu);
 	border-radius: var(--rayon-carte);
-	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.releves-vitrees .releve-valeur {
+	font-size: 28px;
+	font-weight: 700;
+	letter-spacing: -0.01em;
 }
 
 .releves-vitrees .releve-alarme {
-	border-color: var(--rouge);
+	border-left-color: var(--rouge);
+}
+
+.releves-vitrees .releve-alarme .releve-valeur {
+	color: var(--rouge);
 }
 
 .rangee-entete {
-	min-height: 30px;
+	min-height: 34px;
 	background: var(--plaque-creuse);
-	border-bottom: 1px solid var(--trait-fort);
+	border-bottom: 1px solid var(--trait);
 	color: var(--encre-faible);
-	font-size: 11px;
+	font-size: 10.5px;
 	font-weight: 600;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
 }
 
 .rangee-nom {
@@ -505,12 +551,20 @@
 
 /* ── États : jamais une pastille colorée seule, toujours lampe + mot ─────── */
 
+/*
+ * Pastille façon maquette : un fond légèrement teinté de la couleur d'état
+ * plutôt qu'un badge plein — le texte reste la même teinte, juste posée sur
+ * un lit translucide de cette même couleur.
+ */
 .etat {
 	display: inline-flex;
 	align-items: center;
-	gap: 7px;
+	gap: 6px;
 	overflow: hidden;
-	font-size: 12px;
+	padding: 3px 10px 3px 8px;
+	background: color-mix(in srgb, currentColor 14%, transparent);
+	border-radius: var(--rayon-pastille);
+	font-size: 11.5px;
 	font-weight: 600;
 	text-overflow: ellipsis;
 	white-space: nowrap;
@@ -722,6 +776,21 @@
 		overflow: visible;
 	}
 
+	/* Les sections se dissolvent dans le fil horizontal : seul le label
+	   disparaît, les liens restent tous au même niveau. */
+	.rail-section {
+		flex-direction: row;
+		flex-wrap: wrap;
+	}
+
+	.rail-section + .rail-section {
+		margin-top: 0;
+	}
+
+	.rail-section-titre {
+		display: none;
+	}
+
 	.section-entete {
 		flex-wrap: wrap;
 		gap: 10px 14px;
@@ -741,7 +810,7 @@
 	.rail-lien-actif {
 		background: none;
 		border-left-color: transparent;
-		border-bottom-color: var(--rail-encre);
+		border-bottom-color: var(--bleu);
 	}
 
 	.rail-poste {
