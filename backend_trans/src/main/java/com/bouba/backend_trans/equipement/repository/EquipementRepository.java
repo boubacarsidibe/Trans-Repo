@@ -22,4 +22,7 @@ public interface EquipementRepository extends JpaRepository<Equipement, UUID> {
 	List<Equipement> findByEtatNot(EtatEquipement etat);
 
 	long countByEtatNot(EtatEquipement etat);
+
+	/** Vrai si un autre équipement dépend de celui-ci — bloque sa suppression définitive. */
+	boolean existsByDependDeId(UUID dependDeId);
 }

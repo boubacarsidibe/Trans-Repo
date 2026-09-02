@@ -17,11 +17,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.bouba.backend_trans.alerte.repository.AlerteRepository;
 import com.bouba.backend_trans.equipement.dto.EquipementRequest;
 import com.bouba.backend_trans.equipement.entity.Equipement;
 import com.bouba.backend_trans.equipement.entity.EtatEquipement;
 import com.bouba.backend_trans.equipement.entity.TypeEquipement;
 import com.bouba.backend_trans.equipement.repository.EquipementRepository;
+import com.bouba.backend_trans.maintenance.repository.FenetreMaintenanceRepository;
+import com.bouba.backend_trans.metrique.repository.MetriqueRepository;
+import com.bouba.backend_trans.seuil.repository.SeuilAlerteRepository;
 
 @ExtendWith(MockitoExtension.class)
 class EquipementServiceTest {
@@ -29,11 +33,24 @@ class EquipementServiceTest {
 	@Mock
 	private EquipementRepository equipementRepository;
 
+	@Mock
+	private MetriqueRepository metriqueRepository;
+
+	@Mock
+	private AlerteRepository alerteRepository;
+
+	@Mock
+	private SeuilAlerteRepository seuilAlerteRepository;
+
+	@Mock
+	private FenetreMaintenanceRepository fenetreMaintenanceRepository;
+
 	private EquipementService equipementService;
 
 	@BeforeEach
 	void initService() {
-		equipementService = new EquipementService(equipementRepository);
+		equipementService = new EquipementService(equipementRepository, metriqueRepository, alerteRepository,
+				seuilAlerteRepository, fenetreMaintenanceRepository);
 	}
 
 	// --- findAll / findById ---
@@ -252,6 +269,111 @@ class EquipementServiceTest {
 		assertThatThrownBy(() -> equipementService.archive(id))
 				.isInstanceOf(IllegalArgumentException.class)
 				.hasMessage("Équipement introuvable.");
+	}
+
+	// --- supprimerDefinitivement ---
+
+	@Test
+	void supprime_definitivement_un_equipement_sans_aucun_historique() {
+		Equipement existant = equipement(UUID.randomUUID(), "10.0.0.1", EtatEquipement.ACTIF);
+		when(equipementRepository.findById(existant.getId())).thenReturn(Optional.of(existant));
+		when(metriqueRepository.existsByEquipementId(existant.getId())).thenReturn(false);
+		when(alerteRepository.existsByEquipementId(existant.getId())).thenReturn(false);
+		when(seuilAlerteRepository.existsByEquipementId(existant.getId())).thenReturn(false);
+		when(fenetreMaintenanceRepository.existsByEquipementId(existant.getId())).thenReturn(false);
+		when(equipementRepository.existsByDependDeId(existant.getId())).thenReturn(false);
+
+		equipementService.supprimerDefinitivement(existant.getId());
+
+		verify(equipementRepository).delete(existant);
+	}
+
+	@Test
+	void refuse_la_suppression_definitive_d_un_equipement_avec_des_metriques() {
+		Equipement existant = equipement(UUID.randomUUID(), "10.0.0.1", EtatEquipement.ACTIF);
+		when(equipementRepository.findById(existant.getId())).thenReturn(Optional.of(existant));
+		when(metriqueRepository.existsByEquipementId(existant.getId())).thenReturn(true);
+
+		assertThatThrownBy(() -> equipementService.supprimerDefinitivement(existant.getId()))
+				.isInstanceOf(IllegalStateException.class)
+				.hasMessageContaining("des métriques")
+				.hasMessageContaining("Archivez-le à la place");
+
+		verify(equipementRepository, never()).delete(any());
+	}
+
+	@Test
+	void refuse_la_suppression_definitive_d_un_equipement_avec_des_alertes() {
+		Equipement existant = equipement(UUID.randomUUID(), "10.0.0.1", EtatEquipement.ACTIF);
+		when(equipementRepository.findById(existant.getId())).thenReturn(Optional.of(existant));
+		when(metriqueRepository.existsByEquipementId(existant.getId())).thenReturn(false);
+		when(alerteRepository.existsByEquipementId(existant.getId())).thenReturn(true);
+
+		assertThatThrownBy(() -> equipementService.supprimerDefinitivement(existant.getId()))
+				.isInstanceOf(IllegalStateException.class)
+				.hasMessageContaining("des alertes");
+
+		verify(equipementRepository, never()).delete(any());
+	}
+
+	@Test
+	void refuse_la_suppression_definitive_d_un_equipement_avec_des_seuils() {
+		Equipement existant = equipement(UUID.randomUUID(), "10.0.0.1", EtatEquipement.ACTIF);
+		when(equipementRepository.findById(existant.getId())).thenReturn(Optional.of(existant));
+		when(metriqueRepository.existsByEquipementId(existant.getId())).thenReturn(false);
+		when(alerteRepository.existsByEquipementId(existant.getId())).thenReturn(false);
+		when(seuilAlerteRepository.existsByEquipementId(existant.getId())).thenReturn(true);
+
+		assertThatThrownBy(() -> equipementService.supprimerDefinitivement(existant.getId()))
+				.isInstanceOf(IllegalStateException.class)
+				.hasMessageContaining("des seuils d'alerte");
+
+		verify(equipementRepository, never()).delete(any());
+	}
+
+	@Test
+	void refuse_la_suppression_definitive_d_un_equipement_avec_des_fenetres_de_maintenance() {
+		Equipement existant = equipement(UUID.randomUUID(), "10.0.0.1", EtatEquipement.ACTIF);
+		when(equipementRepository.findById(existant.getId())).thenReturn(Optional.of(existant));
+		when(metriqueRepository.existsByEquipementId(existant.getId())).thenReturn(false);
+		when(alerteRepository.existsByEquipementId(existant.getId())).thenReturn(false);
+		when(seuilAlerteRepository.existsByEquipementId(existant.getId())).thenReturn(false);
+		when(fenetreMaintenanceRepository.existsByEquipementId(existant.getId())).thenReturn(true);
+
+		assertThatThrownBy(() -> equipementService.supprimerDefinitivement(existant.getId()))
+				.isInstanceOf(IllegalStateException.class)
+				.hasMessageContaining("des fenêtres de maintenance");
+
+		verify(equipementRepository, never()).delete(any());
+	}
+
+	@Test
+	void refuse_la_suppression_definitive_d_un_equipement_dont_dependent_d_autres_equipements() {
+		Equipement existant = equipement(UUID.randomUUID(), "10.0.0.1", EtatEquipement.ACTIF);
+		when(equipementRepository.findById(existant.getId())).thenReturn(Optional.of(existant));
+		when(metriqueRepository.existsByEquipementId(existant.getId())).thenReturn(false);
+		when(alerteRepository.existsByEquipementId(existant.getId())).thenReturn(false);
+		when(seuilAlerteRepository.existsByEquipementId(existant.getId())).thenReturn(false);
+		when(fenetreMaintenanceRepository.existsByEquipementId(existant.getId())).thenReturn(false);
+		when(equipementRepository.existsByDependDeId(existant.getId())).thenReturn(true);
+
+		assertThatThrownBy(() -> equipementService.supprimerDefinitivement(existant.getId()))
+				.isInstanceOf(IllegalStateException.class)
+				.hasMessageContaining("des équipements qui en dépendent");
+
+		verify(equipementRepository, never()).delete(any());
+	}
+
+	@Test
+	void leve_une_exception_lors_de_la_suppression_definitive_d_un_equipement_introuvable() {
+		UUID id = UUID.randomUUID();
+		when(equipementRepository.findById(id)).thenReturn(Optional.empty());
+
+		assertThatThrownBy(() -> equipementService.supprimerDefinitivement(id))
+				.isInstanceOf(IllegalArgumentException.class)
+				.hasMessage("Équipement introuvable.");
+
+		verify(equipementRepository, never()).delete(any());
 	}
 
 	// --- fixtures ---

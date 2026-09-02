@@ -20,4 +20,7 @@ public interface SeuilAlerteRepository extends JpaRepository<SeuilAlerte, UUID> 
 	Optional<SeuilAlerte> findByTypeMetriqueAndEquipementIsNull(TypeMetrique typeMetrique);
 
 	boolean existsByTypeMetriqueAndEquipementIsNull(TypeMetrique typeMetrique);
+
+	/** Vrai si un seuil spécifique existe pour cet équipement — bloque sa suppression définitive. */
+	boolean existsByEquipementId(UUID equipementId);
 }

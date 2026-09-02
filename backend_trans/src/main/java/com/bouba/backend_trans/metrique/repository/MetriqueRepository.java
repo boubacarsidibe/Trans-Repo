@@ -16,6 +16,9 @@ import com.bouba.backend_trans.metrique.entity.TypeMetrique;
 
 public interface MetriqueRepository extends JpaRepository<Metrique, Long> {
 
+	/** Vrai si au moins une mesure existe pour cet équipement — bloque sa suppression définitive. */
+	boolean existsByEquipementId(UUID equipementId);
+
 	/**
 	 * Historique borné dans le temps et paginé (§7.9).
 	 *

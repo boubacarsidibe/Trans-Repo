@@ -41,6 +41,11 @@ export function archiveEquipement(id: string) {
 	return apiClient.delete<void>(`/api/v1/equipments/${id}`).then(() => undefined);
 }
 
+/** Suppression réelle de la ligne — réservée à l'administrateur, refusée si l'équipement conserve un historique. */
+export function supprimerEquipementDefinitivement(id: string) {
+	return apiClient.delete<void>(`/api/v1/equipments/${id}/definitif`).then(() => undefined);
+}
+
 /**
  * Historique borné côté serveur (§7.9). `taille` compte les mesures *tous types
  * confondus* : l'enregistreur en demande large pour garder assez de points sur
