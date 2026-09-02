@@ -72,6 +72,18 @@ public class EquipementController {
 	}
 
 	/**
+	 * Suppression définitive (issue #177), réservée à l'administrateur — plus
+	 * restrictive que l'archivage puisqu'elle efface la ligne pour de bon. Le
+	 * service refuse (409) si l'équipement conserve la moindre trace.
+	 */
+	@DeleteMapping("/{id}/definitif")
+	@PreAuthorize("hasRole('ADMINISTRATEUR')")
+	public ResponseEntity<Void> supprimerDefinitivement(@PathVariable UUID id) {
+		equipementService.supprimerDefinitivement(id);
+		return ResponseEntity.noContent().build();
+	}
+
+	/**
 	 * Scan de découverte (issue #152) sur une plage d'IP : ICMP puis GET SNMP
 	 * {@code sysDescr}/{@code sysObjectID}. Ne crée rien — l'administrateur
 	 * déclare ensuite manuellement les candidats retenus via {@link #create}.

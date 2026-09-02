@@ -1,24 +1,39 @@
 package com.bouba.backend_trans.equipement.service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.bouba.backend_trans.alerte.repository.AlerteRepository;
 import com.bouba.backend_trans.audit.Auditable;
 import com.bouba.backend_trans.equipement.dto.EquipementRequest;
 import com.bouba.backend_trans.equipement.entity.Equipement;
 import com.bouba.backend_trans.equipement.entity.EtatEquipement;
 import com.bouba.backend_trans.equipement.repository.EquipementRepository;
+import com.bouba.backend_trans.maintenance.repository.FenetreMaintenanceRepository;
+import com.bouba.backend_trans.metrique.repository.MetriqueRepository;
+import com.bouba.backend_trans.seuil.repository.SeuilAlerteRepository;
 
 @Service
 public class EquipementService {
 
 	private final EquipementRepository equipementRepository;
+	private final MetriqueRepository metriqueRepository;
+	private final AlerteRepository alerteRepository;
+	private final SeuilAlerteRepository seuilAlerteRepository;
+	private final FenetreMaintenanceRepository fenetreMaintenanceRepository;
 
-	public EquipementService(EquipementRepository equipementRepository) {
+	public EquipementService(EquipementRepository equipementRepository, MetriqueRepository metriqueRepository,
+			AlerteRepository alerteRepository, SeuilAlerteRepository seuilAlerteRepository,
+			FenetreMaintenanceRepository fenetreMaintenanceRepository) {
 		this.equipementRepository = equipementRepository;
+		this.metriqueRepository = metriqueRepository;
+		this.alerteRepository = alerteRepository;
+		this.seuilAlerteRepository = seuilAlerteRepository;
+		this.fenetreMaintenanceRepository = fenetreMaintenanceRepository;
 	}
 
 	@Transactional(readOnly = true)
@@ -67,6 +82,44 @@ public class EquipementService {
 		Equipement equipement = findById(id);
 		equipement.setEtat(EtatEquipement.INACTIF);
 		equipementRepository.save(equipement);
+	}
+
+	/**
+	 * Suppression réelle de la ligne (issue #177), à l'inverse de {@link #archive}
+	 * qui ne fait que masquer l'équipement. N'est autorisée que si l'équipement
+	 * ne conserve strictement aucune trace : la supprimer casserait sinon les
+	 * métriques/alertes/seuils/fenêtres de maintenance qui le référencent par
+	 * clé étrangère, ou les équipements qui en dépendent.
+	 */
+	@Transactional
+	@Auditable("SUPPRESSION_EQUIPEMENT")
+	public void supprimerDefinitivement(UUID id) {
+		Equipement equipement = findById(id);
+
+		List<String> blocages = new ArrayList<>();
+		if (metriqueRepository.existsByEquipementId(id)) {
+			blocages.add("des métriques");
+		}
+		if (alerteRepository.existsByEquipementId(id)) {
+			blocages.add("des alertes");
+		}
+		if (seuilAlerteRepository.existsByEquipementId(id)) {
+			blocages.add("des seuils d'alerte");
+		}
+		if (fenetreMaintenanceRepository.existsByEquipementId(id)) {
+			blocages.add("des fenêtres de maintenance");
+		}
+		if (equipementRepository.existsByDependDeId(id)) {
+			blocages.add("des équipements qui en dépendent");
+		}
+
+		if (!blocages.isEmpty()) {
+			throw new IllegalStateException(
+					"Impossible de supprimer définitivement " + equipement.getNom() + " : il conserve "
+							+ String.join(", ", blocages) + ". Archivez-le à la place.");
+		}
+
+		equipementRepository.delete(equipement);
 	}
 
 	private void applyRequest(Equipement equipement, EquipementRequest request) {

@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { archiveEquipement } from "../api/endpoints";
+import { archiveEquipement, supprimerEquipementDefinitivement } from "../api/endpoints";
 import { useAuth } from "../auth/AuthContext";
 import { Lampe } from "../components/Lampe";
 import { EtatVide, Message } from "../components/Retours";
 import { useSupervision } from "../supervision/SupervisionContext";
 import { LIBELLE_ETAT, alerteOuverte, etatPoste, trierParGravite } from "../supervision/etat";
-import { ETAT_EQUIPEMENT, TYPE_EQUIPEMENT, peutIntervenir } from "../supervision/libelles";
+import { ETAT_EQUIPEMENT, TYPE_EQUIPEMENT, estAdministrateur, peutIntervenir } from "../supervision/libelles";
 import type { Equipement } from "../types/api";
 import { MetricChart } from "./MetricChart";
 
@@ -159,6 +159,7 @@ function Fiche({ poste }: { poste: Equipement }) {
 	const { alertes, rafraichir } = useSupervision();
 	const navigate = useNavigate();
 	const [confirmation, setConfirmation] = useState(false);
+	const [confirmationSuppression, setConfirmationSuppression] = useState(false);
 	const [erreur, setErreur] = useState<string | null>(null);
 	const etat = etatPoste(poste, alertes.filter(alerteOuverte));
 
@@ -173,6 +174,22 @@ function Fiche({ poste }: { poste: Equipement }) {
 			navigate("/equipements");
 		} catch {
 			setErreur("L'archivage a été refusé. Votre rôle ne permet peut-être pas cette action.");
+		}
+	}
+
+	/** Suppression réelle de la ligne (issue #177) : le message de refus vient du backend, tel quel. */
+	async function supprimerDefinitivement() {
+		if (!confirmationSuppression) {
+			setConfirmationSuppression(true);
+			return;
+		}
+		try {
+			await supprimerEquipementDefinitivement(poste.id);
+			rafraichir();
+			navigate("/equipements");
+		} catch (cause) {
+			const message = (cause as { response?: { data?: { message?: string } } })?.response?.data?.message;
+			setErreur(message ?? "La suppression définitive a été refusée.");
 		}
 	}
 
@@ -192,6 +209,15 @@ function Fiche({ poste }: { poste: Equipement }) {
 						<button className="bouton bouton-menu" type="button" onClick={() => void archiver()}>
 							{confirmation ? "Confirmer l'archivage" : "Archiver"}
 						</button>
+						{estAdministrateur(user?.role) && (
+							<button
+								className="bouton bouton-menu"
+								type="button"
+								onClick={() => void supprimerDefinitivement()}
+							>
+								{confirmationSuppression ? "Confirmer la suppression définitive" : "Supprimer définitivement"}
+							</button>
+						)}
 					</div>
 				)}
 			</div>

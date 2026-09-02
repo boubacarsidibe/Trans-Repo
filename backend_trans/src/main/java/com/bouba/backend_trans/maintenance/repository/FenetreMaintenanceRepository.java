@@ -14,6 +14,9 @@ public interface FenetreMaintenanceRepository extends JpaRepository<FenetreMaint
 	@EntityGraph(attributePaths = {"equipement", "creePar"})
 	List<FenetreMaintenance> findByEquipementIdOrderByDateDebutDesc(UUID equipementId);
 
+	/** Vrai si au moins une fenêtre de maintenance existe pour cet équipement — bloque sa suppression définitive. */
+	boolean existsByEquipementId(UUID equipementId);
+
 	/**
 	 * Vrai si une fenêtre non annulée de cet équipement couvre l'instant donné.
 	 * Utilisé par le moteur d'alertes (F6, issue #160) pour taire la création de

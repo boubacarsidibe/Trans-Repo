@@ -30,6 +30,9 @@ public interface AlerteRepository extends JpaRepository<Alerte, UUID> {
 	Optional<Alerte> findFirstByEquipementIdAndTypeAnomalieAndStatutNot(
 			UUID equipementId, TypeAnomalie typeAnomalie, StatutAlerte statut);
 
+	/** Vrai si au moins une alerte existe pour cet équipement — bloque sa suppression définitive. */
+	boolean existsByEquipementId(UUID equipementId);
+
 	/** Alertes à rappeler tant que personne ne les a prises en charge (§11.4). */
 	@EntityGraph(attributePaths = {"equipement", "utilisateurPriseEnCharge"})
 	List<Alerte> findByStatutAndSeverite(StatutAlerte statut, Severite severite);

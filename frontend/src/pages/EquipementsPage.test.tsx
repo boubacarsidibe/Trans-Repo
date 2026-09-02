@@ -20,8 +20,11 @@ vi.mock("../auth/AuthContext", () => ({
 // Le parc rendu par la fiche (MetricChart, useSeuils) appelle ces fonctions
 // dès qu'un poste est sélectionné : neutralisées pour garder le test centré
 // sur la liste, pas sur l'enregistreur.
+const mockSupprimerEquipementDefinitivement = vi.fn();
+
 vi.mock("../api/endpoints", () => ({
 	archiveEquipement: vi.fn(),
+	supprimerEquipementDefinitivement: (...args: unknown[]) => mockSupprimerEquipementDefinitivement(...args),
 	fetchEquipementMetriques: vi.fn().mockResolvedValue([]),
 	fetchSeuils: vi.fn().mockResolvedValue([]),
 }));
@@ -63,6 +66,7 @@ describe("EquipementsPage", () => {
 	beforeEach(() => {
 		mockUseSupervision.mockReset();
 		mockUseAuth.mockReset();
+		mockSupprimerEquipementDefinitivement.mockReset();
 	});
 
 	it("affiche le parc et le compteur d'équipements visibles", () => {
@@ -107,5 +111,45 @@ describe("EquipementsPage", () => {
 		await userEvent.click(screen.getByRole("button", { name: /srv-moodle/ }));
 
 		expect(screen.getByRole("heading", { name: "srv-moodle" })).toBeInTheDocument();
+	});
+
+	it("affiche le bouton de suppression définitive pour un administrateur mais pas pour un technicien", async () => {
+		const { unmount } = rendre([equipement({ id: "eq-1", nom: "srv-moodle" })], [], "ADMINISTRATEUR");
+		await userEvent.click(screen.getByRole("button", { name: /srv-moodle/ }));
+		expect(screen.getByRole("button", { name: "Supprimer définitivement" })).toBeInTheDocument();
+		unmount();
+
+		rendre([equipement({ id: "eq-1", nom: "srv-moodle" })], [], "TECHNICIEN");
+		await userEvent.click(screen.getByRole("button", { name: /srv-moodle/ }));
+		expect(screen.queryByRole("button", { name: "Supprimer définitivement" })).not.toBeInTheDocument();
+	});
+
+	it("supprime définitivement l'équipement après confirmation par un second clic", async () => {
+		mockSupprimerEquipementDefinitivement.mockResolvedValue(undefined);
+		rendre([equipement({ id: "eq-1", nom: "srv-moodle" })], [], "ADMINISTRATEUR");
+		await userEvent.click(screen.getByRole("button", { name: /srv-moodle/ }));
+
+		const bouton = screen.getByRole("button", { name: "Supprimer définitivement" });
+		await userEvent.click(bouton);
+		expect(screen.getByRole("button", { name: "Confirmer la suppression définitive" })).toBeInTheDocument();
+		expect(mockSupprimerEquipementDefinitivement).not.toHaveBeenCalled();
+
+		await userEvent.click(screen.getByRole("button", { name: "Confirmer la suppression définitive" }));
+		expect(mockSupprimerEquipementDefinitivement).toHaveBeenCalledWith("eq-1");
+	});
+
+	it("affiche tel quel le message de refus renvoyé par le backend", async () => {
+		mockSupprimerEquipementDefinitivement.mockRejectedValue({
+			response: { data: { message: "Impossible de supprimer définitivement srv-moodle : il conserve des métriques." } },
+		});
+		rendre([equipement({ id: "eq-1", nom: "srv-moodle" })], [], "ADMINISTRATEUR");
+		await userEvent.click(screen.getByRole("button", { name: /srv-moodle/ }));
+
+		await userEvent.click(screen.getByRole("button", { name: "Supprimer définitivement" }));
+		await userEvent.click(screen.getByRole("button", { name: "Confirmer la suppression définitive" }));
+
+		expect(
+			await screen.findByText("Impossible de supprimer définitivement srv-moodle : il conserve des métriques."),
+		).toBeInTheDocument();
 	});
 });
