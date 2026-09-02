@@ -29,6 +29,7 @@ import com.bouba.backend_trans.alerte.entity.TypeAnomalie;
 import com.bouba.backend_trans.alerte.repository.AlerteRepository;
 import com.bouba.backend_trans.equipement.entity.EtatEquipement;
 import com.bouba.backend_trans.equipement.entity.Equipement;
+import com.bouba.backend_trans.maintenance.service.FenetreMaintenanceService;
 import com.bouba.backend_trans.websocket.DiffusionSupervision;
 import com.bouba.backend_trans.websocket.TypeEvenement;
 
@@ -41,11 +42,14 @@ class AlerteServiceTest {
 	@Mock
 	private DiffusionSupervision diffusionSupervision;
 
+	@Mock
+	private FenetreMaintenanceService fenetreMaintenanceService;
+
 	private AlerteService alerteService;
 
 	@BeforeEach
 	void initService() {
-		alerteService = new AlerteService(alerteRepository, diffusionSupervision);
+		alerteService = new AlerteService(alerteRepository, diffusionSupervision, fenetreMaintenanceService);
 	}
 
 	// --- déclenchement : règle F2 (maintenance) ---
@@ -159,6 +163,54 @@ class AlerteServiceTest {
 		assertThat(active.getSeverite()).isEqualTo(Severite.CRITIQUE);
 		verify(alerteRepository, never()).save(any());
 		verifyNoInteractions(diffusionSupervision);
+	}
+
+	// --- fenêtre de maintenance active (issue #160) ---
+
+	@Test
+	void ne_cree_pas_de_nouvelle_alerte_pendant_une_fenetre_de_maintenance_active() {
+		Equipement equipement = equipement("Serveur applicatif", EtatEquipement.ACTIF);
+		when(alerteRepository.findFirstByEquipementIdAndTypeAnomalieAndStatutNot(
+				equipement.getId(), TypeAnomalie.CPU, StatutAlerte.RESOLUE))
+				.thenReturn(Optional.empty());
+		when(fenetreMaintenanceService.estActive(equipement.getId())).thenReturn(true);
+
+		alerteService.declencherOuEleverSeverite(equipement, TypeAnomalie.CPU, Severite.CRITIQUE);
+
+		verify(alerteRepository, never()).save(any());
+		verifyNoInteractions(diffusionSupervision);
+	}
+
+	@Test
+	void cree_normalement_une_alerte_quand_aucune_fenetre_de_maintenance_n_est_active() {
+		Equipement equipement = equipement("Serveur applicatif", EtatEquipement.ACTIF);
+		when(alerteRepository.findFirstByEquipementIdAndTypeAnomalieAndStatutNot(
+				equipement.getId(), TypeAnomalie.CPU, StatutAlerte.RESOLUE))
+				.thenReturn(Optional.empty());
+		when(fenetreMaintenanceService.estActive(equipement.getId())).thenReturn(false);
+		when(alerteRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+		alerteService.declencherOuEleverSeverite(equipement, TypeAnomalie.CPU, Severite.CRITIQUE);
+
+		verify(alerteRepository).save(any(Alerte.class));
+		verify(diffusionSupervision).publier(eq(TypeEvenement.ALERT_CREATED), any());
+	}
+
+	@Test
+	void eleve_quand_meme_la_severite_d_une_alerte_deja_ouverte_pendant_une_maintenance() {
+		Equipement equipement = equipement("Serveur applicatif", EtatEquipement.ACTIF);
+		Alerte active = alerte(equipement, TypeAnomalie.CPU, Severite.AVERTISSEMENT, StatutAlerte.DECLENCHEE);
+		when(alerteRepository.findFirstByEquipementIdAndTypeAnomalieAndStatutNot(
+				equipement.getId(), TypeAnomalie.CPU, StatutAlerte.RESOLUE))
+				.thenReturn(Optional.of(active));
+
+		alerteService.declencherOuEleverSeverite(equipement, TypeAnomalie.CPU, Severite.CRITIQUE);
+
+		assertThat(active.getSeverite()).isEqualTo(Severite.CRITIQUE);
+		verify(alerteRepository).save(active);
+		// La fenêtre de maintenance ne bloque que la création d'une alerte nouvelle :
+		// une alerte déjà ouverte n'a même pas à être consultée ici.
+		verifyNoInteractions(fenetreMaintenanceService);
 	}
 
 	// --- résolution automatique ---
