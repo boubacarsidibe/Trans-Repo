@@ -1,4 +1,5 @@
 import json
+import threading
 
 import pytest
 import requests
@@ -256,6 +257,97 @@ class TestPollEquipment:
         assert payloads[1]["bandwidth_mbps"] > 0
         assert payloads[1]["error_rate_percent"] == 0.0
         assert payloads[1]["uptime_seconds"] == 10.0
+
+
+class TestPollEquipmentLock:
+    def test_fonctionne_a_l_identique_avec_un_verrou_reel(self, monkeypatch):
+        # Le verrou est optionnel (utilise seulement quand le recepteur de traps
+        # tourne en parallele) : avec un vrai threading.Lock, le resultat doit rester
+        # identique a l'appel sans verrou, et le verrou doit ressortir libere.
+        monkeypatch.setattr(network_collector, "ping_equipment", lambda *a, **k: (3.5, True))
+        monkeypatch.setattr(
+            network_collector, "snmp_get_values",
+            lambda *a, **k: {"in_octets": 100, "out_octets": 100, "in_errors": 0, "out_errors": 0,
+                              "in_packets": 10, "out_packets": 10, "if_oper_status": 1, "sys_up_time": 500_000},
+        )
+        payloads = []
+        monkeypatch.setattr(network_collector, "send_network_metrics", lambda cfg, eq, payload: payloads.append(payload))
+        lock = threading.Lock()
+
+        network_collector.poll_equipment(fake_config(), fake_equipment(equipment_id="eq-1"), {}, lock)
+
+        assert payloads[0]["uptime_seconds"] == 5000.0
+        assert payloads[0]["interface_up"] == 1
+        assert not lock.locked()
+
+
+class TestFindEquipmentByIp:
+    def test_trouve_l_equipement_dont_l_ip_correspond(self):
+        equipements = [fake_equipment(equipment_id="eq-1", ip_address="10.0.0.1"),
+                       fake_equipment(equipment_id="eq-2", ip_address="10.0.0.2")]
+
+        trouve = network_collector.find_equipment_by_ip(equipements, "10.0.0.2")
+
+        assert trouve.equipment_id == "eq-2"
+
+    def test_renvoie_none_si_aucune_ip_ne_correspond(self):
+        equipements = [fake_equipment(ip_address="10.0.0.1")]
+
+        assert network_collector.find_equipment_by_ip(equipements, "10.0.0.99") is None
+
+
+class TestDescribeTrap:
+    def test_reconnait_un_trap_standard(self):
+        var_binds = [("1.3.6.1.6.3.1.1.4.1.0", "1.3.6.1.6.3.1.1.5.3")]
+
+        assert network_collector.describe_trap(var_binds) == "linkDown"
+
+    def test_renvoie_l_oid_brut_pour_un_trap_non_repertorie(self):
+        var_binds = [("1.3.6.1.6.3.1.1.4.1.0", "1.3.6.1.4.1.9999.1")]
+
+        assert network_collector.describe_trap(var_binds) == "1.3.6.1.4.1.9999.1"
+
+    def test_renvoie_inconnu_si_snmp_trap_oid_absent(self):
+        var_binds = [("1.3.6.1.2.1.1.3.0", "12345")]
+
+        assert network_collector.describe_trap(var_binds) == "inconnu"
+
+
+class TestHandleTrap:
+    def test_trap_d_une_ip_non_declaree_est_ignore(self, monkeypatch):
+        appels = []
+        monkeypatch.setattr(network_collector, "poll_equipment", lambda *a, **k: appels.append(a))
+        equipements = [fake_equipment(ip_address="10.0.0.1")]
+
+        network_collector.handle_trap(fake_config(), equipements, {}, "10.0.0.99", [])
+
+        assert appels == []
+
+    def test_trap_d_un_equipement_declare_declenche_un_sondage_immediat(self, monkeypatch):
+        appels = []
+        monkeypatch.setattr(network_collector, "poll_equipment", lambda *a, **k: appels.append(a))
+        equipement = fake_equipment(equipment_id="eq-1", ip_address="10.0.0.1")
+        config = fake_config()
+        previous_readings = {}
+        lock = threading.Lock()
+
+        network_collector.handle_trap(
+            config, [equipement], previous_readings, "10.0.0.1",
+            [("1.3.6.1.6.3.1.1.4.1.0", "1.3.6.1.6.3.1.1.5.3")], lock)
+
+        assert len(appels) == 1
+        assert appels[0] == (config, equipement, previous_readings, lock)
+
+    def test_une_erreur_lors_du_sondage_declenche_par_le_trap_est_absorbee(self, monkeypatch):
+        def leve(*a, **k):
+            raise RuntimeError("panne SNMP")
+
+        monkeypatch.setattr(network_collector, "poll_equipment", leve)
+        equipement = fake_equipment(ip_address="10.0.0.1")
+
+        # Ne doit pas lever : un trap malforme ou un equipement en echec ne doit pas
+        # arreter le thread du recepteur de traps.
+        network_collector.handle_trap(fake_config(), [equipement], {}, "10.0.0.1", [])
 
 
 class FakeResponse:
