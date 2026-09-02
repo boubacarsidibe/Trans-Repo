@@ -16,6 +16,20 @@ Historique des décisions techniques prises pendant le développement et des poi
 **29/08 — Version pysnmp cassée**
 En écrivant les tests pytest de `network_collector.py`, découvert que `network/requirements.txt` épinglait `pysnmp==6.2.6` alors que le code importe `pysnmp.hlapi.v3arch.asyncio`, module introduit seulement en pysnmp 7.1.10+. L'agent réseau n'aurait jamais démarré en l'état (`ModuleNotFoundError`), un défaut que `python -m compileall` (vérif de syntaxe seule, sans import réel) ne pouvait pas détecter. Corrigé vers `pysnmp==7.1.29` (dernière version stable, testée : import + suite pytest complète passent).
 
+**01/09 — Pollers réseau distribués / redondants (#157)**
+Redondance simple retenue plutôt qu'une répartition multi-site : deux
+instances de `network_collector.py`, une seule active à la fois
+(`COLLECTOR_ROLE=primaire/secondaire` en `.env`). La primaire est active dès
+le démarrage et expose un heartbeat HTTP local ; la secondaire reste en
+veille et surveille ce heartbeat, puis prend le relais après
+`FAILOVER_CYCLES_TOLERES` cycles sans réponse (pas de bascule automatique en
+sens inverse, pour éviter les allers-retours). Côté backend, l'instance
+active pousse un heartbeat (`POST /api/v1/collectors/heartbeat`, clé
+partagée `app.collecteurs.cle-api`) que `CollecteurWatchdog` surveille selon
+le même principe que `DisponibiliteWatchdog` pour les équipements (F3) :
+silence prolongé → événement `collector_status_changed` sur `/ws/status`.
+Cf. `agent/network/README.md` § Redondance pour la configuration complète.
+
 ## Points à trancher
 
 **Sort de `/netvision-preview` (#11)**

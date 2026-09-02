@@ -17,6 +17,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.bouba.backend_trans.auth.security.JwtAuthenticationFilter;
+import com.bouba.backend_trans.collecteur.security.CollecteurApiKeyAuthenticationFilter;
 import com.bouba.backend_trans.equipement.security.ApiKeyAuthenticationFilter;
 
 @Configuration
@@ -26,15 +27,18 @@ public class SecurityConfig {
 
 	private final JwtAuthenticationFilter jwtAuthenticationFilter;
 	private final ApiKeyAuthenticationFilter apiKeyAuthenticationFilter;
+	private final CollecteurApiKeyAuthenticationFilter collecteurApiKeyAuthenticationFilter;
 	private final List<String> corsAllowedOrigins;
 
 	public SecurityConfig(
 			JwtAuthenticationFilter jwtAuthenticationFilter,
 			ApiKeyAuthenticationFilter apiKeyAuthenticationFilter,
+			CollecteurApiKeyAuthenticationFilter collecteurApiKeyAuthenticationFilter,
 			@Value("${app.cors.allowed-origins}") List<String> corsAllowedOrigins
 	) {
 		this.jwtAuthenticationFilter = jwtAuthenticationFilter;
 		this.apiKeyAuthenticationFilter = apiKeyAuthenticationFilter;
+		this.collecteurApiKeyAuthenticationFilter = collecteurApiKeyAuthenticationFilter;
 		this.corsAllowedOrigins = corsAllowedOrigins;
 	}
 
@@ -54,9 +58,13 @@ public class SecurityConfig {
 						// laisser passer ici, refuser dans JwtHandshakeInterceptor.
 						.requestMatchers("/ws/**").permitAll()
 						.requestMatchers("/api/v1/metrics/**").hasRole("AGENT")
+						// Heartbeat des instances du collecteur reseau (issue #157) : clé
+						// partagée distincte des clés API par équipement (§ ci-dessus).
+						.requestMatchers("/api/v1/collectors/**").hasRole("COLLECTOR")
 						.anyRequest().authenticated()
 				)
 				.addFilterBefore(apiKeyAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+				.addFilterBefore(collecteurApiKeyAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
 				.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
 		return http.build();

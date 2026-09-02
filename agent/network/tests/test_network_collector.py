@@ -1,5 +1,7 @@
 import json
 import threading
+import urllib.error
+import urllib.request
 
 import pytest
 import requests
@@ -259,6 +261,128 @@ class TestPollEquipment:
         assert payloads[1]["uptime_seconds"] == 10.0
 
 
+class TestValidateRedundancyConfig:
+    def test_role_unique_par_defaut_ne_leve_pas(self):
+        network_collector.validate_redundancy_config(fake_config())
+
+    def test_role_primaire_ne_leve_pas(self):
+        network_collector.validate_redundancy_config(fake_config(collector_role="primaire"))
+
+    def test_role_inconnu_leve(self):
+        with pytest.raises(SystemExit):
+            network_collector.validate_redundancy_config(fake_config(collector_role="tertiaire"))
+
+    def test_secondaire_sans_url_de_la_primaire_leve(self):
+        with pytest.raises(SystemExit):
+            network_collector.validate_redundancy_config(
+                fake_config(collector_role="secondaire", peer_heartbeat_url=""))
+
+    def test_secondaire_avec_url_de_la_primaire_ne_leve_pas(self):
+        network_collector.validate_redundancy_config(
+            fake_config(collector_role="secondaire", peer_heartbeat_url="http://primaire:8091/heartbeat"))
+
+
+class TestHeartbeatServer:
+    def test_repond_actif_sur_heartbeat(self):
+        server = network_collector.start_heartbeat_server(0, "collecteur-test")
+        try:
+            port = server.server_address[1]
+            with urllib.request.urlopen(f"http://127.0.0.1:{port}/heartbeat", timeout=2) as reponse:
+                corps = json.loads(reponse.read())
+
+            assert reponse.status == 200
+            assert corps == {"collector_id": "collecteur-test", "actif": True}
+        finally:
+            server.shutdown()
+
+    def test_renvoie_404_sur_une_autre_route(self):
+        server = network_collector.start_heartbeat_server(0, "collecteur-test")
+        try:
+            port = server.server_address[1]
+            try:
+                urllib.request.urlopen(f"http://127.0.0.1:{port}/autre", timeout=2)
+                assert False, "une reponse 404 aurait du lever une HTTPError"
+            except urllib.error.HTTPError as exc:
+                assert exc.code == 404
+        finally:
+            server.shutdown()
+
+
+class TestPollPeerHeartbeat:
+    def test_reponse_ok_renvoie_true(self, monkeypatch):
+        monkeypatch.setattr(network_collector.requests, "get", lambda *a, **k: FakeResponse(200))
+
+        assert network_collector.poll_peer_heartbeat("http://primaire:8091/heartbeat", timeout=2) is True
+
+    def test_erreur_reseau_renvoie_false_sans_lever(self, monkeypatch):
+        def leve(*a, **k):
+            raise requests.RequestException("connexion refusee")
+
+        monkeypatch.setattr(network_collector.requests, "get", leve)
+
+        assert network_collector.poll_peer_heartbeat("http://primaire:8091/heartbeat", timeout=2) is False
+
+    def test_code_erreur_http_renvoie_false(self, monkeypatch):
+        monkeypatch.setattr(network_collector.requests, "get", lambda *a, **k: FakeResponse(500))
+
+        assert network_collector.poll_peer_heartbeat("http://primaire:8091/heartbeat", timeout=2) is False
+
+
+class TestEvaluateStandbyCycle:
+    def test_heartbeat_present_reinitialise_le_compteur(self, monkeypatch):
+        monkeypatch.setattr(network_collector, "poll_peer_heartbeat", lambda *a, **k: True)
+
+        bascule, compteur = network_collector.evaluate_standby_cycle(
+            fake_config(collector_role="secondaire", failover_cycles_toleres=3), consecutive_failures=2)
+
+        assert bascule is False
+        assert compteur == 0
+
+    def test_bascule_uniquement_au_seuil_configure(self, monkeypatch):
+        monkeypatch.setattr(network_collector, "poll_peer_heartbeat", lambda *a, **k: False)
+        config = fake_config(collector_role="secondaire", failover_cycles_toleres=3)
+
+        bascule_1, compteur_1 = network_collector.evaluate_standby_cycle(config, consecutive_failures=0)
+        bascule_2, compteur_2 = network_collector.evaluate_standby_cycle(config, consecutive_failures=compteur_1)
+        bascule_3, compteur_3 = network_collector.evaluate_standby_cycle(config, consecutive_failures=compteur_2)
+
+        assert (bascule_1, compteur_1) == (False, 1)
+        assert (bascule_2, compteur_2) == (False, 2)
+        assert (bascule_3, compteur_3) == (True, 3)
+
+
+class TestSendCollectorHeartbeat:
+    def test_envoie_le_heartbeat_quand_id_et_cle_sont_configures(self, monkeypatch):
+        appels = []
+        monkeypatch.setattr(network_collector.requests, "post", lambda *a, **k: appels.append((a, k)) or FakeResponse(201))
+        config = fake_config(collector_id="collecteur-1", collector_api_key="cle-collecteur")
+
+        network_collector.send_collector_heartbeat(config, actif=True)
+
+        assert len(appels) == 1
+        args, kwargs = appels[0]
+        assert args[0] == "http://backend.local/api/v1/collectors/heartbeat"
+        assert kwargs["headers"] == {"X-Collector-Key": "cle-collecteur"}
+        assert kwargs["json"] == {"collector_id": "collecteur-1", "actif": True}
+
+    def test_aucun_appel_sans_identifiant_ni_cle(self, monkeypatch):
+        appels = []
+        monkeypatch.setattr(network_collector.requests, "post", lambda *a, **k: appels.append(1))
+
+        network_collector.send_collector_heartbeat(fake_config(), actif=True)
+
+        assert appels == []
+
+    def test_erreur_reseau_est_absorbee_sans_lever(self, monkeypatch):
+        def leve(*a, **k):
+            raise requests.RequestException("connexion refusee")
+
+        monkeypatch.setattr(network_collector.requests, "post", leve)
+        config = fake_config(collector_id="collecteur-1", collector_api_key="cle-collecteur")
+
+        network_collector.send_collector_heartbeat(config, actif=True)
+
+
 class TestPollEquipmentLock:
     def test_fonctionne_a_l_identique_avec_un_verrou_reel(self, monkeypatch):
         # Le verrou est optionnel (utilise seulement quand le recepteur de traps
@@ -348,6 +472,102 @@ class TestHandleTrap:
         # Ne doit pas lever : un trap malforme ou un equipement en echec ne doit pas
         # arreter le thread du recepteur de traps.
         network_collector.handle_trap(fake_config(), [equipement], {}, "10.0.0.1", [])
+
+
+class _ArreterApresNCycles:
+    """Remplace GracefulShutdown dans les tests de run() : s'arrete au bout de N
+    passages dans la boucle plutot que d'attendre un signal OS."""
+
+    def __init__(self, n: int):
+        self._restants = n
+
+    @property
+    def stop_requested(self) -> bool:
+        if self._restants <= 0:
+            return True
+        self._restants -= 1
+        return False
+
+
+class FakeHeartbeatServer:
+    def __init__(self):
+        self.shutdown_appele = False
+
+    def shutdown(self):
+        self.shutdown_appele = True
+
+
+class TestRunTrapReceiverSuitLActivite:
+    """Redondance (issue #157) + traps SNMP (cf. tete de module) : le recepteur
+    de traps ne doit tourner que sur l'instance active, jamais sur une
+    secondaire en veille."""
+
+    def test_instance_primaire_demarre_le_recepteur_de_traps_des_le_depart(self, monkeypatch):
+        monkeypatch.setattr(network_collector, "GracefulShutdown", lambda: _ArreterApresNCycles(1))
+        monkeypatch.setattr(network_collector, "start_heartbeat_server",
+                             lambda *a, **k: FakeHeartbeatServer())
+        appels_trap = []
+        monkeypatch.setattr(network_collector, "start_trap_receiver_thread",
+                             lambda *a, **k: appels_trap.append(1))
+        monkeypatch.setattr(network_collector, "poll_equipment", lambda *a, **k: None)
+        monkeypatch.setattr(network_collector, "send_collector_heartbeat", lambda *a, **k: None)
+
+        config = fake_config(collector_role="primaire", interval_seconds=0)
+        network_collector.run(config, [fake_equipment()], {})
+
+        assert appels_trap == [1]
+
+    def test_instance_secondaire_en_veille_ne_demarre_pas_le_recepteur_de_traps(self, monkeypatch):
+        # 2 cycles, jamais de bascule (heartbeat de la primaire toujours present) :
+        # le recepteur de traps ne doit jamais demarrer.
+        monkeypatch.setattr(network_collector, "GracefulShutdown", lambda: _ArreterApresNCycles(2))
+        monkeypatch.setattr(network_collector, "poll_peer_heartbeat", lambda *a, **k: True)
+        appels_trap = []
+        monkeypatch.setattr(network_collector, "start_trap_receiver_thread",
+                             lambda *a, **k: appels_trap.append(1))
+        monkeypatch.setattr(network_collector, "start_heartbeat_server",
+                             lambda *a, **k: FakeHeartbeatServer())
+
+        config = fake_config(collector_role="secondaire", peer_heartbeat_url="http://primaire:8091/heartbeat",
+                              failover_cycles_toleres=3, interval_seconds=0)
+        network_collector.run(config, [fake_equipment()], {})
+
+        assert appels_trap == []
+
+    def test_instance_secondaire_demarre_le_recepteur_de_traps_seulement_apres_bascule(self, monkeypatch):
+        # 2 cycles, bascule au 2e (seuil atteint) : le recepteur de traps ne doit
+        # demarrer qu'a ce moment-la, pas avant.
+        monkeypatch.setattr(network_collector, "GracefulShutdown", lambda: _ArreterApresNCycles(2))
+        monkeypatch.setattr(network_collector, "poll_peer_heartbeat", lambda *a, **k: False)
+        appels_trap = []
+        monkeypatch.setattr(network_collector, "start_trap_receiver_thread",
+                             lambda *a, **k: appels_trap.append(1))
+        monkeypatch.setattr(network_collector, "start_heartbeat_server",
+                             lambda *a, **k: FakeHeartbeatServer())
+        monkeypatch.setattr(network_collector, "poll_equipment", lambda *a, **k: None)
+        monkeypatch.setattr(network_collector, "send_collector_heartbeat", lambda *a, **k: None)
+
+        config = fake_config(collector_role="secondaire", peer_heartbeat_url="http://primaire:8091/heartbeat",
+                              failover_cycles_toleres=2, interval_seconds=0)
+        network_collector.run(config, [fake_equipment()], {})
+
+        # Une seule bascule, donc un seul demarrage du recepteur de traps.
+        assert appels_trap == [1]
+
+    def test_recepteur_de_traps_desactive_n_est_jamais_demarre(self, monkeypatch):
+        monkeypatch.setattr(network_collector, "GracefulShutdown", lambda: _ArreterApresNCycles(1))
+        monkeypatch.setattr(network_collector, "start_heartbeat_server",
+                             lambda *a, **k: FakeHeartbeatServer())
+        appels_trap = []
+        monkeypatch.setattr(network_collector, "start_trap_receiver_thread",
+                             lambda *a, **k: appels_trap.append(1))
+        monkeypatch.setattr(network_collector, "poll_equipment", lambda *a, **k: None)
+        monkeypatch.setattr(network_collector, "send_collector_heartbeat", lambda *a, **k: None)
+
+        config = fake_config(collector_role="primaire", interval_seconds=0, trap_enabled=False)
+        network_collector.run(config, [fake_equipment()], {})
+
+        assert appels_trap == []
 
 
 class FakeResponse:

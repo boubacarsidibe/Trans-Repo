@@ -11,15 +11,31 @@ l'interface via les compteurs MIB-II (ifTable), ainsi que l'uptime
 systeme (sysUpTime). ICMP donne la latence et la disponibilite au niveau
 reseau (independante de l'etat administratif de l'interface).
 
+Redondance (issue #157) : ce processus etant un point de panne unique pour
+toute la supervision reseau, il peut tourner en deux exemplaires - une seule
+instance active a la fois (COLLECTOR_ROLE=primaire ou secondaire). La
+primaire sonde les equipements comme avant et expose un heartbeat HTTP local
+(/heartbeat) ; la secondaire reste en veille et surveille ce heartbeat, puis
+prend le relais si la primaire reste muette pendant FAILOVER_CYCLES_TOLERES
+cycles consecutifs. Quand COLLECTOR_ID/COLLECTOR_API_KEY sont configures,
+l'instance active pousse egalement un heartbeat au backend
+(POST /api/v1/collectors/heartbeat) pour que le backend puisse detecter
+l'arret du collecteur actif, au meme titre que la disponibilite des
+equipements (F3, cf. DisponibiliteWatchdog).
+
 En plus du polling periodique, un recepteur de traps SNMP (v1/v2c) tourne
-en tache de fond : a la reception d'un trap (linkDown/linkUp, coldStart,
-...) depuis un equipement declare dans equipments.json, l'equipement
-concerne est sonde immediatement (meme pipeline que le cycle normal)
-plutot que d'attendre le prochain cycle -- voir handle_trap().
+en tache de fond sur l'instance active uniquement : a la reception d'un trap
+(linkDown/linkUp, coldStart, ...) depuis un equipement declare dans
+equipments.json, l'equipement concerne est sonde immediatement (meme
+pipeline que le cycle normal) plutot que d'attendre le prochain cycle -- voir
+handle_trap(). Une instance secondaire en veille ne l'ouvre pas : elle ne
+sonde aucun equipement tant qu'elle n'a pas pris le relais, et n'a donc rien
+a faire des traps qui leur sont associes -- voir run().
 """
 
 import asyncio
 import contextlib
+import http.server
 import json
 import logging
 import os
@@ -85,6 +101,16 @@ class CollectorConfig:
     ping_timeout_seconds: float
     snmp_timeout_seconds: float
     request_timeout_seconds: int
+    # Redondance (issue #157) : "unique" reproduit le comportement historique
+    # (une seule instance, toujours active). "primaire"/"secondaire" activent
+    # la bascule active/passive decrite en tete de module.
+    collector_id: str = ""
+    collector_role: str = "unique"
+    collector_api_key: str = ""
+    heartbeat_port: int = 8091
+    peer_heartbeat_url: str = ""
+    failover_cycles_toleres: int = 3
+    peer_check_timeout_seconds: float = 3.0
     trap_enabled: bool = True
     trap_bind_address: str = "0.0.0.0"
     trap_port: int = 1162
@@ -110,6 +136,13 @@ def load_config() -> CollectorConfig:
         ping_timeout_seconds=float(os.environ.get("PING_TIMEOUT_SECONDS", "2")),
         snmp_timeout_seconds=float(os.environ.get("SNMP_TIMEOUT_SECONDS", "3")),
         request_timeout_seconds=int(os.environ.get("REQUEST_TIMEOUT_SECONDS", "10")),
+        collector_id=os.environ.get("COLLECTOR_ID", ""),
+        collector_role=os.environ.get("COLLECTOR_ROLE", "unique"),
+        collector_api_key=os.environ.get("COLLECTOR_API_KEY", ""),
+        heartbeat_port=int(os.environ.get("HEARTBEAT_PORT", "8091")),
+        peer_heartbeat_url=os.environ.get("PEER_HEARTBEAT_URL", ""),
+        failover_cycles_toleres=int(os.environ.get("FAILOVER_CYCLES_TOLERES", "3")),
+        peer_check_timeout_seconds=float(os.environ.get("PEER_CHECK_TIMEOUT_SECONDS", "3")),
         # Recepteur de traps : port non privilegie par defaut (1162) car le port
         # standard (162) exige les droits root / cap_net_bind_service -- voir README.
         trap_enabled=os.environ.get("SNMP_TRAP_ENABLED", "true").strip().lower() in ("1", "true", "yes"),
@@ -117,6 +150,20 @@ def load_config() -> CollectorConfig:
         trap_port=int(os.environ.get("SNMP_TRAP_PORT", "1162")),
         trap_community=os.environ.get("SNMP_TRAP_COMMUNITY", "public"),
     )
+
+
+def validate_redundancy_config(config: CollectorConfig) -> None:
+    """Echoue tot plutot que de laisser une instance secondaire tourner sans
+    savoir qui surveiller, ou un role mal orthographie passer inapercu."""
+    if config.collector_role not in ("unique", "primaire", "secondaire"):
+        raise SystemExit(
+            f"COLLECTOR_ROLE invalide : \"{config.collector_role}\" "
+            "(attendu \"unique\", \"primaire\" ou \"secondaire\")")
+
+    if config.collector_role == "secondaire" and not config.peer_heartbeat_url:
+        raise SystemExit(
+            "COLLECTOR_ROLE=secondaire necessite PEER_HEARTBEAT_URL "
+            "(URL du heartbeat HTTP de l'instance primaire).")
 
 
 def load_equipments(path: str) -> list[NetworkEquipment]:
@@ -263,6 +310,88 @@ def poll_equipment(config: CollectorConfig, equipment: NetworkEquipment, previou
             payload["interface_up"] = 1 if counters["if_oper_status"] == 1 else 0
 
     send_network_metrics(config, equipment, payload)
+
+
+class _HeartbeatRequestHandler(http.server.BaseHTTPRequestHandler):
+    """Repond `{"collector_id": ..., "actif": true}` sur GET /heartbeat.
+
+    Interroge par l'instance secondaire pour savoir si la primaire est
+    toujours en vie (cf. `poll_peer_heartbeat`) - aucune autre route n'est
+    necessaire.
+    """
+
+    def do_GET(self) -> None:  # noqa: N802 - nom impose par BaseHTTPRequestHandler
+        if self.path != "/heartbeat":
+            self.send_response(404)
+            self.end_headers()
+            return
+
+        body = json.dumps({"collector_id": self.server.collector_id, "actif": True}).encode("utf-8")
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def log_message(self, format: str, *args) -> None:  # noqa: A002 - signature imposee
+        # Le collecteur a deja son propre logger ; evite de polluer stdout.
+        pass
+
+
+def start_heartbeat_server(port: int, collector_id: str) -> http.server.HTTPServer:
+    """Demarre le serveur de heartbeat local dans un thread daemon et le
+    renvoie (pour permettre `server.shutdown()` a l'arret)."""
+    server = http.server.HTTPServer(("0.0.0.0", port), _HeartbeatRequestHandler)
+    server.collector_id = collector_id
+    thread = threading.Thread(target=server.serve_forever, name="heartbeat-server", daemon=True)
+    thread.start()
+    logger.info("Serveur de heartbeat local demarre sur le port %d.", port)
+    return server
+
+
+def poll_peer_heartbeat(peer_url: str, timeout: float) -> bool:
+    """Interroge le heartbeat HTTP d'une autre instance. True si elle a
+    repondu avec succes, False dans tous les autres cas (timeout, connexion
+    refusee, code d'erreur, ...)."""
+    try:
+        response = requests.get(peer_url, timeout=timeout)
+        response.raise_for_status()
+        return True
+    except requests.RequestException:
+        return False
+
+
+def evaluate_standby_cycle(config: CollectorConfig, consecutive_failures: int) -> tuple[bool, int]:
+    """Un cycle de surveillance pour l'instance secondaire : interroge le
+    heartbeat de la primaire et decide si le seuil de bascule est atteint.
+
+    Renvoie `(doit_prendre_le_relais, nouveau_compteur_d_echecs)`.
+    """
+    if poll_peer_heartbeat(config.peer_heartbeat_url, config.peer_check_timeout_seconds):
+        return False, 0
+
+    consecutive_failures += 1
+    return consecutive_failures >= config.failover_cycles_toleres, consecutive_failures
+
+
+def send_collector_heartbeat(config: CollectorConfig, actif: bool) -> None:
+    """Signale au backend que cette instance est active, pour que
+    `CollecteurWatchdog` (cote backend) puisse detecter son arret - au meme
+    titre que la disponibilite des equipements (F3). Sans effet si
+    COLLECTOR_ID/COLLECTOR_API_KEY ne sont pas configures (mode "unique"
+    historique sans redondance)."""
+    if not config.collector_id or not config.collector_api_key:
+        return
+
+    url = f"{config.backend_url}/api/v1/collectors/heartbeat"
+    headers = {"X-Collector-Key": config.collector_api_key}
+    payload = {"collector_id": config.collector_id, "actif": actif}
+
+    try:
+        response = requests.post(url, json=payload, headers=headers, timeout=config.request_timeout_seconds)
+        response.raise_for_status()
+    except requests.RequestException as exc:
+        logger.error("Echec d'envoi du heartbeat collecteur pour %s : %s", config.collector_id, exc)
 
 
 def find_equipment_by_ip(equipments: list, ip_address: str):
@@ -422,21 +551,69 @@ def run(config: CollectorConfig, equipments: list, previous_readings: dict,
         lock: "threading.Lock | None" = None) -> None:
     """Boucle de polling periodique. `previous_readings` et `lock` sont recus en
     parametres (plutot que crees ici) pour pouvoir etre partages avec le recepteur
-    de traps, qui declenche des sondages immediats sur les memes equipements."""
-    shutdown = GracefulShutdown()
+    de traps, qui declenche des sondages immediats sur les memes equipements.
 
-    logger.info(
-        "Collecteur reseau demarre (%d equipements, backend=%s, intervalle=%ss)",
-        len(equipments), config.backend_url, config.interval_seconds,
-    )
+    Redondance (issue #157) : le recepteur de traps SNMP n'est demarre que
+    lorsque cette instance devient active -- au demarrage pour role
+    "primaire"/"unique", ou au moment de la bascule pour "secondaire" -- afin
+    qu'une instance en veille, qui ne sonde encore aucun equipement, ne
+    reagisse jamais a un trap qui leur serait associe.
+    """
+    shutdown = GracefulShutdown()
+    heartbeat_server = None
+    consecutive_peer_failures = 0
+
+    def _activer() -> None:
+        nonlocal heartbeat_server
+        heartbeat_server = start_heartbeat_server(config.heartbeat_port, config.collector_id)
+        if config.trap_enabled:
+            start_trap_receiver_thread(config, equipments, previous_readings, lock)
+        else:
+            logger.info("Recepteur de traps SNMP desactive (SNMP_TRAP_ENABLED=false) : polling seul.")
+
+    # "primaire" et "unique" sont actifs des le demarrage ; "secondaire" reste
+    # en veille jusqu'a bascule (cf. evaluate_standby_cycle).
+    active = config.collector_role != "secondaire"
+
+    if active:
+        _activer()
+        logger.info(
+            "Collecteur reseau demarre en instance active (role=%s, id=%s, %d equipements, "
+            "backend=%s, intervalle=%ss)",
+            config.collector_role, config.collector_id or "n/a",
+            len(equipments), config.backend_url, config.interval_seconds,
+        )
+    else:
+        logger.info(
+            "Collecteur reseau demarre en veille (secondaire, id=%s) : surveillance du heartbeat "
+            "de %s (bascule apres %d cycles sans reponse).",
+            config.collector_id or "n/a", config.peer_heartbeat_url, config.failover_cycles_toleres,
+        )
 
     while not shutdown.stop_requested:
         cycle_start = time.monotonic()
-        for equipment in equipments:
-            try:
-                poll_equipment(config, equipment, previous_readings, lock)
-            except Exception:
-                logger.exception("Erreur inattendue lors du sondage de %s", equipment.nom)
+
+        if active:
+            for equipment in equipments:
+                try:
+                    poll_equipment(config, equipment, previous_readings, lock)
+                except Exception:
+                    logger.exception("Erreur inattendue lors du sondage de %s", equipment.nom)
+            send_collector_heartbeat(config, actif=True)
+        else:
+            bascule, consecutive_peer_failures = evaluate_standby_cycle(config, consecutive_peer_failures)
+            if consecutive_peer_failures > 0:
+                logger.warning(
+                    "Heartbeat du collecteur primaire absent (%d/%d cycles).",
+                    consecutive_peer_failures, config.failover_cycles_toleres,
+                )
+            if bascule:
+                logger.warning(
+                    "Collecteur primaire injoignable depuis %d cycles consecutifs : bascule de "
+                    "%s en instance active.", consecutive_peer_failures, config.collector_id or "n/a",
+                )
+                active = True
+                _activer()
 
         elapsed = time.monotonic() - cycle_start
         sleep_time = max(0.0, config.interval_seconds - elapsed)
@@ -445,6 +622,9 @@ def run(config: CollectorConfig, equipments: list, previous_readings: dict,
                 break
             time.sleep(1)
 
+    if heartbeat_server is not None:
+        heartbeat_server.shutdown()
+
 
 def main() -> None:
     logging.basicConfig(
@@ -452,6 +632,7 @@ def main() -> None:
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     )
     config = load_config()
+    validate_redundancy_config(config)
 
     try:
         equipments = load_equipments(config.equipments_config_path)
@@ -463,11 +644,6 @@ def main() -> None:
 
     previous_readings: dict = {}
     lock = threading.Lock()
-
-    if config.trap_enabled:
-        start_trap_receiver_thread(config, equipments, previous_readings, lock)
-    else:
-        logger.info("Recepteur de traps SNMP desactive (SNMP_TRAP_ENABLED=false) : polling seul.")
 
     run(config, equipments, previous_readings, lock)
 
