@@ -1,4 +1,5 @@
 import json
+import threading
 import urllib.error
 import urllib.request
 
@@ -380,6 +381,193 @@ class TestSendCollectorHeartbeat:
         config = fake_config(collector_id="collecteur-1", collector_api_key="cle-collecteur")
 
         network_collector.send_collector_heartbeat(config, actif=True)
+
+
+class TestPollEquipmentLock:
+    def test_fonctionne_a_l_identique_avec_un_verrou_reel(self, monkeypatch):
+        # Le verrou est optionnel (utilise seulement quand le recepteur de traps
+        # tourne en parallele) : avec un vrai threading.Lock, le resultat doit rester
+        # identique a l'appel sans verrou, et le verrou doit ressortir libere.
+        monkeypatch.setattr(network_collector, "ping_equipment", lambda *a, **k: (3.5, True))
+        monkeypatch.setattr(
+            network_collector, "snmp_get_values",
+            lambda *a, **k: {"in_octets": 100, "out_octets": 100, "in_errors": 0, "out_errors": 0,
+                              "in_packets": 10, "out_packets": 10, "if_oper_status": 1, "sys_up_time": 500_000},
+        )
+        payloads = []
+        monkeypatch.setattr(network_collector, "send_network_metrics", lambda cfg, eq, payload: payloads.append(payload))
+        lock = threading.Lock()
+
+        network_collector.poll_equipment(fake_config(), fake_equipment(equipment_id="eq-1"), {}, lock)
+
+        assert payloads[0]["uptime_seconds"] == 5000.0
+        assert payloads[0]["interface_up"] == 1
+        assert not lock.locked()
+
+
+class TestFindEquipmentByIp:
+    def test_trouve_l_equipement_dont_l_ip_correspond(self):
+        equipements = [fake_equipment(equipment_id="eq-1", ip_address="10.0.0.1"),
+                       fake_equipment(equipment_id="eq-2", ip_address="10.0.0.2")]
+
+        trouve = network_collector.find_equipment_by_ip(equipements, "10.0.0.2")
+
+        assert trouve.equipment_id == "eq-2"
+
+    def test_renvoie_none_si_aucune_ip_ne_correspond(self):
+        equipements = [fake_equipment(ip_address="10.0.0.1")]
+
+        assert network_collector.find_equipment_by_ip(equipements, "10.0.0.99") is None
+
+
+class TestDescribeTrap:
+    def test_reconnait_un_trap_standard(self):
+        var_binds = [("1.3.6.1.6.3.1.1.4.1.0", "1.3.6.1.6.3.1.1.5.3")]
+
+        assert network_collector.describe_trap(var_binds) == "linkDown"
+
+    def test_renvoie_l_oid_brut_pour_un_trap_non_repertorie(self):
+        var_binds = [("1.3.6.1.6.3.1.1.4.1.0", "1.3.6.1.4.1.9999.1")]
+
+        assert network_collector.describe_trap(var_binds) == "1.3.6.1.4.1.9999.1"
+
+    def test_renvoie_inconnu_si_snmp_trap_oid_absent(self):
+        var_binds = [("1.3.6.1.2.1.1.3.0", "12345")]
+
+        assert network_collector.describe_trap(var_binds) == "inconnu"
+
+
+class TestHandleTrap:
+    def test_trap_d_une_ip_non_declaree_est_ignore(self, monkeypatch):
+        appels = []
+        monkeypatch.setattr(network_collector, "poll_equipment", lambda *a, **k: appels.append(a))
+        equipements = [fake_equipment(ip_address="10.0.0.1")]
+
+        network_collector.handle_trap(fake_config(), equipements, {}, "10.0.0.99", [])
+
+        assert appels == []
+
+    def test_trap_d_un_equipement_declare_declenche_un_sondage_immediat(self, monkeypatch):
+        appels = []
+        monkeypatch.setattr(network_collector, "poll_equipment", lambda *a, **k: appels.append(a))
+        equipement = fake_equipment(equipment_id="eq-1", ip_address="10.0.0.1")
+        config = fake_config()
+        previous_readings = {}
+        lock = threading.Lock()
+
+        network_collector.handle_trap(
+            config, [equipement], previous_readings, "10.0.0.1",
+            [("1.3.6.1.6.3.1.1.4.1.0", "1.3.6.1.6.3.1.1.5.3")], lock)
+
+        assert len(appels) == 1
+        assert appels[0] == (config, equipement, previous_readings, lock)
+
+    def test_une_erreur_lors_du_sondage_declenche_par_le_trap_est_absorbee(self, monkeypatch):
+        def leve(*a, **k):
+            raise RuntimeError("panne SNMP")
+
+        monkeypatch.setattr(network_collector, "poll_equipment", leve)
+        equipement = fake_equipment(ip_address="10.0.0.1")
+
+        # Ne doit pas lever : un trap malforme ou un equipement en echec ne doit pas
+        # arreter le thread du recepteur de traps.
+        network_collector.handle_trap(fake_config(), [equipement], {}, "10.0.0.1", [])
+
+
+class _ArreterApresNCycles:
+    """Remplace GracefulShutdown dans les tests de run() : s'arrete au bout de N
+    passages dans la boucle plutot que d'attendre un signal OS."""
+
+    def __init__(self, n: int):
+        self._restants = n
+
+    @property
+    def stop_requested(self) -> bool:
+        if self._restants <= 0:
+            return True
+        self._restants -= 1
+        return False
+
+
+class FakeHeartbeatServer:
+    def __init__(self):
+        self.shutdown_appele = False
+
+    def shutdown(self):
+        self.shutdown_appele = True
+
+
+class TestRunTrapReceiverSuitLActivite:
+    """Redondance (issue #157) + traps SNMP (cf. tete de module) : le recepteur
+    de traps ne doit tourner que sur l'instance active, jamais sur une
+    secondaire en veille."""
+
+    def test_instance_primaire_demarre_le_recepteur_de_traps_des_le_depart(self, monkeypatch):
+        monkeypatch.setattr(network_collector, "GracefulShutdown", lambda: _ArreterApresNCycles(1))
+        monkeypatch.setattr(network_collector, "start_heartbeat_server",
+                             lambda *a, **k: FakeHeartbeatServer())
+        appels_trap = []
+        monkeypatch.setattr(network_collector, "start_trap_receiver_thread",
+                             lambda *a, **k: appels_trap.append(1))
+        monkeypatch.setattr(network_collector, "poll_equipment", lambda *a, **k: None)
+        monkeypatch.setattr(network_collector, "send_collector_heartbeat", lambda *a, **k: None)
+
+        config = fake_config(collector_role="primaire", interval_seconds=0)
+        network_collector.run(config, [fake_equipment()], {})
+
+        assert appels_trap == [1]
+
+    def test_instance_secondaire_en_veille_ne_demarre_pas_le_recepteur_de_traps(self, monkeypatch):
+        # 2 cycles, jamais de bascule (heartbeat de la primaire toujours present) :
+        # le recepteur de traps ne doit jamais demarrer.
+        monkeypatch.setattr(network_collector, "GracefulShutdown", lambda: _ArreterApresNCycles(2))
+        monkeypatch.setattr(network_collector, "poll_peer_heartbeat", lambda *a, **k: True)
+        appels_trap = []
+        monkeypatch.setattr(network_collector, "start_trap_receiver_thread",
+                             lambda *a, **k: appels_trap.append(1))
+        monkeypatch.setattr(network_collector, "start_heartbeat_server",
+                             lambda *a, **k: FakeHeartbeatServer())
+
+        config = fake_config(collector_role="secondaire", peer_heartbeat_url="http://primaire:8091/heartbeat",
+                              failover_cycles_toleres=3, interval_seconds=0)
+        network_collector.run(config, [fake_equipment()], {})
+
+        assert appels_trap == []
+
+    def test_instance_secondaire_demarre_le_recepteur_de_traps_seulement_apres_bascule(self, monkeypatch):
+        # 2 cycles, bascule au 2e (seuil atteint) : le recepteur de traps ne doit
+        # demarrer qu'a ce moment-la, pas avant.
+        monkeypatch.setattr(network_collector, "GracefulShutdown", lambda: _ArreterApresNCycles(2))
+        monkeypatch.setattr(network_collector, "poll_peer_heartbeat", lambda *a, **k: False)
+        appels_trap = []
+        monkeypatch.setattr(network_collector, "start_trap_receiver_thread",
+                             lambda *a, **k: appels_trap.append(1))
+        monkeypatch.setattr(network_collector, "start_heartbeat_server",
+                             lambda *a, **k: FakeHeartbeatServer())
+        monkeypatch.setattr(network_collector, "poll_equipment", lambda *a, **k: None)
+        monkeypatch.setattr(network_collector, "send_collector_heartbeat", lambda *a, **k: None)
+
+        config = fake_config(collector_role="secondaire", peer_heartbeat_url="http://primaire:8091/heartbeat",
+                              failover_cycles_toleres=2, interval_seconds=0)
+        network_collector.run(config, [fake_equipment()], {})
+
+        # Une seule bascule, donc un seul demarrage du recepteur de traps.
+        assert appels_trap == [1]
+
+    def test_recepteur_de_traps_desactive_n_est_jamais_demarre(self, monkeypatch):
+        monkeypatch.setattr(network_collector, "GracefulShutdown", lambda: _ArreterApresNCycles(1))
+        monkeypatch.setattr(network_collector, "start_heartbeat_server",
+                             lambda *a, **k: FakeHeartbeatServer())
+        appels_trap = []
+        monkeypatch.setattr(network_collector, "start_trap_receiver_thread",
+                             lambda *a, **k: appels_trap.append(1))
+        monkeypatch.setattr(network_collector, "poll_equipment", lambda *a, **k: None)
+        monkeypatch.setattr(network_collector, "send_collector_heartbeat", lambda *a, **k: None)
+
+        config = fake_config(collector_role="primaire", interval_seconds=0, trap_enabled=False)
+        network_collector.run(config, [fake_equipment()], {})
+
+        assert appels_trap == []
 
 
 class FakeResponse:

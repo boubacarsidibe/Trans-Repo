@@ -52,6 +52,13 @@ export interface Equipement {
 	description: string | null;
 	/** Dernière métrique reçue ; `null` si l'équipement n'a jamais rien remonté. */
 	derniereMesure: string | null;
+	/**
+	 * Équipement dont celui-ci dépend pour être joignable (typiquement le
+	 * commutateur qui le dessert) — `null` s'il n'en dépend d'aucun. C'est la
+	 * relation que la cartographie réseau (/cartographie) trace en arêtes.
+	 */
+	dependDeId: string | null;
+	dependDeNom: string | null;
 	/** Only returned by POST /equipments, once, at creation. */
 	cleApi?: string;
 }
