@@ -210,7 +210,7 @@ jobs:
           target: ${{ secrets.CRI_DEPLOY_PATH }}
 
       - name: Deployer sur le serveur CRI
-        uses: appleboy/ssh-action@v1.2.0
+        uses: appleboy/ssh-action@v1.2.5
         with:
           host: ${{ secrets.CRI_HOST }}
           username: ${{ secrets.CRI_USER }}
